@@ -69,7 +69,6 @@ export default function Home() {
           className="flex items-end justify-between mb-10"
         >
           <div>
-            <p className="text-sm font-semibold text-primary uppercase tracking-wider mb-2">Curadoria SP Spaces</p>
             <h2 className="font-display text-3xl lg:text-4xl font-bold text-foreground">
               Recomendados para você
             </h2>
