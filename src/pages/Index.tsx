@@ -1,17 +1,16 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Presentation, Stethoscope, Users, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { Layout } from "@/components/Layout";
 import { SpaceCard } from "@/components/SpaceCard";
-import { spaces, categories } from "@/data/mockData";
-
-const categoryIcons: Record<string, React.ElementType> = {
-  Presentation,
-  Stethoscope,
-  Users,
-};
+import { spaces } from "@/data/mockData";
 
 const recommended = spaces.filter((s) => s.recommended);
+const categorySections = [
+  { id: "auditorium", name: "Auditórios" },
+  { id: "dental", name: "Salas Odontológicas" },
+  { id: "meeting", name: "Salas de Reunião" },
+] as const;
 
 export default function Home() {
   return (
@@ -100,43 +99,33 @@ export default function Home() {
       {/* Categories */}
       <section className="gradient-subtle py-20">
         <div className="container mx-auto px-4 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-12"
-          >
-            <p className="text-sm font-semibold text-primary uppercase tracking-wider mb-2">Categorias</p>
-            <h2 className="font-display text-3xl lg:text-4xl font-bold text-foreground">
-              Explore por tipo de espaço
-            </h2>
-          </motion.div>
+          <div className="space-y-14">
+            {categorySections.map((category, categoryIndex) => {
+              const spacesByCategory = spaces.filter((space) => space.category === category.id).slice(0, 3);
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {categories.map((cat, i) => {
-              const Icon = categoryIcons[cat.icon] || Users;
               return (
                 <motion.div
-                  key={cat.id}
+                  key={category.id}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: i * 0.1 }}
+                  transition={{ duration: 0.45, delay: categoryIndex * 0.08 }}
                 >
-                  <Link
-                    to={`/encontrar?category=${cat.id}`}
-                    className="group block bg-card rounded-2xl p-8 border border-border/50 card-shadow hover:card-shadow-hover transition-all duration-300 hover:-translate-y-1"
-                  >
-                    <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-5 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                      <Icon className="w-6 h-6 text-primary group-hover:text-primary-foreground transition-colors" />
-                    </div>
-                    <h3 className="font-display font-bold text-lg text-foreground mb-2">{cat.name}</h3>
-                    <p className="text-sm text-muted-foreground mb-4">{cat.description}</p>
-                    <span className="text-xs font-medium text-primary">
-                      {cat.count} espaços disponíveis →
-                    </span>
-                  </Link>
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="font-display text-2xl lg:text-3xl font-bold text-foreground">{category.name}</h2>
+                    <Link
+                      to={`/encontrar?category=${category.id}`}
+                      className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary-hover transition-colors"
+                    >
+                      Ver mais &gt;
+                    </Link>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {spacesByCategory.map((space, i) => (
+                      <SpaceCard key={space.id} space={space} index={i} showPricing={false} />
+                    ))}
+                  </div>
                 </motion.div>
               );
             })}

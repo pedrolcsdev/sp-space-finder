@@ -1,13 +1,14 @@
-import { MapPin, Users, Star, TrendingUp } from "lucide-react";
+import { Check, MapPin, Users, Star, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
 import type { Space } from "@/data/mockData";
 
 interface SpaceCardProps {
   space: Space;
   index?: number;
+  showPricing?: boolean;
 }
 
-export function SpaceCard({ space, index = 0 }: SpaceCardProps) {
+export function SpaceCard({ space, index = 0, showPricing = true }: SpaceCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -60,27 +61,31 @@ export function SpaceCard({ space, index = 0 }: SpaceCardProps) {
           {space.resources.slice(0, 3).map((r) => (
             <span
               key={r}
-              className="px-2.5 py-1 rounded-lg bg-muted text-muted-foreground text-xs font-medium"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-muted text-muted-foreground text-xs font-medium"
             >
+              <Check className="w-3 h-3" />
               {r}
             </span>
           ))}
           {space.resources.length > 3 && (
-            <span className="px-2.5 py-1 rounded-lg bg-muted text-muted-foreground text-xs font-medium">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-muted text-muted-foreground text-xs font-medium">
+              <Check className="w-3 h-3" />
               +{space.resources.length - 3}
             </span>
           )}
         </div>
 
-        <div className="pt-2 border-t border-border/50 flex items-center justify-between">
-          <span className="text-lg font-bold text-foreground">
-            R$ {space.pricePerHour}
-            <span className="text-sm font-normal text-muted-foreground">/hora</span>
-          </span>
-          <button className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary-hover transition-colors">
-            Ver detalhes
-          </button>
-        </div>
+        {showPricing && (
+          <div className="pt-2 border-t border-border/50 flex items-center justify-between">
+            <span className="text-lg font-bold text-foreground">
+              R$ {space.pricePerHour}
+              <span className="text-sm font-normal text-muted-foreground">/hora</span>
+            </span>
+            <button className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary-hover transition-colors">
+              Ver detalhes
+            </button>
+          </div>
+        )}
       </div>
     </motion.div>
   );
