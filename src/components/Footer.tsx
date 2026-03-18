@@ -14,7 +14,8 @@ export function Footer() {
               <span className="font-display font-bold text-lg">SP Spaces</span>
             </div>
             <p className="text-primary-foreground/70 text-sm leading-relaxed max-w-xs">
-              Grupo São Paulo Participações — conectando profissionais aos melhores espaços corporativos da cidade.
+              Grupo São Paulo Participações — conectando profissionais aos
+              melhores espaços corporativos da cidade.
             </p>
           </div>
 
@@ -23,9 +24,24 @@ export function Footer() {
               Navegação
             </h4>
             <div className="flex flex-col gap-2.5">
-              <Link to="/" className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">Início</Link>
-              <Link to="/encontrar" className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">Encontrar Espaço</Link>
-              <Link to="/login" className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">Entrar</Link>
+              <Link
+                to="/"
+                className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors"
+              >
+                Início
+              </Link>
+              <Link
+                to="/encontrar"
+                className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors"
+              >
+                Encontrar Espaço
+              </Link>
+              <Link
+                to="/login"
+                className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors"
+              >
+                Entrar
+              </Link>
             </div>
           </div>
 
@@ -34,7 +50,8 @@ export function Footer() {
               Institucional
             </h4>
             <p className="text-sm text-primary-foreground/70 leading-relaxed">
-              O Grupo São Paulo Participações atua no mercado de espaços corporativos com foco em qualidade e inovação.
+              O Grupo São Paulo Participações atua no mercado de espaços
+              corporativos com foco em qualidade e inovação.
             </p>
             <a
               href="https://example.com"
@@ -49,7 +66,8 @@ export function Footer() {
 
         <div className="mt-12 pt-8 border-t border-primary-foreground/10 text-center">
           <p className="text-xs text-primary-foreground/40">
-            © {new Date().getFullYear()} Grupo São Paulo Participações. Todos os direitos reservados.
+            © {new Date().getFullYear()} Grupo São Paulo Participações. Todos os
+            direitos reservados.
           </p>
         </div>
       </div>

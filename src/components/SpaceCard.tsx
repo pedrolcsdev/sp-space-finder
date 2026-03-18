@@ -8,7 +8,11 @@ interface SpaceCardProps {
   showPricing?: boolean;
 }
 
-export function SpaceCard({ space, index = 0, showPricing = true }: SpaceCardProps) {
+export function SpaceCard({
+  space,
+  index = 0,
+  showPricing = true,
+}: SpaceCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -69,8 +73,7 @@ export function SpaceCard({ space, index = 0, showPricing = true }: SpaceCardPro
           ))}
           {space.resources.length > 3 && (
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-muted text-muted-foreground text-xs font-medium">
-              <Check className="w-3 h-3" />
-              +{space.resources.length - 3}
+              <Check className="w-3 h-3" />+{space.resources.length - 3}
             </span>
           )}
         </div>
@@ -79,7 +82,9 @@ export function SpaceCard({ space, index = 0, showPricing = true }: SpaceCardPro
           <div className="pt-2 border-t border-border/50 flex items-center justify-between">
             <span className="text-lg font-bold text-foreground">
               R$ {space.pricePerHour}
-              <span className="text-sm font-normal text-muted-foreground">/hora</span>
+              <span className="text-sm font-normal text-muted-foreground">
+                /hora
+              </span>
             </span>
             <button className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary-hover transition-colors">
               Ver detalhes

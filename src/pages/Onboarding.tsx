@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Building2, User, Briefcase, MapPin, Check, ArrowRight, ArrowLeft } from "lucide-react";
+import {
+  Building2,
+  User,
+  Briefcase,
+  MapPin,
+  Check,
+  ArrowRight,
+  ArrowLeft,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const steps = [
@@ -9,16 +17,32 @@ const steps = [
     subtitle: "Conte-nos um pouco sobre seu perfil",
     fields: [
       { label: "Nome completo", icon: User, placeholder: "João Silva" },
-      { label: "E-mail profissional", icon: Briefcase, placeholder: "joao@empresa.com" },
+      {
+        label: "E-mail profissional",
+        icon: Briefcase,
+        placeholder: "joao@empresa.com",
+      },
     ],
   },
   {
     title: "Tipo de espaço",
     subtitle: "Que tipo de espaço você mais procura?",
     options: [
-      { id: "auditorium", label: "Auditórios", desc: "Para eventos e apresentações" },
-      { id: "meeting", label: "Salas de Reunião", desc: "Para reuniões corporativas" },
-      { id: "dental", label: "Consultórios", desc: "Espaços para profissionais de saúde" },
+      {
+        id: "auditorium",
+        label: "Auditórios",
+        desc: "Para eventos e apresentações",
+      },
+      {
+        id: "meeting",
+        label: "Salas de Reunião",
+        desc: "Para reuniões corporativas",
+      },
+      {
+        id: "dental",
+        label: "Consultórios",
+        desc: "Espaços para profissionais de saúde",
+      },
     ],
   },
   {
@@ -72,9 +96,13 @@ export default function Onboarding() {
               <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
                 <Building2 className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="font-display font-bold text-lg text-foreground">SP Spaces</span>
+              <span className="font-display font-bold text-lg text-foreground">
+                SP Spaces
+              </span>
             </div>
-            <p className="text-xs text-muted-foreground">Etapa {step + 1} de {steps.length}</p>
+            <p className="text-xs text-muted-foreground">
+              Etapa {step + 1} de {steps.length}
+            </p>
           </div>
 
           <AnimatePresence mode="wait">
@@ -86,14 +114,20 @@ export default function Onboarding() {
               transition={{ duration: 0.3 }}
               className="bg-card rounded-2xl border border-border/50 card-shadow p-8"
             >
-              <h2 className="font-display text-xl font-bold text-foreground mb-1">{current.title}</h2>
-              <p className="text-sm text-muted-foreground mb-6">{current.subtitle}</p>
+              <h2 className="font-display text-xl font-bold text-foreground mb-1">
+                {current.title}
+              </h2>
+              <p className="text-sm text-muted-foreground mb-6">
+                {current.subtitle}
+              </p>
 
               {current.fields && (
                 <div className="space-y-4">
                   {current.fields.map((f) => (
                     <div key={f.label}>
-                      <label className="text-sm font-medium text-foreground mb-1.5 block">{f.label}</label>
+                      <label className="text-sm font-medium text-foreground mb-1.5 block">
+                        {f.label}
+                      </label>
                       <div className="relative">
                         <f.icon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <input
@@ -120,14 +154,24 @@ export default function Onboarding() {
                             : "border-border hover:border-primary/30"
                         }`}
                       >
-                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                          isSelected ? "border-primary bg-primary" : "border-border"
-                        }`}>
-                          {isSelected && <Check className="w-3.5 h-3.5 text-primary-foreground" />}
+                        <div
+                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                            isSelected
+                              ? "border-primary bg-primary"
+                              : "border-border"
+                          }`}
+                        >
+                          {isSelected && (
+                            <Check className="w-3.5 h-3.5 text-primary-foreground" />
+                          )}
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-foreground">{opt.label}</p>
-                          <p className="text-xs text-muted-foreground">{opt.desc}</p>
+                          <p className="text-sm font-semibold text-foreground">
+                            {opt.label}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {opt.desc}
+                          </p>
                         </div>
                       </button>
                     );
@@ -139,7 +183,9 @@ export default function Onboarding() {
                 <button
                   onClick={() => step > 0 && setStep(step - 1)}
                   className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
-                    step > 0 ? "text-muted-foreground hover:text-foreground" : "invisible"
+                    step > 0
+                      ? "text-muted-foreground hover:text-foreground"
+                      : "invisible"
                   }`}
                 >
                   <ArrowLeft className="w-4 h-4" /> Voltar

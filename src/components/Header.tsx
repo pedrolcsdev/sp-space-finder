@@ -55,7 +55,11 @@ export function Header() {
           onClick={() => setMobileOpen(!mobileOpen)}
           className="md:hidden p-2 rounded-lg hover:bg-muted transition-colors"
         >
-          {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          {mobileOpen ? (
+            <X className="w-5 h-5" />
+          ) : (
+            <Menu className="w-5 h-5" />
+          )}
         </button>
       </div>
 
