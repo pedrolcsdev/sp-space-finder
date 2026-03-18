@@ -23,8 +23,12 @@ export default function Login() {
               SP <span className="text-primary">Spaces</span>
             </span>
           </Link>
-          <h1 className="font-display text-2xl font-bold text-foreground">Bem-vindo de volta</h1>
-          <p className="text-sm text-muted-foreground mt-1">Entre na sua conta para continuar</p>
+          <h1 className="font-display text-2xl font-bold text-foreground">
+            Bem-vindo de volta
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Entre na sua conta para continuar
+          </p>
         </div>
 
         <div className="bg-card rounded-2xl border border-border/50 card-shadow p-8 space-y-5">
@@ -41,7 +45,9 @@ export default function Login() {
 
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-foreground mb-1.5 block">E-mail</label>
+              <label className="text-sm font-medium text-foreground mb-1.5 block">
+                E-mail
+              </label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
@@ -54,7 +60,9 @@ export default function Login() {
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-foreground mb-1.5 block">Senha</label>
+              <label className="text-sm font-medium text-foreground mb-1.5 block">
+                Senha
+              </label>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
@@ -74,7 +82,10 @@ export default function Login() {
 
           <p className="text-center text-sm text-muted-foreground">
             Não tem conta?{" "}
-            <Link to="/onboarding" className="text-primary font-medium hover:text-primary-hover">
+            <Link
+              to="/onboarding"
+              className="text-primary font-medium hover:text-primary-hover"
+            >
               Cadastre-se
             </Link>
           </p>

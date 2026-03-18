@@ -35,10 +35,13 @@ export default function Home() {
             <h1 className="font-display text-4xl lg:text-6xl font-extrabold text-primary-foreground leading-[1.1] mb-6">
               Encontre o espaço
               <br />
-              <span className="text-primary-foreground/70">perfeito para você</span>
+              <span className="text-primary-foreground/70">
+                perfeito para você
+              </span>
             </h1>
             <p className="text-lg text-primary-foreground/60 max-w-lg mb-8 leading-relaxed">
-              Auditórios, salas de reunião e consultórios em São Paulo. Descubra, compare e reserve com facilidade.
+              Auditórios, salas de reunião e consultórios em São Paulo.
+              Descubra, compare e reserve com facilidade.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link
@@ -100,7 +103,9 @@ export default function Home() {
         <div className="container mx-auto px-4 lg:px-8">
           <div className="space-y-14">
             {categorySections.map((category, categoryIndex) => {
-              const spacesByCategory = spaces.filter((space) => space.category === category.id).slice(0, 3);
+              const spacesByCategory = spaces
+                .filter((space) => space.category === category.id)
+                .slice(0, 3);
 
               return (
                 <motion.div
@@ -111,7 +116,9 @@ export default function Home() {
                   transition={{ duration: 0.45, delay: categoryIndex * 0.08 }}
                 >
                   <div className="flex items-center justify-between mb-6">
-                    <h2 className="font-display text-2xl lg:text-3xl font-bold text-foreground">{category.name}</h2>
+                    <h2 className="font-display text-2xl lg:text-3xl font-bold text-foreground">
+                      {category.name}
+                    </h2>
                     <Link
                       to={`/encontrar?category=${category.id}`}
                       className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary-hover transition-colors"
@@ -122,7 +129,12 @@ export default function Home() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {spacesByCategory.map((space, i) => (
-                      <SpaceCard key={space.id} space={space} index={i} showPricing={false} />
+                      <SpaceCard
+                        key={space.id}
+                        space={space}
+                        index={i}
+                        showPricing={false}
+                      />
                     ))}
                   </div>
                 </motion.div>

@@ -1,5 +1,3 @@
-
-
 ## Plano: Exibir espaços por categoria na Home
 
 Substituir a seção de "Categorias" (que hoje mostra apenas cards com ícone/descrição/link) por seções que exibem os espaços reais agrupados por categoria, similar à imagem de referência.
@@ -7,6 +5,7 @@ Substituir a seção de "Categorias" (que hoje mostra apenas cards com ícone/de
 ### Estrutura
 
 Para cada categoria (`auditorium`, `dental`, `meeting`):
+
 - Titulo da categoria + link "Ver mais >" alinhado à direita
 - Grid de 3 colunas com os `SpaceCard` daquela categoria (limitado a 3)
 - "Ver mais" linka para `/encontrar?category={id}`
@@ -18,6 +17,7 @@ Atualmente existem 3 espaços por categoria (9 total). Adicionar mais espaços m
 ### Mudanças no SpaceCard
 
 Ajustar o card para ficar mais parecido com a referência:
+
 - Layout mais limpo: imagem em cima, nome, localização com icone, capacidade com icone, recursos como badges com icones pequenos
 - Remover o preço e botão "Ver detalhes" nessa visualização da home (ou manter opcional)
 
@@ -29,6 +29,5 @@ Ajustar o card para ficar mais parecido com a referência:
 ### Mapeamento de categorias para nomes
 
 - `auditorium` → "Auditórios"
-- `dental` → "Salas Odontológicas"  
+- `dental` → "Salas Odontológicas"
 - `meeting` → "Salas de Reunião"
-

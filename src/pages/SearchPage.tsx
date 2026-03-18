@@ -19,12 +19,18 @@ export default function SearchPage() {
   const initialCat = searchParams.get("category");
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(initialCat ? [initialCat] : []);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(
+    initialCat ? [initialCat] : [],
+  );
   const [selectedResources, setSelectedResources] = useState<string[]>([]);
   const [minCapacity, setMinCapacity] = useState(0);
   const [mobileFilters, setMobileFilters] = useState(false);
 
-  const toggle = (arr: string[], val: string, setArr: (v: string[]) => void) => {
+  const toggle = (
+    arr: string[],
+    val: string,
+    setArr: (v: string[]) => void,
+  ) => {
     setArr(arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val]);
   };
 
@@ -37,24 +43,41 @@ export default function SearchPage() {
 
   const filtered = useMemo(() => {
     return spaces.filter((s) => {
-      if (searchTerm && !s.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-      if (selectedCategories.length && !selectedCategories.includes(s.category)) return false;
+      if (
+        searchTerm &&
+        !s.name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+        return false;
+      if (selectedCategories.length && !selectedCategories.includes(s.category))
+        return false;
       if (minCapacity && s.capacity < minCapacity) return false;
-      if (selectedResources.length && !selectedResources.every((r) => s.resources.includes(r))) return false;
+      if (
+        selectedResources.length &&
+        !selectedResources.every((r) => s.resources.includes(r))
+      )
+        return false;
       return true;
     });
   }, [searchTerm, selectedCategories, selectedResources, minCapacity]);
 
-  const activeFilterCount = selectedCategories.length + selectedResources.length + (minCapacity > 0 ? 1 : 0);
+  const activeFilterCount =
+    selectedCategories.length +
+    selectedResources.length +
+    (minCapacity > 0 ? 1 : 0);
 
   const FilterContent = () => (
     <div className="space-y-8">
       {/* Categories */}
       <div>
-        <h3 className="font-display font-semibold text-sm text-foreground mb-3">Categoria</h3>
+        <h3 className="font-display font-semibold text-sm text-foreground mb-3">
+          Categoria
+        </h3>
         <div className="space-y-2">
           {Object.entries(categoryLabels).map(([key, label]) => (
-            <label key={key} className="flex items-center gap-3 cursor-pointer group">
+            <label
+              key={key}
+              className="flex items-center gap-3 cursor-pointer group"
+            >
               <div
                 className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ${
                   selectedCategories.includes(key)
@@ -63,8 +86,18 @@ export default function SearchPage() {
                 }`}
               >
                 {selectedCategories.includes(key) && (
-                  <svg className="w-3 h-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  <svg
+                    className="w-3 h-3 text-primary-foreground"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={3}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 )}
               </div>
@@ -73,7 +106,9 @@ export default function SearchPage() {
                 type="checkbox"
                 className="sr-only"
                 checked={selectedCategories.includes(key)}
-                onChange={() => toggle(selectedCategories, key, setSelectedCategories)}
+                onChange={() =>
+                  toggle(selectedCategories, key, setSelectedCategories)
+                }
               />
             </label>
           ))}
@@ -82,7 +117,9 @@ export default function SearchPage() {
 
       {/* Capacity */}
       <div>
-        <h3 className="font-display font-semibold text-sm text-foreground mb-3">Capacidade mínima</h3>
+        <h3 className="font-display font-semibold text-sm text-foreground mb-3">
+          Capacidade mínima
+        </h3>
         <input
           type="number"
           min={0}
@@ -95,7 +132,9 @@ export default function SearchPage() {
 
       {/* Resources */}
       <div>
-        <h3 className="font-display font-semibold text-sm text-foreground mb-3">Recursos</h3>
+        <h3 className="font-display font-semibold text-sm text-foreground mb-3">
+          Recursos
+        </h3>
         <div className="flex flex-wrap gap-2">
           {allResources.map((r) => (
             <button
@@ -130,8 +169,12 @@ export default function SearchPage() {
         {/* Top bar */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="font-display text-2xl lg:text-3xl font-bold text-foreground">Encontrar Espaço</h1>
-            <p className="text-sm text-muted-foreground mt-1">{filtered.length} espaços encontrados</p>
+            <h1 className="font-display text-2xl lg:text-3xl font-bold text-foreground">
+              Encontrar Espaço
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {filtered.length} espaços encontrados
+            </p>
           </div>
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <div className="relative flex-1 sm:w-72">
@@ -177,8 +220,13 @@ export default function SearchPage() {
             </div>
             {filtered.length === 0 && (
               <div className="text-center py-20">
-                <p className="text-muted-foreground text-lg">Nenhum espaço encontrado com esses filtros.</p>
-                <button onClick={clearFilters} className="mt-4 text-sm font-medium text-primary hover:text-primary-hover">
+                <p className="text-muted-foreground text-lg">
+                  Nenhum espaço encontrado com esses filtros.
+                </p>
+                <button
+                  onClick={clearFilters}
+                  className="mt-4 text-sm font-medium text-primary hover:text-primary-hover"
+                >
                   Limpar filtros
                 </button>
               </div>
@@ -206,8 +254,13 @@ export default function SearchPage() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="font-display font-bold text-foreground">Filtros</h2>
-                <button onClick={() => setMobileFilters(false)} className="p-1.5 rounded-lg hover:bg-muted">
+                <h2 className="font-display font-bold text-foreground">
+                  Filtros
+                </h2>
+                <button
+                  onClick={() => setMobileFilters(false)}
+                  className="p-1.5 rounded-lg hover:bg-muted"
+                >
                   <X className="w-5 h-5" />
                 </button>
               </div>

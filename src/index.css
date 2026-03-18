@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -92,29 +92,49 @@
     @apply bg-background text-foreground font-sans antialiased;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-display;
   }
 }
 
 @layer utilities {
   .gradient-hero {
-    background: linear-gradient(135deg, hsl(213 52% 24%) 0%, hsl(213 44% 35%) 50%, hsl(200 60% 40%) 100%);
+    background: linear-gradient(
+      135deg,
+      hsl(213 52% 24%) 0%,
+      hsl(213 44% 35%) 50%,
+      hsl(200 60% 40%) 100%
+    );
   }
 
   .gradient-subtle {
-    background: linear-gradient(180deg, hsl(210 20% 99%) 0%, hsl(220 14% 96%) 100%);
+    background: linear-gradient(
+      180deg,
+      hsl(210 20% 99%) 0%,
+      hsl(220 14% 96%) 100%
+    );
   }
 
   .card-shadow {
-    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+    box-shadow:
+      0 1px 3px 0 rgb(0 0 0 / 0.04),
+      0 1px 2px -1px rgb(0 0 0 / 0.04);
   }
 
   .card-shadow-hover {
-    box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.04);
+    box-shadow:
+      0 10px 25px -5px rgb(0 0 0 / 0.08),
+      0 8px 10px -6px rgb(0 0 0 / 0.04);
   }
 
   .card-shadow-lg {
-    box-shadow: 0 20px 40px -10px rgb(0 0 0 / 0.1), 0 10px 20px -10px rgb(0 0 0 / 0.04);
+    box-shadow:
+      0 20px 40px -10px rgb(0 0 0 / 0.1),
+      0 10px 20px -10px rgb(0 0 0 / 0.04);
   }
 }
