@@ -1,5 +1,5 @@
+import Link from "next/link";
 import { Building2, ExternalLink } from "lucide-react";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 export function Footer() {
@@ -17,7 +17,7 @@ export function Footer() {
               </span>
             </div>
             <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">
-              Grupo São Paulo — conectando profissionais aos
+              Grupo São Paulo - conectando profissionais aos
               melhores espaços corporativos da cidade.
             </p>
           </div>
@@ -28,19 +28,19 @@ export function Footer() {
             </h4>
             <div className="flex flex-col gap-2.5">
               <Link
-                to="/"
+                href="/"
                 className="text-sm text-secondary-foreground transition-colors hover:text-primary"
               >
                 Início
               </Link>
               <Link
-                to="/encontrar"
+                href="/encontrar"
                 className="text-sm text-secondary-foreground transition-colors hover:text-primary"
               >
                 Encontrar Espaço
               </Link>
               <Link
-                to="/login"
+                href="/login"
                 className="text-sm text-secondary-foreground transition-colors hover:text-primary"
               >
                 Entrar

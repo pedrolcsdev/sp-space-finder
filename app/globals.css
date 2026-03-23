@@ -1,0 +1,188 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 214 30% 98%;
+    --foreground: 218 48% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 218 48% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 218 48% 11%;
+
+    --primary: 213 49% 23%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 214 50% 18%;
+    --primary-soft: 213 47% 95%;
+
+    --secondary: 214 28% 97%;
+    --secondary-foreground: 215 30% 28%;
+
+    --muted: 212 30% 96%;
+    --muted-foreground: 215 16% 45%;
+
+    --accent: 213 49% 23%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 70% 42%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 148 60% 30%;
+    --success-foreground: 0 0% 100%;
+
+    --border: 215 28% 88%;
+    --input: 215 28% 88%;
+    --ring: 220 79% 57%;
+
+    --radius: 0.75rem;
+    --radius-sm: 0.5rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.25rem;
+
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --space-10: 2.5rem;
+    --space-12: 3rem;
+    --space-16: 4rem;
+
+    --shadow-1:
+      0 1px 2px rgb(16 24 40 / 0.06),
+      0 1px 1px rgb(16 24 40 / 0.03);
+    --shadow-2:
+      0 4px 14px rgb(16 24 40 / 0.08),
+      0 1px 2px rgb(16 24 40 / 0.04);
+    --shadow-3:
+      0 12px 28px rgb(16 24 40 / 0.12),
+      0 4px 10px rgb(16 24 40 / 0.08);
+
+    --focus-ring: 37 99 235;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 218 48% 11%;
+    --sidebar-primary: 213 49% 23%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 214 28% 97%;
+    --sidebar-accent-foreground: 215 30% 28%;
+    --sidebar-border: 215 28% 88%;
+    --sidebar-ring: 220 79% 57%;
+  }
+
+  .dark {
+    --background: 220 35% 8%;
+    --foreground: 210 40% 98%;
+    --card: 220 33% 11%;
+    --card-foreground: 210 40% 98%;
+    --popover: 220 33% 11%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 213 52% 50%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 213 52% 55%;
+    --primary-soft: 218 40% 17%;
+    --secondary: 220 30% 15%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 220 28% 15%;
+    --muted-foreground: 215 20% 67%;
+    --accent: 220 30% 15%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 65% 45%;
+    --destructive-foreground: 210 40% 98%;
+    --success: 148 55% 42%;
+    --success-foreground: 210 40% 98%;
+    --border: 220 27% 20%;
+    --input: 220 27% 20%;
+    --ring: 220 79% 57%;
+    --sidebar-background: 220 35% 8%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 213 52% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 30% 15%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 220 27% 20%;
+    --sidebar-ring: 220 79% 57%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display;
+  }
+
+  :focus-visible {
+    outline: 3px solid rgb(var(--focus-ring) / 0.35);
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  .page-container {
+    @apply container px-4 sm:px-6 lg:px-8;
+  }
+
+  .section-space {
+    @apply py-12 lg:py-16;
+  }
+
+  .gradient-hero {
+    background:
+      radial-gradient(
+        circle at 15% 15%,
+        hsl(212 41% 34% / 0.4) 0%,
+        transparent 42%
+      ),
+      linear-gradient(135deg, hsl(213 49% 23%) 0%, hsl(216 48% 17%) 100%);
+  }
+
+  .gradient-subtle {
+    background: linear-gradient(
+      180deg,
+      hsl(214 30% 98%) 0%,
+      hsl(214 31% 96%) 100%
+    );
+  }
+
+  .card-shadow {
+    box-shadow: var(--shadow-1);
+  }
+
+  .card-shadow-hover {
+    box-shadow: var(--shadow-2);
+  }
+
+  .card-shadow-lg {
+    box-shadow: var(--shadow-3);
+  }
+
+  .surface-1 {
+    @apply bg-card border border-border;
+  }
+
+  .surface-2 {
+    @apply bg-secondary border border-border;
+  }
+}

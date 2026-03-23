@@ -1,6 +1,6 @@
 import { Check, MapPin, Users, Star, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
-import type { Space } from "@/data/mockData";
+import type { Space } from "@/lib/data/contracts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 

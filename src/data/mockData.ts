@@ -1,24 +1,4 @@
-export interface Space {
-  id: string;
-  name: string;
-  category: "auditorium" | "dental" | "meeting";
-  location: string;
-  capacity: number;
-  pricePerHour: number;
-  image: string;
-  resources: string[];
-  recommended?: boolean;
-  matchPercentage?: number;
-  description: string;
-}
-
-export interface Category {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  count: number;
-}
+import type { Category, ChatFlowStep, Space } from "@/lib/data/contracts";
 
 export const categories: Category[] = [
   {
@@ -285,7 +265,7 @@ export const spaces: Space[] = [
   },
 ];
 
-export const chatFlow = [
+export const chatFlow: ChatFlowStep[] = [
   {
     type: "bot" as const,
     text: "Olá! 👋 Sou o assistente do SP Spaces. Vou te ajudar a encontrar o espaço ideal.",

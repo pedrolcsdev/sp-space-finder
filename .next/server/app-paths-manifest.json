@@ -1,0 +1,7 @@
+{
+  "/(site)/page": "app/(site)/page.js",
+  "/(standalone)/onboarding/page": "app/(standalone)/onboarding/page.js",
+  "/(site)/chat-resultados/page": "app/(site)/chat-resultados/page.js",
+  "/(standalone)/login/page": "app/(standalone)/login/page.js",
+  "/(site)/encontrar/page": "app/(site)/encontrar/page.js"
+}
