@@ -2,40 +2,43 @@ import { useState } from "react";
 import { Building2, Mail, Lock, Chrome } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   return (
-    <div className="min-h-screen gradient-subtle flex items-center justify-center p-4">
+    <div className="gradient-subtle flex min-h-screen items-center justify-center px-4 py-12">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
+        className="w-full max-w-md space-y-8"
       >
-        <div className="text-center mb-8">
+        <div className="text-center">
           <Link to="/" className="inline-flex items-center gap-2.5 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary">
               <Building2 className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="font-display font-bold text-xl text-foreground">
+            <span className="font-display text-xl font-semibold text-foreground">
               SP <span className="text-primary">Spaces</span>
             </span>
           </Link>
-          <h1 className="font-display text-2xl font-bold text-foreground">
+          <h1 className="font-display text-3xl font-semibold text-foreground">
             Bem-vindo de volta
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="mt-2 text-sm text-muted-foreground">
             Entre na sua conta para continuar
           </p>
         </div>
 
-        <div className="bg-card rounded-2xl border border-border/50 card-shadow p-8 space-y-5">
-          <button className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-border hover:bg-muted transition-colors text-sm font-medium">
+        <Card size="lg" className="space-y-5">
+          <Button variant="secondary" className="w-full gap-3">
             <Chrome className="w-4 h-4" />
             Entrar com Google
-          </button>
+          </Button>
 
           <div className="flex items-center gap-3">
             <div className="flex-1 h-px bg-border" />
@@ -50,12 +53,12 @@ export default function Login() {
               </label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
+                <Input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="seu@email.com"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-muted border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="pl-10"
                 />
               </div>
             </div>
@@ -65,20 +68,18 @@ export default function Login() {
               </label>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
+                <Input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-muted border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="pl-10"
                 />
               </div>
             </div>
           </div>
 
-          <button className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary-hover transition-colors">
-            Entrar
-          </button>
+          <Button className="w-full">Entrar</Button>
 
           <p className="text-center text-sm text-muted-foreground">
             Não tem conta?{" "}
@@ -89,7 +90,7 @@ export default function Login() {
               Cadastre-se
             </Link>
           </p>
-        </div>
+        </Card>
       </motion.div>
     </div>
   );

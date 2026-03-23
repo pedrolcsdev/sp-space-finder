@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { MessageCircle, X, Send, Bot, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { chatFlow } from "@/data/mockData";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { FilterChip } from "@/components/ui/filter-chip";
 
 interface Message {
   type: "bot" | "user";
@@ -56,7 +59,7 @@ export function ChatWidget() {
             animate={{ scale: 1 }}
             exit={{ scale: 0 }}
             onClick={() => setOpen(true)}
-            className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-2xl gradient-hero text-primary-foreground flex items-center justify-center card-shadow-lg hover:scale-105 transition-transform"
+            className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-xl bg-primary text-primary-foreground card-shadow-lg transition-transform hover:scale-105 hover:bg-primary-hover"
           >
             <MessageCircle className="w-6 h-6" />
           </motion.button>
@@ -70,12 +73,12 @@ export function ChatWidget() {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-6 right-6 z-50 w-[380px] max-w-[calc(100vw-3rem)] h-[520px] bg-card rounded-2xl border border-border/50 card-shadow-lg flex flex-col overflow-hidden"
+            className="fixed bottom-4 right-4 z-50 flex h-[78vh] max-h-[560px] w-[380px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-xl border border-border bg-card card-shadow-lg sm:bottom-6 sm:right-6"
           >
             {/* Header */}
-            <div className="gradient-hero px-5 py-4 flex items-center justify-between">
+            <div className="gradient-hero flex items-center justify-between px-5 py-4">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-primary-foreground/20 flex items-center justify-center">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-foreground/20">
                   <Bot className="w-4 h-4 text-primary-foreground" />
                 </div>
                 <div>
@@ -89,14 +92,14 @@ export function ChatWidget() {
               </div>
               <button
                 onClick={() => setOpen(false)}
-                className="p-1.5 rounded-lg hover:bg-primary-foreground/10 transition-colors"
+                className="rounded-md p-1.5 transition-colors hover:bg-primary-foreground/10"
               >
                 <X className="w-4 h-4 text-primary-foreground" />
               </button>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div className="flex-1 space-y-3 overflow-y-auto p-4">
               {messages.map((msg, i) => (
                 <div
                   key={i}
@@ -119,8 +122,8 @@ export function ChatWidget() {
                     <div
                       className={`px-4 py-2.5 rounded-2xl text-sm ${
                         msg.type === "bot"
-                          ? "bg-muted text-foreground rounded-bl-md"
-                          : "bg-primary text-primary-foreground rounded-br-md"
+                          ? "rounded-bl-sm bg-secondary text-foreground"
+                          : "rounded-br-sm bg-primary text-primary-foreground"
                       }`}
                     >
                       {msg.text}
@@ -133,34 +136,37 @@ export function ChatWidget() {
               {lastMsg?.options && (
                 <div className="flex flex-wrap gap-2 pl-8">
                   {lastMsg.options.map((opt) => (
-                    <button
+                    <FilterChip
                       key={opt}
                       onClick={() => handleOption(opt)}
-                      className="px-3.5 py-2 rounded-xl border border-primary/30 text-primary text-xs font-medium hover:bg-primary hover:text-primary-foreground transition-colors"
+                      variant="default"
+                      size="sm"
+                      className="hover:border-primary/40"
                     >
                       {opt}
-                    </button>
+                    </FilterChip>
                   ))}
                 </div>
               )}
             </div>
 
             {/* Input */}
-            <div className="p-3 border-t border-border">
+            <div className="border-t border-border p-3">
               <div className="flex items-center gap-2">
-                <input
+                <Input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSend()}
                   placeholder="Digite sua mensagem..."
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-muted border-0 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="h-10 rounded-md border-border bg-secondary"
                 />
-                <button
+                <Button
                   onClick={handleSend}
-                  className="p-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary-hover transition-colors"
+                  size="icon"
+                  className="h-10 w-10 rounded-md"
                 >
                   <Send className="w-4 h-4" />
-                </button>
+                </Button>
               </div>
             </div>
           </motion.div>

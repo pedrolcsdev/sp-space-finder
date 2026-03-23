@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Building2, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
 
 const navItems = [
   { label: "Início", path: "/" },
@@ -12,48 +13,46 @@ export function Header() {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const isActive = (path: string) => location.pathname === path;
+
   return (
-    <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border/50">
-      <div className="container mx-auto flex items-center justify-between h-16 px-4 lg:px-8">
+    <header className="sticky top-0 z-50 border-b border-border/90 bg-card/90 backdrop-blur-xl">
+      <div className="page-container flex h-[72px] items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center transition-transform group-hover:scale-105">
+          <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary transition-transform group-hover:scale-105">
             <Building2 className="w-5 h-5 text-primary-foreground" />
           </div>
-          <span className="font-display font-bold text-lg text-foreground">
+          <span className="font-display text-lg font-semibold text-foreground">
             SP <span className="text-primary">Spaces</span>
           </span>
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden items-center gap-2 md:flex">
           {navItems.map((item) => {
-            const active = location.pathname === item.path;
             return (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  active
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+                  isActive(item.path)
+                    ? "bg-primary-soft text-primary"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                 }`}
               >
                 {item.label}
               </Link>
             );
           })}
-          <Link
-            to="/login"
-            className="ml-3 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary-hover transition-colors"
-          >
-            Entrar
-          </Link>
+          <Button asChild className="ml-3">
+            <Link to="/login">Entrar</Link>
+          </Button>
         </nav>
 
         {/* Mobile toggle */}
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="md:hidden p-2 rounded-lg hover:bg-muted transition-colors"
+          className="rounded-md p-2 transition-colors hover:bg-secondary md:hidden"
         >
           {mobileOpen ? (
             <X className="w-5 h-5" />
@@ -70,26 +69,28 @@ export function Header() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden border-t border-border bg-card overflow-hidden"
+            className="overflow-hidden border-t border-border bg-card md:hidden"
           >
-            <div className="px-4 py-4 flex flex-col gap-2">
+            <div className="page-container flex flex-col gap-2 py-4">
               {navItems.map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}
                   onClick={() => setMobileOpen(false)}
-                  className="px-4 py-3 rounded-xl text-sm font-medium hover:bg-muted transition-colors"
+                  className={`rounded-md px-4 py-3 text-sm font-medium transition-colors ${
+                    isActive(item.path)
+                      ? "bg-primary-soft text-primary"
+                      : "hover:bg-secondary"
+                  }`}
                 >
                   {item.label}
                 </Link>
               ))}
-              <Link
-                to="/login"
-                onClick={() => setMobileOpen(false)}
-                className="px-4 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold text-center"
-              >
-                Entrar
-              </Link>
+              <Button asChild className="mt-1 w-full">
+                <Link to="/login" onClick={() => setMobileOpen(false)}>
+                  Entrar
+                </Link>
+              </Button>
             </div>
           </motion.div>
         )}

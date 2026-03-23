@@ -10,6 +10,10 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 
 const steps = [
   {
@@ -78,31 +82,33 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen gradient-subtle flex flex-col">
+    <div className="gradient-subtle flex min-h-screen flex-col">
       {/* Progress */}
-      <div className="w-full bg-border h-1">
+      <div className="h-1 w-full bg-border">
         <motion.div
-          className="h-full bg-primary rounded-r-full"
+          className="h-full rounded-r-full bg-primary"
           animate={{ width: `${progress}%` }}
           transition={{ duration: 0.4 }}
         />
       </div>
 
-      <div className="flex-1 flex items-center justify-center p-4">
+      <div className="flex flex-1 items-center justify-center px-4 py-10">
         <div className="w-full max-w-lg">
           {/* Logo */}
-          <div className="text-center mb-8">
+          <div className="mb-7 text-center">
             <div className="inline-flex items-center gap-2.5 mb-2">
-              <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
+              <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary">
                 <Building2 className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="font-display font-bold text-lg text-foreground">
+              <span className="font-display text-lg font-semibold text-foreground">
                 SP Spaces
               </span>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Etapa {step + 1} de {steps.length}
-            </p>
+            <div>
+              <Badge variant="outline" size="sm">
+                Etapa {step + 1} de {steps.length}
+              </Badge>
+            </div>
           </div>
 
           <AnimatePresence mode="wait">
@@ -112,12 +118,12 @@ export default function Onboarding() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -30 }}
               transition={{ duration: 0.3 }}
-              className="bg-card rounded-2xl border border-border/50 card-shadow p-8"
             >
-              <h2 className="font-display text-xl font-bold text-foreground mb-1">
+              <Card size="lg" className="p-7 sm:p-8">
+              <h2 className="mb-1 font-display text-2xl font-semibold text-foreground">
                 {current.title}
               </h2>
-              <p className="text-sm text-muted-foreground mb-6">
+              <p className="mb-6 text-sm text-muted-foreground">
                 {current.subtitle}
               </p>
 
@@ -130,9 +136,9 @@ export default function Onboarding() {
                       </label>
                       <div className="relative">
                         <f.icon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <input
+                        <Input
                           placeholder={f.placeholder}
-                          className="w-full pl-10 pr-4 py-3 rounded-xl bg-muted border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                          className="pl-10"
                         />
                       </div>
                     </div>
@@ -148,30 +154,32 @@ export default function Onboarding() {
                       <button
                         key={opt.id}
                         onClick={() => toggleOption(opt.id)}
-                        className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left ${
+                        className={`w-full rounded-lg border-2 p-4 text-left transition-all ${
                           isSelected
-                            ? "border-primary bg-primary/5"
-                            : "border-border hover:border-primary/30"
+                            ? "border-primary bg-primary-soft"
+                            : "border-border hover:border-primary/40"
                         }`}
                       >
-                        <div
-                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                            isSelected
-                              ? "border-primary bg-primary"
-                              : "border-border"
-                          }`}
-                        >
-                          {isSelected && (
-                            <Check className="w-3.5 h-3.5 text-primary-foreground" />
-                          )}
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">
-                            {opt.label}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {opt.desc}
-                          </p>
+                        <div className="flex items-center gap-4">
+                          <div
+                            className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                              isSelected
+                                ? "border-primary bg-primary"
+                                : "border-border"
+                            }`}
+                          >
+                            {isSelected && (
+                              <Check className="w-3.5 h-3.5 text-primary-foreground" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-foreground">
+                              {opt.label}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {opt.desc}
+                            </p>
+                          </div>
                         </div>
                       </button>
                     );
@@ -179,25 +187,26 @@ export default function Onboarding() {
                 </div>
               )}
 
-              <div className="flex items-center justify-between mt-8">
-                <button
+              <div className="mt-8 flex items-center justify-between">
+                <Button
                   onClick={() => step > 0 && setStep(step - 1)}
+                  variant="ghost"
+                  size="sm"
                   className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
-                    step > 0
-                      ? "text-muted-foreground hover:text-foreground"
-                      : "invisible"
+                    step > 0 ? "text-muted-foreground hover:text-foreground" : "invisible"
                   }`}
                 >
                   <ArrowLeft className="w-4 h-4" /> Voltar
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={next}
-                  className="flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary-hover transition-colors"
+                  className="gap-2 px-6"
                 >
                   {step === steps.length - 1 ? "Concluir" : "Continuar"}
                   <ArrowRight className="w-4 h-4" />
-                </button>
+                </Button>
               </div>
+              </Card>
             </motion.div>
           </AnimatePresence>
         </div>
