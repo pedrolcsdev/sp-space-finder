@@ -1,6 +1,4 @@
 {
   "/(site)/page": "app/(site)/page.js",
-  "/(site)/encontrar/page": "app/(site)/encontrar/page.js",
-  "/(standalone)/login/page": "app/(standalone)/login/page.js",
-  "/(standalone)/onboarding/page": "app/(standalone)/onboarding/page.js"
+  "/(site)/encontrar/page": "app/(site)/encontrar/page.js"
 }
