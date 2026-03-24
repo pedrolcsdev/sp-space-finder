@@ -1,4 +1,7 @@
-import { Link, useLocation } from "react-router-dom";
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Building2, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -10,15 +13,15 @@ const navItems = [
 ];
 
 export function Header() {
-  const location = useLocation();
+  const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => pathname === path;
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/90 bg-card/90 backdrop-blur-xl">
       <div className="page-container flex h-[72px] items-center justify-between">
-        <Link to="/" className="flex items-center gap-2.5 group">
+        <Link href="/" className="flex items-center gap-2.5 group">
           <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary transition-transform group-hover:scale-105">
             <Building2 className="w-5 h-5 text-primary-foreground" />
           </div>
@@ -27,13 +30,12 @@ export function Header() {
           </span>
         </Link>
 
-        {/* Desktop nav */}
         <nav className="hidden items-center gap-2 md:flex">
           {navItems.map((item) => {
             return (
               <Link
                 key={item.path}
-                to={item.path}
+                href={item.path}
                 className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
                   isActive(item.path)
                     ? "bg-primary-soft text-primary"
@@ -45,14 +47,14 @@ export function Header() {
             );
           })}
           <Button asChild className="ml-3">
-            <Link to="/login">Entrar</Link>
+            <Link href="/login">Entrar</Link>
           </Button>
         </nav>
 
-        {/* Mobile toggle */}
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
           className="rounded-md p-2 transition-colors hover:bg-secondary md:hidden"
+          aria-label="Abrir menu"
         >
           {mobileOpen ? (
             <X className="w-5 h-5" />
@@ -62,7 +64,6 @@ export function Header() {
         </button>
       </div>
 
-      {/* Mobile menu */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
@@ -75,7 +76,7 @@ export function Header() {
               {navItems.map((item) => (
                 <Link
                   key={item.path}
-                  to={item.path}
+                  href={item.path}
                   onClick={() => setMobileOpen(false)}
                   className={`rounded-md px-4 py-3 text-sm font-medium transition-colors ${
                     isActive(item.path)
@@ -87,7 +88,7 @@ export function Header() {
                 </Link>
               ))}
               <Button asChild className="mt-1 w-full">
-                <Link to="/login" onClick={() => setMobileOpen(false)}>
+                <Link href="/login" onClick={() => setMobileOpen(false)}>
                   Entrar
                 </Link>
               </Button>

@@ -1,8 +1,10 @@
+"use client";
+
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { MessageCircle, X, Send, Bot, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { chatFlow } from "@/data/mockData";
+import type { ChatFlowStep } from "@/lib/data/contracts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FilterChip } from "@/components/ui/filter-chip";
@@ -13,12 +15,18 @@ interface Message {
   options?: string[];
 }
 
-export function ChatWidget() {
+interface ChatWidgetProps {
+  chatFlow: ChatFlowStep[];
+}
+
+export function ChatWidget({ chatFlow }: ChatWidgetProps) {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([chatFlow[0]]);
+  const [messages, setMessages] = useState<Message[]>(
+    chatFlow.length > 0 ? [chatFlow[0]] : [],
+  );
   const [step, setStep] = useState(1);
   const [input, setInput] = useState("");
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleOption = (option: string) => {
     const userMsg: Message = { type: "user", text: option };
@@ -33,7 +41,7 @@ export function ChatWidget() {
       if (step === chatFlow.length - 1) {
         setTimeout(() => {
           setOpen(false);
-          navigate("/chat-resultados");
+          router.push("/chat-resultados");
         }, 2000);
       }
     } else {
@@ -51,7 +59,6 @@ export function ChatWidget() {
 
   return (
     <>
-      {/* Floating Button */}
       <AnimatePresence>
         {!open && (
           <motion.button
@@ -60,13 +67,13 @@ export function ChatWidget() {
             exit={{ scale: 0 }}
             onClick={() => setOpen(true)}
             className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-xl bg-primary text-primary-foreground card-shadow-lg transition-transform hover:scale-105 hover:bg-primary-hover"
+            aria-label="Abrir chat"
           >
             <MessageCircle className="w-6 h-6" />
           </motion.button>
         )}
       </AnimatePresence>
 
-      {/* Chat Panel */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -75,7 +82,6 @@ export function ChatWidget() {
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             className="fixed bottom-4 right-4 z-50 flex h-[78vh] max-h-[560px] w-[380px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-xl border border-border bg-card card-shadow-lg sm:bottom-6 sm:right-6"
           >
-            {/* Header */}
             <div className="gradient-hero flex items-center justify-between px-5 py-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-foreground/20">
@@ -93,12 +99,12 @@ export function ChatWidget() {
               <button
                 onClick={() => setOpen(false)}
                 className="rounded-md p-1.5 transition-colors hover:bg-primary-foreground/10"
+                aria-label="Fechar chat"
               >
                 <X className="w-4 h-4 text-primary-foreground" />
               </button>
             </div>
 
-            {/* Messages */}
             <div className="flex-1 space-y-3 overflow-y-auto p-4">
               {messages.map((msg, i) => (
                 <div
@@ -132,7 +138,6 @@ export function ChatWidget() {
                 </div>
               ))}
 
-              {/* Options */}
               {lastMsg?.options && (
                 <div className="flex flex-wrap gap-2 pl-8">
                   {lastMsg.options.map((opt) => (
@@ -150,7 +155,6 @@ export function ChatWidget() {
               )}
             </div>
 
-            {/* Input */}
             <div className="border-t border-border p-3">
               <div className="flex items-center gap-2">
                 <Input

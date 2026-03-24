@@ -1,0 +1,5 @@
+{
+  "/(site)/page": "app/(site)/page.js",
+  "/(site)/encontrar/page": "app/(site)/encontrar/page.js",
+  "/(site)/chat-resultados/page": "app/(site)/chat-resultados/page.js"
+}
