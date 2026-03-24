@@ -26,21 +26,6 @@
       "static/chunks/main-app.js",
       "static/chunks/app/(site)/encontrar/page.js"
     ],
-    "/(standalone)/onboarding/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(standalone)/onboarding/page.js"
-    ],
-    "/(standalone)/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(standalone)/layout.js"
-    ],
-    "/(standalone)/login/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(standalone)/login/page.js"
-    ],
     "/(site)/chat-resultados/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
