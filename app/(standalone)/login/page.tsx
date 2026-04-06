@@ -1,5 +1,9 @@
 import LoginScreen from "@/screens/Login";
 
-export default function LoginPage() {
-  return <LoginScreen />;
+interface LoginPageProps {
+  searchParams?: { redirect?: string };
+}
+
+export default function LoginPage({ searchParams }: LoginPageProps) {
+  return <LoginScreen redirectTo={searchParams?.redirect} />;
 }

@@ -12,6 +12,9 @@ export interface Space {
   recommended?: boolean;
   matchPercentage?: number;
   description: string;
+  images?: string[];
+  usageRules?: string[];
+  commercialInfo?: string;
 }
 
 export interface Category {

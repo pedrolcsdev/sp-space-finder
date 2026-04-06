@@ -1,5 +1,6 @@
 import { Check, MapPin, Users, Star, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import type { Space } from "@/lib/data/contracts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -91,8 +92,8 @@ export function SpaceCard({
                 /hora
               </span>
             </span>
-            <Button size="sm" className="h-9 rounded-md px-3.5 text-xs">
-              Ver detalhes
+            <Button asChild size="sm" className="h-9 rounded-md px-3.5 text-xs">
+              <Link href={`/espacos/${space.id}`}>Ver detalhes</Link>
             </Button>
           </div>
         )}

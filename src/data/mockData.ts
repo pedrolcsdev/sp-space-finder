@@ -24,7 +24,40 @@ export const categories: Category[] = [
   },
 ];
 
-export const spaces: Space[] = [
+const defaultRulesByCategory: Record<Space["category"], string[]> = {
+  auditorium: [
+    "Entrada permitida 30 minutos antes do início da reserva.",
+    "É proibido alterar o layout sem autorização prévia.",
+    "Eventos com som alto devem respeitar os limites do condomínio.",
+  ],
+  dental: [
+    "Obrigatório seguir protocolos de biossegurança durante todo o uso.",
+    "Materiais de consumo devem ser levados pelo profissional.",
+    "Ao final da reserva, descarte resíduos em local apropriado.",
+  ],
+  meeting: [
+    "Respeitar horário de início e término para evitar cobranças extras.",
+    "Não é permitido fixar objetos em paredes e mobiliário.",
+    "Manter o ambiente organizado e silencioso nas áreas comuns.",
+  ],
+};
+
+const extraGalleryByCategory: Record<Space["category"], string[]> = {
+  auditorium: [
+    "https://images.unsplash.com/photo-1511578314322-379afb476865?w=1200&h=800&fit=crop",
+    "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=1200&h=800&fit=crop",
+  ],
+  dental: [
+    "https://images.unsplash.com/photo-1581594693702-fbdc51b2763b?w=1200&h=800&fit=crop",
+    "https://images.unsplash.com/photo-1629909615957-be4f8c63a7ea?w=1200&h=800&fit=crop",
+  ],
+  meeting: [
+    "https://images.unsplash.com/photo-1577412647305-991150c7d163?w=1200&h=800&fit=crop",
+    "https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=1200&h=800&fit=crop",
+  ],
+};
+
+const baseSpaces: Space[] = [
   {
     id: "1",
     name: "Auditório Premium Central",
@@ -264,6 +297,13 @@ export const spaces: Space[] = [
       "Espaço corporativo para reuniões estratégicas e dinâmicas de time.",
   },
 ];
+
+export const spaces: Space[] = baseSpaces.map((space) => ({
+  ...space,
+  images: [space.image, ...extraGalleryByCategory[space.category]],
+  usageRules: defaultRulesByCategory[space.category],
+  commercialInfo: `Reserva flexível por hora. A partir de R$ ${space.pricePerHour}/hora.`,
+}));
 
 export const chatFlow: ChatFlowStep[] = [
   {

@@ -1,16 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Building2, Mail, Lock, Chrome } from "lucide-react";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { MOCK_AUTH_COOKIE } from "@/lib/auth/mockAuth";
 
-export default function LoginScreen() {
+interface LoginScreenProps {
+  redirectTo?: string;
+}
+
+export default function LoginScreen({ redirectTo = "/" }: LoginScreenProps) {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const alreadyLoggedIn = document.cookie.includes(`${MOCK_AUTH_COOKIE}=1`);
+
+    if (alreadyLoggedIn) {
+      router.replace(redirectTo);
+    }
+  }, [redirectTo, router]);
+
+  const handleLogin = () => {
+    setIsSubmitting(true);
+    document.cookie = `${MOCK_AUTH_COOKIE}=1; path=/; max-age=${60 * 60 * 24 * 30}; samesite=lax`;
+    router.push(redirectTo);
+  };
 
   return (
     <div className="gradient-subtle flex min-h-screen items-center justify-center px-4 py-12">
@@ -37,7 +59,12 @@ export default function LoginScreen() {
         </div>
 
         <Card size="lg" className="space-y-5">
-          <Button variant="secondary" className="w-full gap-3">
+          <Button
+            variant="secondary"
+            className="w-full gap-3"
+            onClick={handleLogin}
+            disabled={isSubmitting}
+          >
             <Chrome className="w-4 h-4" />
             Entrar com Google
           </Button>
@@ -81,7 +108,9 @@ export default function LoginScreen() {
             </div>
           </div>
 
-          <Button className="w-full">Entrar</Button>
+          <Button className="w-full" onClick={handleLogin} disabled={isSubmitting}>
+            {isSubmitting ? "Entrando..." : "Entrar"}
+          </Button>
 
           <p className="text-center text-sm text-muted-foreground">
             Não tem conta?{" "}
