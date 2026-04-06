@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
   CalendarDays,
@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { MOCK_AUTH_COOKIE } from "@/lib/auth/mockAuth";
 
 type AvailabilityStatus = "idle" | "available" | "unavailable";
 type ReservationType = "single" | "package";
@@ -167,6 +168,7 @@ interface ReserveSpaceScreenProps {
 
 export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
   const [reservationType, setReservationType] = useState<ReservationType>("single");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [form, setForm] = useState<ReservationForm>({
     date: getDefaultDate(),
     time: "",
@@ -216,6 +218,22 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
 
   const handleEditReservation = () => {
     setAvailabilityStatus("idle");
+  };
+
+  useEffect(() => {
+    setIsLoggedIn(document.cookie.includes(`${MOCK_AUTH_COOKIE}=1`));
+  }, []);
+
+  const ensureLoginBeforeCheckout = (targetUrl: string) => {
+    const logged = document.cookie.includes(`${MOCK_AUTH_COOKIE}=1`);
+    setIsLoggedIn(logged);
+
+    if (!logged) {
+      window.location.assign(`/login?redirect=${encodeURIComponent(`/reservar/${space.id}`)}`);
+      return;
+    }
+
+    window.open(targetUrl, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -449,13 +467,20 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
                 <Button variant="secondary" size="lg" onClick={handleEditReservation}>
                   Editar dados
                 </Button>
-                <Button asChild size="lg" className="gap-2">
-                  <a href={whatsappLink} target="_blank" rel="noreferrer">
-                    <MessageCircle className="h-4 w-4" />
-                    Confirmar e continuar no WhatsApp
-                  </a>
+                <Button
+                  size="lg"
+                  className="gap-2"
+                  onClick={() => ensureLoginBeforeCheckout(whatsappLink)}
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  Confirmar e continuar no WhatsApp
                 </Button>
               </div>
+              {!isLoggedIn && (
+                <p className="text-sm text-muted-foreground">
+                  Antes de ir para o WhatsApp, faça login para confirmar a solicitação.
+                </p>
+              )}
             </div>
           )}
 
@@ -557,7 +582,7 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
                   disabled={!isPackageReady}
                   className="gap-2"
                   onClick={() => {
-                    window.open(packageWhatsappLink, "_blank", "noopener,noreferrer");
+                    ensureLoginBeforeCheckout(packageWhatsappLink);
                   }}
                 >
                   <MessageCircle className="h-4 w-4" />
@@ -567,6 +592,11 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
                   <Link href={`/espacos/${space.id}`}>Voltar aos detalhes</Link>
                 </Button>
               </div>
+              {!isLoggedIn && (
+                <p className="text-sm text-muted-foreground">
+                  Antes de solicitar o pacote no WhatsApp, faça login no protótipo.
+                </p>
+              )}
             </div>
           )}
         </Card>
