@@ -1,4 +1,4 @@
-// File: D:\code\sp-space-finder\app\(site)\layout.tsx
+// File: /Users/pedrolucas/code/sp-space-finder/app/(site)/layout.tsx
 import * as entry from '../../../../app/(site)/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

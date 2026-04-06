@@ -1065,6 +1065,9 @@ h1,
 .min-h-\[80px\]{
   min-height: 80px;
 }
+.min-h-\[96px\]{
+  min-height: 96px;
+}
 .min-h-screen{
   min-height: 100vh;
 }
@@ -1177,9 +1180,6 @@ h1,
 }
 .min-w-\[var\(--radix-select-trigger-width\)\]{
   min-width: var(--radix-select-trigger-width);
-}
-.max-w-2xl{
-  max-width: 42rem;
 }
 .max-w-3xl{
   max-width: 48rem;
@@ -1550,8 +1550,14 @@ h1,
 .border-primary-foreground\/25{
   border-color: hsl(var(--primary-foreground) / 0.25);
 }
+.border-primary\/20{
+  border-color: hsl(var(--primary) / 0.2);
+}
 .border-sidebar-border{
   border-color: hsl(var(--sidebar-border));
+}
+.border-success\/30{
+  border-color: hsl(var(--success) / 0.3);
 }
 .border-transparent{
   border-color: transparent;
@@ -1623,11 +1629,17 @@ h1,
 .bg-primary-soft{
   background-color: hsl(var(--primary-soft));
 }
+.bg-primary-soft\/70{
+  background-color: hsl(var(--primary-soft) / 0.7);
+}
 .bg-primary\/10{
   background-color: hsl(var(--primary) / 0.1);
 }
 .bg-secondary{
   background-color: hsl(var(--secondary));
+}
+.bg-secondary\/40{
+  background-color: hsl(var(--secondary) / 0.4);
 }
 .bg-secondary\/50{
   background-color: hsl(var(--secondary) / 0.5);
@@ -1640,6 +1652,9 @@ h1,
 }
 .bg-success{
   background-color: hsl(var(--success));
+}
+.bg-success\/10{
+  background-color: hsl(var(--success) / 0.1);
 }
 .bg-success\/15{
   background-color: hsl(var(--success) / 0.15);
@@ -1795,6 +1810,9 @@ h1,
 }
 .pl-8{
   padding-left: 2rem;
+}
+.pl-9{
+  padding-left: 2.25rem;
 }
 .pr-2{
   padding-right: 0.5rem;
@@ -1952,6 +1970,9 @@ h1,
 }
 .text-muted-foreground{
   color: hsl(var(--muted-foreground));
+}
+.text-muted-foreground\/60{
+  color: hsl(var(--muted-foreground) / 0.6);
 }
 .text-popover-foreground{
   color: hsl(var(--popover-foreground));
@@ -3478,10 +3499,6 @@ h1,
     justify-content: flex-end;
   }
 
-  .sm\:justify-center{
-    justify-content: center;
-  }
-
   .sm\:gap-2\.5{
     gap: 0.625rem;
   }
@@ -3675,6 +3692,10 @@ h1,
   .xl\:grid-cols-\[1fr_360px\]{
     grid-template-columns: 1fr 360px;
   }
+
+  .xl\:grid-cols-\[minmax\(0\2c 1fr\)_360px\]{
+    grid-template-columns: minmax(0,1fr) 360px;
+  }
 }
 
 .\[\&\:has\(\[aria-selected\]\)\]\:bg-accent:has([aria-selected]){
@@ -3782,6 +3803,10 @@ h1,
 
 .\[\&\>svg\]\:text-sidebar-accent-foreground>svg{
   color: hsl(var(--sidebar-accent-foreground));
+}
+
+.\[\&\>svg\]\:text-success>svg{
+  color: hsl(var(--success));
 }
 
 .\[\&\>svg\~\*\]\:pl-7>svg~*{

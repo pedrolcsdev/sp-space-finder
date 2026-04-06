@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Building2, Mail, Lock, Chrome } from "lucide-react";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
@@ -14,24 +13,41 @@ interface LoginScreenProps {
   redirectTo?: string;
 }
 
-export default function LoginScreen({ redirectTo = "/" }: LoginScreenProps) {
-  const router = useRouter();
+const normalizeRedirectPath = (value?: string) => {
+  if (!value) {
+    return "/encontrar";
+  }
+
+  let parsed = value;
+
+  try {
+    parsed = decodeURIComponent(value);
+  } catch {
+    parsed = value;
+  }
+
+  if (!parsed.startsWith("/") || parsed.startsWith("//")) {
+    return "/encontrar";
+  }
+
+  return parsed;
+};
+
+export default function LoginScreen({ redirectTo }: LoginScreenProps) {
+  const safeRedirectTo = normalizeRedirectPath(redirectTo);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    const alreadyLoggedIn = document.cookie.includes(`${MOCK_AUTH_COOKIE}=1`);
-
-    if (alreadyLoggedIn) {
-      router.replace(redirectTo);
-    }
-  }, [redirectTo, router]);
-
   const handleLogin = () => {
     setIsSubmitting(true);
     document.cookie = `${MOCK_AUTH_COOKIE}=1; path=/; max-age=${60 * 60 * 24 * 30}; samesite=lax`;
-    router.push(redirectTo);
+    window.location.assign(safeRedirectTo);
+  };
+
+  const handleClearMockLogin = () => {
+    document.cookie = `${MOCK_AUTH_COOKIE}=; path=/; max-age=0; samesite=lax`;
+    setIsSubmitting(false);
   };
 
   return (
@@ -54,7 +70,7 @@ export default function LoginScreen({ redirectTo = "/" }: LoginScreenProps) {
             Bem-vindo de volta
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Entre na sua conta para continuar
+            Login fictício para teste do protótipo. Use qualquer e-mail/senha.
           </p>
         </div>
 
@@ -110,6 +126,10 @@ export default function LoginScreen({ redirectTo = "/" }: LoginScreenProps) {
 
           <Button className="w-full" onClick={handleLogin} disabled={isSubmitting}>
             {isSubmitting ? "Entrando..." : "Entrar"}
+          </Button>
+
+          <Button variant="ghost" className="w-full" onClick={handleClearMockLogin}>
+            Limpar login de teste
           </Button>
 
           <p className="text-center text-sm text-muted-foreground">
