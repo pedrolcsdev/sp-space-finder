@@ -1,8 +1,6 @@
 {
-  "/(site)/reservar/[id]/page": "app/(site)/reservar/[id]/page.js",
   "/(site)/page": "app/(site)/page.js",
   "/(site)/espacos/[id]/page": "app/(site)/espacos/[id]/page.js",
-  "/(standalone)/login/page": "app/(standalone)/login/page.js",
-  "/(standalone)/onboarding/page": "app/(standalone)/onboarding/page.js",
-  "/(site)/encontrar/page": "app/(site)/encontrar/page.js"
+  "/(site)/reservar/[id]/page": "app/(site)/reservar/[id]/page.js",
+  "/(standalone)/login/page": "app/(standalone)/login/page.js"
 }

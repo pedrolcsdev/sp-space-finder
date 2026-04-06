@@ -40,16 +40,6 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/(standalone)/layout.js"
-    ],
-    "/(standalone)/onboarding/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(standalone)/onboarding/page.js"
-    ],
-    "/(site)/encontrar/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(site)/encontrar/page.js"
     ]
   }
 }
