@@ -21,6 +21,16 @@
       "static/chunks/main-app.js",
       "static/chunks/app/not-found.js"
     ],
+    "/(site)/espacos/[id]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(site)/espacos/[id]/page.js"
+    ],
+    "/(site)/reservar/[id]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(site)/reservar/[id]/page.js"
+    ],
     "/(standalone)/login/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -31,20 +41,15 @@
       "static/chunks/main-app.js",
       "static/chunks/app/(standalone)/layout.js"
     ],
+    "/(standalone)/onboarding/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(standalone)/onboarding/page.js"
+    ],
     "/(site)/encontrar/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/(site)/encontrar/page.js"
-    ],
-    "/(site)/espacos/[id]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(site)/espacos/[id]/page.js"
-    ],
-    "/(site)/reservar/[id]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(site)/reservar/[id]/page.js"
     ]
   }
 }
