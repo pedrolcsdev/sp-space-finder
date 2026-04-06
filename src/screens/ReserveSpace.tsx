@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   AlertCircle,
   CalendarDays,
@@ -26,6 +27,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { MOCK_AUTH_COOKIE } from "@/lib/auth/mockAuth";
+import {
+  DEFAULT_TIME_SLOTS,
+  getTodayISODate,
+  getUnavailableTimes,
+  sanitizeReservationPreselection,
+} from "@/lib/availability/spaceAvailability";
 
 type AvailabilityStatus = "idle" | "available" | "unavailable";
 type ReservationType = "single" | "package";
@@ -43,19 +50,6 @@ type PackageForm = {
   occurrences: number;
   notes: string;
 };
-
-const TIME_OPTIONS = [
-  "08:00",
-  "09:00",
-  "10:00",
-  "11:00",
-  "13:00",
-  "14:00",
-  "15:00",
-  "16:00",
-  "17:00",
-  "18:00",
-] as const;
 
 const WHATSAPP_PHONE = "5511999999999";
 const PACKAGE_RECURRENCE_OPTIONS: Array<{
@@ -85,37 +79,6 @@ const formatDate = (value: string) => {
     month: "2-digit",
     year: "numeric",
   }).format(date);
-};
-
-const getDefaultDate = () => {
-  const now = new Date();
-  const tzOffsetMs = now.getTimezoneOffset() * 60000;
-
-  return new Date(now.getTime() - tzOffsetMs).toISOString().slice(0, 10);
-};
-
-const getUnavailableTimes = (spaceId: string, date: string): string[] => {
-  if (!date) {
-    return [];
-  }
-
-  const day = Number(date.slice(-2));
-  const numericSpaceId = Number.parseInt(spaceId, 10) || 1;
-  const ruleSeed = (day + numericSpaceId) % 4;
-
-  if (ruleSeed === 0) {
-    return ["10:00", "14:00", "17:00"];
-  }
-
-  if (ruleSeed === 1) {
-    return ["09:00", "13:00"];
-  }
-
-  if (ruleSeed === 2) {
-    return ["11:00", "15:00", "18:00"];
-  }
-
-  return ["08:00", "16:00"];
 };
 
 const buildWhatsAppMessage = (space: Space, form: ReservationForm) => {
@@ -167,10 +130,14 @@ interface ReserveSpaceScreenProps {
 }
 
 export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
+  const searchParams = useSearchParams();
+  const todayISODate = useMemo(() => getTodayISODate(), []);
+  const preselectedDate = searchParams.get("date");
+  const preselectedTime = searchParams.get("time");
   const [reservationType, setReservationType] = useState<ReservationType>("single");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [form, setForm] = useState<ReservationForm>({
-    date: getDefaultDate(),
+    date: todayISODate,
     time: "",
     people: Math.min(2, space.capacity),
     notes: "",
@@ -223,6 +190,24 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
   useEffect(() => {
     setIsLoggedIn(document.cookie.includes(`${MOCK_AUTH_COOKIE}=1`));
   }, []);
+
+  useEffect(() => {
+    const normalizedSelection = sanitizeReservationPreselection(
+      space.id,
+      {
+        date: preselectedDate,
+        time: preselectedTime,
+      },
+      { todayISODate },
+    );
+
+    setForm((current) => ({
+      ...current,
+      date: normalizedSelection.date,
+      time: normalizedSelection.time,
+    }));
+    setAvailabilityStatus("idle");
+  }, [preselectedDate, preselectedTime, space.id, todayISODate]);
 
   const ensureLoginBeforeCheckout = (targetUrl: string) => {
     const logged = document.cookie.includes(`${MOCK_AUTH_COOKIE}=1`);
@@ -304,11 +289,21 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
                     <Input
                       id="reservation-date"
                       type="date"
-                      min={getDefaultDate()}
+                      min={todayISODate}
                       value={form.date}
                       onChange={(event) => {
                         const nextDate = event.target.value;
-                        setForm((current) => ({ ...current, date: nextDate }));
+                        setForm((current) => {
+                          const nextUnavailableTimes = getUnavailableTimes(
+                            space.id,
+                            nextDate,
+                          );
+                          const nextTime = nextUnavailableTimes.includes(current.time)
+                            ? ""
+                            : current.time;
+
+                          return { ...current, date: nextDate, time: nextTime };
+                        });
                         setAvailabilityStatus("idle");
                       }}
                       className="pl-9"
@@ -330,7 +325,7 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
                       <SelectValue placeholder="Selecione um horário" />
                     </SelectTrigger>
                     <SelectContent>
-                      {TIME_OPTIONS.map((timeOption) => {
+                      {DEFAULT_TIME_SLOTS.map((timeOption) => {
                         const blocked = unavailableTimes.includes(timeOption);
 
                         return (
@@ -392,7 +387,9 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
               <div className="rounded-lg border border-border bg-card p-3 text-sm text-muted-foreground">
                 Horários simulados como indisponíveis para {formatDate(form.date)}:{" "}
                 <span className="font-medium text-foreground">
-                  {unavailableTimes.join(", ")}
+                  {unavailableTimes.length > 0
+                    ? unavailableTimes.join(", ")
+                    : "Nenhum horário bloqueado"}
                 </span>
               </div>
 

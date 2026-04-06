@@ -10,8 +10,8 @@ import {
 } from "lucide-react";
 import type { Space } from "@/lib/data/contracts";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { SpaceAvailabilitySidebar } from "@/components/SpaceAvailabilitySidebar";
 
 interface SpaceDetailsScreenProps {
   space: Space;
@@ -145,7 +145,7 @@ export default function SpaceDetailsScreen({ space }: SpaceDetailsScreenProps) {
           </Card>
         </div>
 
-        <aside className="xl:sticky xl:top-24 xl:h-fit">
+        <aside className="space-y-4 xl:sticky xl:top-24 xl:h-fit">
           <Card className="space-y-5 p-6">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -166,11 +166,12 @@ export default function SpaceDetailsScreen({ space }: SpaceDetailsScreenProps) {
               </p>
               <p className="mt-1 text-sm text-muted-foreground">{commercialInfo}</p>
             </div>
-
-            <Button asChild size="lg" className="w-full">
-              <Link href={`/reservar/${space.id}`}>Reservar</Link>
-            </Button>
           </Card>
+
+          <SpaceAvailabilitySidebar
+            spaceId={space.id}
+            reservePath={`/reservar/${space.id}`}
+          />
         </aside>
       </div>
     </div>
