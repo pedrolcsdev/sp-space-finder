@@ -1,8 +1,4 @@
 {
   "/(site)/page": "app/(site)/page.js",
-  "/(site)/espacos/[id]/page": "app/(site)/espacos/[id]/page.js",
-  "/(site)/reservar/[id]/page": "app/(site)/reservar/[id]/page.js",
-  "/(standalone)/login/page": "app/(standalone)/login/page.js",
-  "/(site)/encontrar/page": "app/(site)/encontrar/page.js",
-  "/(site)/chat-resultados/page": "app/(site)/chat-resultados/page.js"
+  "/(site)/encontrar/page": "app/(site)/encontrar/page.js"
 }
