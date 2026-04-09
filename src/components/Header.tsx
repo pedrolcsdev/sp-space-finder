@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Building2, Menu, X } from "lucide-react";
+import { ArrowRight, Building2, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -40,20 +40,20 @@ export function Header() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/90 bg-card/90 backdrop-blur-xl">
-      <div className="page-container grid h-[72px] grid-cols-[auto_1fr_auto] items-center gap-4">
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary transition-transform group-hover:scale-105">
+    <header className="sticky top-0 z-50 border-b border-white/50 bg-background/80 backdrop-blur-xl">
+      <div className="page-container grid h-[82px] grid-cols-[auto_1fr_auto] items-center gap-4">
+        <Link href="/" className="group flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20 transition-transform group-hover:scale-[1.03]">
             <Building2 className="w-5 h-5 text-primary-foreground" />
           </div>
-          <span className="font-display text-lg font-semibold text-foreground">
+          <span className="font-display text-lg font-semibold tracking-[-0.03em] text-foreground sm:text-xl">
             SP <span className="text-primary">Spaces</span>
           </span>
         </Link>
 
         <nav
           aria-label="Categorias de espaços"
-          className="hidden items-center justify-center gap-1 lg:flex"
+          className="hidden items-center justify-center gap-1 xl:flex"
         >
           {categoryItems.map((category) => {
             const active = isCategoryActive(category.id);
@@ -62,10 +62,10 @@ export function Header() {
               <Link
                 key={category.id}
                 href={`/encontrar?category=${encodeURIComponent(category.id)}`}
-                className={`rounded-md px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+                className={`rounded-full px-4 py-2.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
                   active
-                    ? "bg-primary-soft text-primary"
-                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
+                    : "text-muted-foreground hover:bg-white hover:text-foreground hover:shadow-sm"
                 }`}
               >
                 {category.name}
@@ -80,24 +80,27 @@ export function Header() {
               <Link
                 key={item.path}
                 href={item.path}
-                className={`rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+                className={`rounded-full px-4 py-2.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
                   isActive(item.path)
-                    ? "bg-primary-soft text-primary"
-                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    ? "bg-white text-primary shadow-sm"
+                    : "text-muted-foreground hover:bg-white hover:text-foreground hover:shadow-sm"
                 }`}
               >
                 {item.label}
               </Link>
             );
           })}
-          <Button asChild className="ml-3">
-            <Link href="/login">Entrar</Link>
+          <Button asChild className="ml-3 rounded-full px-5">
+            <Link href="/login">
+              Entrar
+              <ArrowRight className="h-4 w-4" />
+            </Link>
           </Button>
         </nav>
 
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="rounded-md p-2 transition-colors hover:bg-secondary md:hidden"
+          className="rounded-2xl border border-border/70 bg-white/80 p-2.5 shadow-sm transition-colors hover:bg-white md:hidden"
           aria-label="Abrir menu"
         >
           {mobileOpen ? (
@@ -114,7 +117,7 @@ export function Header() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden border-t border-border bg-card md:hidden"
+            className="overflow-hidden border-t border-white/60 bg-background/95 md:hidden"
           >
             <div className="page-container flex flex-col gap-2 py-4">
               {navItems.map((item) => (
@@ -122,16 +125,16 @@ export function Header() {
                   key={item.path}
                   href={item.path}
                   onClick={() => setMobileOpen(false)}
-                  className={`rounded-md px-4 py-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+                  className={`rounded-2xl px-4 py-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
                     isActive(item.path)
-                      ? "bg-primary-soft text-primary"
-                      : "hover:bg-secondary"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-white/75 hover:bg-white"
                   }`}
                 >
                   {item.label}
                 </Link>
               ))}
-              <div className="my-1 border-t border-border/80 pt-2">
+              <div className="my-1 border-t border-border/80 pt-3">
                 <p className="px-4 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Categorias
                 </p>
@@ -141,10 +144,10 @@ export function Header() {
                       key={category.id}
                       href={`/encontrar?category=${encodeURIComponent(category.id)}`}
                       onClick={() => setMobileOpen(false)}
-                      className={`rounded-md px-4 py-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+                      className={`rounded-2xl px-4 py-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
                         isCategoryActive(category.id)
-                          ? "bg-primary-soft text-primary"
-                          : "hover:bg-secondary"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-white/75 hover:bg-white"
                       }`}
                     >
                       {category.name}

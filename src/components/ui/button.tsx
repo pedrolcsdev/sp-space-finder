@@ -5,24 +5,25 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold ring-offset-background transition-all duration-200 focus-visible:ring-0 disabled:pointer-events-none disabled:opacity-55 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-semibold ring-offset-background transition-all duration-200 focus-visible:ring-0 disabled:pointer-events-none disabled:opacity-55 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow-sm hover:bg-primary-hover active:bg-primary-hover/95",
+          "bg-primary text-primary-foreground shadow-sm shadow-primary/15 hover:-translate-y-0.5 hover:bg-primary-hover hover:shadow-md hover:shadow-primary/20 active:translate-y-0",
         secondary:
-          "border border-border bg-card text-foreground hover:bg-secondary hover:border-border/80",
+          "border border-border/80 bg-card/95 text-foreground shadow-sm hover:-translate-y-0.5 hover:bg-secondary hover:border-border hover:shadow-md",
         outline:
-          "border border-border bg-card text-foreground hover:bg-secondary hover:border-border/80",
-        ghost: "text-muted-foreground hover:bg-secondary hover:text-foreground",
+          "border border-border/80 bg-transparent text-foreground hover:border-primary/25 hover:bg-primary/5",
+        ghost:
+          "text-muted-foreground hover:bg-secondary/80 hover:text-foreground",
         destructive: "bg-destructive text-destructive-foreground hover:opacity-95",
         link: "h-auto rounded-none p-0 text-primary underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-11 px-4 text-sm [&_svg]:size-4",
-        sm: "h-9 px-3 text-sm [&_svg]:size-4",
-        lg: "h-[52px] px-5 text-base [&_svg]:size-[18px]",
+        default: "h-11 px-[18px] text-sm [&_svg]:size-4",
+        sm: "h-9 px-3.5 text-sm [&_svg]:size-4",
+        lg: "h-[54px] px-6 text-base [&_svg]:size-[18px]",
         icon: "h-11 w-11 [&_svg]:size-4",
       },
     },
