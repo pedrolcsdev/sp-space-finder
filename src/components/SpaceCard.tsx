@@ -85,7 +85,7 @@ export function SpaceCard({
               <h3 className="line-clamp-2 text-[20px] font-semibold leading-tight tracking-[-0.03em] text-foreground">
                 {space.name}
               </h3>
-              <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-3 text-sm text-foreground/72">
                 <span className="flex items-center gap-1.5">
                   <MapPin className="w-3.5 h-3.5" />
                   <span className="truncate max-w-[210px]">{space.location}</span>
@@ -104,7 +104,7 @@ export function SpaceCard({
             </div>
           </div>
 
-          <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">
+          <p className="line-clamp-2 text-sm leading-6 text-foreground/68">
             {space.description}
           </p>
 
@@ -131,7 +131,7 @@ export function SpaceCard({
                 <span className="text-2xl font-bold tracking-[-0.04em] text-foreground">
                   R$ {space.pricePerHour}
                 </span>
-                <span className="ml-1 text-sm font-medium text-muted-foreground">
+                <span className="ml-1 text-sm font-medium text-foreground/65">
                   /hora
                 </span>
               </div>
