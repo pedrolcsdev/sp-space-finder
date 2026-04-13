@@ -19,43 +19,100 @@ interface ChatWidgetProps {
   chatFlow: ChatFlowStep[];
 }
 
+interface ChatOpenDetail {
+  message?: string;
+  autoSend?: boolean;
+}
+
 export function ChatWidget({ chatFlow }: ChatWidgetProps) {
+  const initialMessages = chatFlow.length > 0 ? [chatFlow[0]] : [];
+  const initialStep = chatFlow.length > 0 ? 1 : 0;
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>(
-    chatFlow.length > 0 ? [chatFlow[0]] : [],
-  );
-  const [step, setStep] = useState(1);
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [step, setStep] = useState(initialStep);
   const [input, setInput] = useState("");
   const router = useRouter();
 
-  useEffect(() => {
-    const handleOpenChat = () => setOpen(true);
-    window.addEventListener("spspaces:open-chat", handleOpenChat);
+  const resetConversation = () => {
+    setMessages(initialMessages);
+    setStep(initialStep);
+    setInput("");
+  };
 
-    return () => {
-      window.removeEventListener("spspaces:open-chat", handleOpenChat);
-    };
-  }, []);
+  const applyUserMessage = (
+    userText: string,
+    currentMessages: Message[],
+    currentStep: number,
+  ) => {
+    const trimmed = userText.trim();
 
-  const handleOption = (option: string) => {
-    const userMsg: Message = { type: "user", text: option };
-    const nextMessages = [...messages, userMsg];
+    if (!trimmed) return;
 
-    if (step < chatFlow.length) {
-      const botMsg = chatFlow[step];
-      nextMessages.push(botMsg);
+    const nextMessages: Message[] = [
+      ...currentMessages,
+      { type: "user", text: trimmed },
+    ];
+
+    if (currentStep < chatFlow.length) {
+      nextMessages.push(chatFlow[currentStep]);
       setMessages(nextMessages);
-      setStep(step + 1);
+      setStep(currentStep + 1);
 
-      if (step === chatFlow.length - 1) {
+      if (currentStep === chatFlow.length - 1) {
         setTimeout(() => {
           setOpen(false);
           router.push("/chat-resultados");
         }, 2000);
       }
-    } else {
-      setMessages(nextMessages);
+
+      return;
     }
+
+    setMessages(nextMessages);
+  };
+
+  useEffect(() => {
+    const handleOpenChat = (event: Event) => {
+      const detail = (event as CustomEvent<ChatOpenDetail | undefined>).detail;
+      const nextInitialMessages = chatFlow.length > 0 ? [chatFlow[0]] : [];
+      const nextInitialStep = chatFlow.length > 0 ? 1 : 0;
+
+      setOpen(true);
+
+      if (detail?.autoSend && detail.message?.trim()) {
+        const nextMessages: Message[] = [
+          ...nextInitialMessages,
+          { type: "user", text: detail.message.trim() },
+        ];
+
+        if (nextInitialStep < chatFlow.length) {
+          nextMessages.push(chatFlow[nextInitialStep]);
+          setStep(nextInitialStep + 1);
+
+          if (nextInitialStep === chatFlow.length - 1) {
+            setTimeout(() => {
+              setOpen(false);
+              router.push("/chat-resultados");
+            }, 2000);
+          }
+        } else {
+          setStep(nextInitialStep);
+        }
+
+        setMessages(nextMessages);
+        setInput("");
+      }
+    };
+
+    window.addEventListener("spspaces:open-chat", handleOpenChat);
+
+    return () => {
+      window.removeEventListener("spspaces:open-chat", handleOpenChat);
+    };
+  }, [chatFlow, router]);
+
+  const handleOption = (option: string) => {
+    applyUserMessage(option, messages, step);
   };
 
   const handleSend = () => {
@@ -74,7 +131,10 @@ export function ChatWidget({ chatFlow }: ChatWidgetProps) {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0 }}
-            onClick={() => setOpen(true)}
+            onClick={() => {
+              resetConversation();
+              setOpen(true);
+            }}
             className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-xl bg-primary text-primary-foreground card-shadow-lg transition-transform hover:scale-105 hover:bg-primary-hover"
             aria-label="Abrir chat"
           >

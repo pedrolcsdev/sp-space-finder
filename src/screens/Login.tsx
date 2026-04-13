@@ -1,13 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Building2, Mail, Lock, Chrome } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  AlertCircle,
+  Building2,
+  CheckCircle2,
+  Lock,
+  Mail,
+  ShieldCheck,
+  UserCircle2,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { MOCK_AUTH_COOKIE } from "@/lib/auth/mockAuth";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useAuth } from "@/hooks/use-auth";
+import { toast } from "@/hooks/use-toast";
 
 interface LoginScreenProps {
   redirectTo?: string;
@@ -30,24 +41,97 @@ const normalizeRedirectPath = (value?: string) => {
     return "/encontrar";
   }
 
+  if (parsed === "/login") {
+    return "/encontrar";
+  }
+
   return parsed;
 };
 
 export default function LoginScreen({ redirectTo }: LoginScreenProps) {
+  const router = useRouter();
+  const pathname = usePathname();
   const safeRedirectTo = normalizeRedirectPath(redirectTo);
+  const hasRedirectedRef = useRef(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState<{
+    type: "error" | "success";
+    title: string;
+    description: string;
+  } | null>(null);
+  const { login, isAuthenticated, session, isReady } = useAuth();
+
+  useEffect(() => {
+    if (
+      hasRedirectedRef.current ||
+      pathname !== "/login" ||
+      !isReady ||
+      !isAuthenticated ||
+      !session
+    ) {
+      return;
+    }
+
+    const redirectTarget =
+      session.user.role === "admin" ? "/admin" : safeRedirectTo;
+
+    if (redirectTarget === pathname) {
+      return;
+    }
+
+    hasRedirectedRef.current = true;
+    router.replace(redirectTarget);
+  }, [isAuthenticated, isReady, pathname, router, safeRedirectTo, session]);
 
   const handleLogin = () => {
-    setIsSubmitting(true);
-    document.cookie = `${MOCK_AUTH_COOKIE}=1; path=/; max-age=${60 * 60 * 24 * 30}; samesite=lax`;
-    window.location.assign(safeRedirectTo);
-  };
+    if (!email.trim() || !password.trim()) {
+      setFeedback({
+        type: "error",
+        title: "Preencha e-mail e senha",
+        description: "Use uma das credenciais disponíveis para acessar sua conta.",
+      });
+      return;
+    }
 
-  const handleClearMockLogin = () => {
-    document.cookie = `${MOCK_AUTH_COOKIE}=; path=/; max-age=0; samesite=lax`;
-    setIsSubmitting(false);
+    setIsSubmitting(true);
+    const result = login(email, password);
+
+    if (!result.ok || !result.session) {
+      setFeedback({
+        type: "error",
+        title: "Não foi possível entrar",
+        description: result.error ?? "Confira as credenciais e tente novamente.",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    const redirectTarget =
+      result.session.user.role === "admin" ? "/admin" : safeRedirectTo;
+
+    setFeedback({
+      type: "success",
+      title: "Login realizado com sucesso",
+      description:
+        result.session.user.role === "admin"
+          ? "Redirecionando para o painel administrativo."
+          : "Redirecionando para sua experiência no SP Spaces.",
+    });
+
+    toast({
+      title: "Sessão iniciada",
+      description:
+        result.session.user.role === "admin"
+          ? "Painel administrativo liberado."
+          : "Seu perfil e suas reservas já estão disponíveis.",
+    });
+
+    window.setTimeout(() => {
+      hasRedirectedRef.current = true;
+      router.replace(redirectTarget);
+    }, 600);
   };
 
   return (
@@ -70,26 +154,58 @@ export default function LoginScreen({ redirectTo }: LoginScreenProps) {
             Bem-vindo de volta
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Login fictício para teste do protótipo. Use qualquer e-mail/senha.
+            Entre com o perfil de cliente ou administrador para continuar.
           </p>
         </div>
 
         <Card size="lg" className="space-y-5">
-          <Button
-            variant="secondary"
-            className="w-full gap-3"
-            onClick={handleLogin}
-            disabled={isSubmitting}
-          >
-            <Chrome className="w-4 h-4" />
-            Entrar com Google
-          </Button>
-
-          <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-border" />
-            <span className="text-xs text-muted-foreground">ou</span>
-            <div className="flex-1 h-px bg-border" />
+          <div className="grid gap-3 rounded-2xl border border-border/70 bg-secondary/35 p-4">
+            <div className="rounded-xl border border-border/70 bg-white/90 p-3">
+              <div className="flex items-center gap-3">
+                <div className="rounded-full bg-primary/10 p-2 text-primary">
+                  <ShieldCheck className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Administrador</p>
+                  <p className="text-xs text-muted-foreground">
+                    admin@gmail.com / admin123
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="rounded-xl border border-border/70 bg-white/90 p-3">
+              <div className="flex items-center gap-3">
+                <div className="rounded-full bg-primary/10 p-2 text-primary">
+                  <UserCircle2 className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Cliente</p>
+                  <p className="text-xs text-muted-foreground">
+                    cliente@gmail.com / cliente123
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
+
+          {feedback && (
+            <Alert
+              variant={feedback.type === "error" ? "destructive" : "default"}
+              className={
+                feedback.type === "success"
+                  ? "border-success/25 bg-success/10 [&>svg]:text-success"
+                  : undefined
+              }
+            >
+              {feedback.type === "success" ? (
+                <CheckCircle2 className="h-4 w-4" />
+              ) : (
+                <AlertCircle className="h-4 w-4" />
+              )}
+              <AlertTitle>{feedback.title}</AlertTitle>
+              <AlertDescription>{feedback.description}</AlertDescription>
+            </Alert>
+          )}
 
           <div className="space-y-4">
             <div>
@@ -128,17 +244,13 @@ export default function LoginScreen({ redirectTo }: LoginScreenProps) {
             {isSubmitting ? "Entrando..." : "Entrar"}
           </Button>
 
-          <Button variant="ghost" className="w-full" onClick={handleClearMockLogin}>
-            Limpar login de teste
-          </Button>
-
           <p className="text-center text-sm text-muted-foreground">
             Não tem conta?{" "}
             <Link
               href="/onboarding"
               className="text-primary font-medium hover:text-primary-hover"
             >
-              Cadastre-se
+              Conheça o onboarding
             </Link>
           </p>
         </Card>

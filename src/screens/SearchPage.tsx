@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  ArrowRight,
   Filter,
   Search,
   SlidersHorizontal,
@@ -15,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { FilterChip } from "@/components/ui/filter-chip";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { useResolvedSpaces } from "@/hooks/use-mock-store";
 
 const categoryLabels: Record<string, string> = {
   auditorium: "Auditórios",
@@ -31,9 +31,10 @@ export default function SearchScreen({
   spaces,
   initialCategory,
 }: SearchScreenProps) {
+  const resolvedSpaces = useResolvedSpaces(spaces);
   const allResources = useMemo(
-    () => Array.from(new Set(spaces.flatMap((s) => s.resources))),
-    [spaces],
+    () => Array.from(new Set(resolvedSpaces.flatMap((s) => s.resources))),
+    [resolvedSpaces],
   );
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -64,7 +65,7 @@ export default function SearchScreen({
   };
 
   const filtered = useMemo(() => {
-    return spaces.filter((s) => {
+    return resolvedSpaces.filter((s) => {
       if (
         searchTerm &&
         !s.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -80,7 +81,7 @@ export default function SearchScreen({
         return false;
       return true;
     });
-  }, [searchTerm, selectedCategories, selectedResources, minCapacity, spaces]);
+  }, [searchTerm, selectedCategories, selectedResources, minCapacity, resolvedSpaces]);
 
   const activeFilterCount =
     selectedCategories.length +
@@ -315,19 +316,6 @@ export default function SearchScreen({
           </aside>
 
           <div className="min-w-0 flex-1">
-            <div className="mb-5 flex flex-col gap-3 rounded-[26px] border border-border/70 bg-white/76 p-4 shadow-sm shadow-slate-950/5 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Mostrando uma curadoria com foco em clareza, confiança e boa
-                  leitura de valor.
-                </p>
-              </div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-secondary/70 px-4 py-2 text-sm font-medium text-foreground">
-                Ver detalhes e comparar
-                <ArrowRight className="h-4 w-4 text-primary" />
-              </div>
-            </div>
-
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
               {filtered.map((space, i) => (
                 <SpaceCard key={space.id} space={space} index={i} />
@@ -370,4 +358,3 @@ export default function SearchScreen({
     </div>
   );
 }
-

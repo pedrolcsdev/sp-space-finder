@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -12,6 +14,8 @@ import type { Space } from "@/lib/data/contracts";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { SpaceAvailabilitySidebar } from "@/components/SpaceAvailabilitySidebar";
+import { useResolvedSpace } from "@/hooks/use-mock-store";
+import { FavoriteSpaceButton } from "@/components/FavoriteSpaceButton";
 
 interface SpaceDetailsScreenProps {
   space: Space;
@@ -30,11 +34,12 @@ const defaultRules = [
 ];
 
 export default function SpaceDetailsScreen({ space }: SpaceDetailsScreenProps) {
-  const gallery = space.images?.length ? space.images : [space.image];
-  const rules = space.usageRules?.length ? space.usageRules : defaultRules;
+  const resolvedSpace = useResolvedSpace(space);
+  const gallery = resolvedSpace.images?.length ? resolvedSpace.images : [resolvedSpace.image];
+  const rules = resolvedSpace.usageRules?.length ? resolvedSpace.usageRules : defaultRules;
   const commercialInfo =
-    space.commercialInfo ??
-    `Disponível por hora, a partir de R$ ${space.pricePerHour}/hora.`;
+    resolvedSpace.commercialInfo ??
+    `Disponível por hora, a partir de R$ ${resolvedSpace.pricePerHour}/hora.`;
 
   return (
     <div className="page-container section-space">
@@ -51,7 +56,7 @@ export default function SpaceDetailsScreen({ space }: SpaceDetailsScreenProps) {
           <div className="overflow-hidden rounded-2xl border border-border bg-card card-shadow">
             <img
               src={gallery[0]}
-              alt={space.name}
+              alt={resolvedSpace.name}
               className="h-[320px] w-full object-cover sm:h-[420px]"
             />
           </div>
@@ -64,8 +69,8 @@ export default function SpaceDetailsScreen({ space }: SpaceDetailsScreenProps) {
                   className="overflow-hidden rounded-xl border border-border bg-card"
                 >
                   <img
-                    src={image}
-                    alt={`${space.name} - foto ${index + 2}`}
+                  src={image}
+                    alt={`${resolvedSpace.name} - foto ${index + 2}`}
                     className="h-28 w-full object-cover sm:h-32"
                   />
                 </div>
@@ -76,14 +81,19 @@ export default function SpaceDetailsScreen({ space }: SpaceDetailsScreenProps) {
           <Card className="space-y-6 p-6 sm:p-7">
             <div className="space-y-3">
               <Badge variant="outline" className="w-fit">
-                {categoryLabel[space.category]}
+                {categoryLabel[resolvedSpace.category]}
               </Badge>
-              <h1 className="font-display text-3xl font-semibold leading-tight text-foreground sm:text-4xl">
-                {space.name}
-              </h1>
-              <p className="text-base leading-relaxed text-muted-foreground">
-                {space.description}
-              </p>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="space-y-3">
+                  <h1 className="font-display text-3xl font-semibold leading-tight text-foreground sm:text-4xl">
+                    {resolvedSpace.name}
+                  </h1>
+                  <p className="text-base leading-relaxed text-muted-foreground">
+                    {resolvedSpace.description}
+                  </p>
+                </div>
+                <FavoriteSpaceButton spaceId={resolvedSpace.id} />
+              </div>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
@@ -93,7 +103,7 @@ export default function SpaceDetailsScreen({ space }: SpaceDetailsScreenProps) {
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     Localização
                   </p>
-                  <p className="text-sm text-foreground">{space.location}</p>
+                  <p className="text-sm text-foreground">{resolvedSpace.location}</p>
                 </div>
               </div>
               <div className="flex items-start gap-2 rounded-lg border border-border bg-secondary/50 p-3">
@@ -103,7 +113,7 @@ export default function SpaceDetailsScreen({ space }: SpaceDetailsScreenProps) {
                     Capacidade
                   </p>
                   <p className="text-sm text-foreground">
-                    Até {space.capacity} pessoas
+                    Até {resolvedSpace.capacity} pessoas
                   </p>
                 </div>
               </div>
@@ -116,7 +126,7 @@ export default function SpaceDetailsScreen({ space }: SpaceDetailsScreenProps) {
               Comodidades
             </h2>
             <div className="flex flex-wrap gap-2">
-              {space.resources.map((resource) => (
+              {resolvedSpace.resources.map((resource) => (
                 <Badge
                   key={resource}
                   variant="secondary"
@@ -152,7 +162,7 @@ export default function SpaceDetailsScreen({ space }: SpaceDetailsScreenProps) {
                 Faixa comercial
               </p>
               <p className="mt-1 text-3xl font-bold text-foreground">
-                R$ {space.pricePerHour}
+                R$ {resolvedSpace.pricePerHour}
                 <span className="text-base font-medium text-muted-foreground">
                   /hora
                 </span>
@@ -169,8 +179,8 @@ export default function SpaceDetailsScreen({ space }: SpaceDetailsScreenProps) {
           </Card>
 
           <SpaceAvailabilitySidebar
-            spaceId={space.id}
-            reservePath={`/reservar/${space.id}`}
+            spaceId={resolvedSpace.id}
+            reservePath={`/reservar/${resolvedSpace.id}`}
           />
         </aside>
       </div>

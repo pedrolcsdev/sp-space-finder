@@ -14,6 +14,15 @@ import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
+const fallbackImageByCategory: Record<Space["category"], string> = {
+  auditorium:
+    "https://images.unsplash.com/photo-1511578314322-379afb476865?w=600&h=400&fit=crop",
+  dental:
+    "https://images.unsplash.com/photo-1581594693702-fbdc51b2763b?w=600&h=400&fit=crop",
+  meeting:
+    "https://images.unsplash.com/photo-1577412647305-991150c7d163?w=600&h=400&fit=crop",
+};
+
 interface SpaceCardProps {
   space: Space;
   index?: number;
@@ -28,10 +37,7 @@ export function SpaceCard({
   showPricing = true,
 }: SpaceCardProps) {
   const visibleResources = space.resources.slice(0, MAX_VISIBLE_RESOURCES);
-  const hiddenResourcesCount = Math.max(
-    space.resources.length - visibleResources.length,
-    0,
-  );
+  const hiddenResourcesCount = space.resources.length - visibleResources.length;
 
   return (
     <motion.div
@@ -49,6 +55,10 @@ export function SpaceCard({
             src={space.image}
             alt={space.name}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 group-focus-visible:scale-105"
+            onError={(event) => {
+              event.currentTarget.onerror = null;
+              event.currentTarget.src = fallbackImageByCategory[space.category];
+            }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-foreground/45 via-foreground/5 to-transparent opacity-80" />
           <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background/65 via-background/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100" />
@@ -87,19 +97,19 @@ export function SpaceCard({
           </div>
         </div>
 
-        <div className="flex flex-1 flex-col gap-4 p-5 sm:p-6">
+        <div className="flex h-full flex-col gap-4 p-5 sm:p-6">
           <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0 flex-1 space-y-2">
+            <div className="min-w-0 space-y-2">
               <h3 className="line-clamp-2 text-[20px] font-semibold leading-tight tracking-[-0.03em] text-foreground">
                 {space.name}
               </h3>
-              <div className="space-y-2 text-sm text-foreground/72">
-                <span className="flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5" />
+              <div className="flex flex-wrap items-center gap-3 text-sm text-foreground/72">
+                <span className="flex min-w-0 items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5 shrink-0" />
                   <span className="truncate">{space.location}</span>
                 </span>
-                <span className="flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5" />
+                <span className="flex shrink-0 items-center gap-1.5">
+                  <Users className="h-3.5 w-3.5" />
                   Até {space.capacity} pessoas
                 </span>
               </div>
@@ -112,11 +122,11 @@ export function SpaceCard({
             </div>
           </div>
 
-          <p className="line-clamp-2 text-sm leading-6 text-foreground/68">
+          <p className="min-h-[3.5rem] line-clamp-2 text-sm leading-6 text-foreground/68">
             {space.description}
           </p>
 
-          <div className="flex h-9 items-center gap-2 overflow-hidden">
+          <div className="flex min-h-[5.5rem] flex-wrap content-start gap-2">
             {visibleResources.map((r) => (
               <span
                 key={r}

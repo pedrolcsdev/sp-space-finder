@@ -239,7 +239,7 @@ const baseSpaces: Space[] = [
     capacity: 3,
     pricePerHour: 170,
     image:
-      "https://images.unsplash.com/photo-1640876770763-9f9b7be0f8b7?w=600&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1581594693702-fbdc51b2763b?w=600&h=400&fit=crop",
     resources: [
       "Cadeira Odontológica",
       "Fotopolimerizador",
@@ -257,7 +257,7 @@ const baseSpaces: Space[] = [
     capacity: 4,
     pricePerHour: 190,
     image:
-      "https://images.unsplash.com/photo-1626726493136-47fd13f6a0de?w=600&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1629909615957-be4f8c63a7ea?w=600&h=400&fit=crop",
     resources: [
       "Raio-X Digital",
       "Cadeira Odontológica",
