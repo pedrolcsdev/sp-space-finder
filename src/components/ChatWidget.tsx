@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MessageCircle, X, Send, Bot, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -27,6 +27,15 @@ export function ChatWidget({ chatFlow }: ChatWidgetProps) {
   const [step, setStep] = useState(1);
   const [input, setInput] = useState("");
   const router = useRouter();
+
+  useEffect(() => {
+    const handleOpenChat = () => setOpen(true);
+    window.addEventListener("spspaces:open-chat", handleOpenChat);
+
+    return () => {
+      window.removeEventListener("spspaces:open-chat", handleOpenChat);
+    };
+  }, []);
 
   const handleOption = (option: string) => {
     const userMsg: Message = { type: "user", text: option };

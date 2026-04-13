@@ -5,17 +5,19 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const filterChipVariants = cva(
-  "inline-flex items-center gap-1.5 rounded-full border text-sm font-medium transition-colors focus-visible:ring-0 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center gap-1.5 rounded-full border text-sm font-medium transition-all duration-200 focus-visible:ring-0 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
-        default: "border-border bg-card text-secondary-foreground hover:bg-secondary",
-        selected: "border-primary bg-primary text-primary-foreground",
-        count: "border-transparent bg-foreground text-background",
+        default:
+          "border-border/80 bg-white/88 text-secondary-foreground shadow-sm shadow-slate-950/5 hover:-translate-y-0.5 hover:border-primary/20 hover:bg-white",
+        selected:
+          "border-primary/20 bg-primary text-primary-foreground shadow-sm shadow-primary/20",
+        count: "border-transparent bg-foreground text-background shadow-sm",
       },
       size: {
-        sm: "h-8 px-3 text-xs",
-        md: "h-9 px-3.5 text-sm",
+        sm: "h-8 px-3.5 text-xs",
+        md: "h-10 px-4 text-sm",
       },
     },
     defaultVariants: {

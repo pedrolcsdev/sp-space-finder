@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Search, SlidersHorizontal } from "lucide-react";
+import {
+  ArrowRight,
+  Filter,
+  Search,
+  SlidersHorizontal,
+  Sparkles,
+  Users,
+} from "lucide-react";
 import { SpaceCard } from "@/components/SpaceCard";
 import type { Space } from "@/lib/data/contracts";
 import { Input } from "@/components/ui/input";
@@ -80,9 +87,15 @@ export default function SearchScreen({
     selectedResources.length +
     (minCapacity > 0 ? 1 : 0);
 
+  const resultHighlights = [
+    { label: "Resultados", value: filtered.length.toString() },
+    { label: "Categorias", value: "3" },
+    { label: "Reserva", value: "Ágil" },
+  ];
+
   const FilterContent = () => (
-    <div className="space-y-8">
-      <div>
+    <div className="space-y-7">
+      <div className="rounded-[24px] border border-border/70 bg-white/85 p-4">
         <h3 className="mb-3 font-display text-sm font-semibold text-foreground">
           Categoria
         </h3>
@@ -104,7 +117,7 @@ export default function SearchScreen({
         </div>
       </div>
 
-      <div>
+      <div className="rounded-[24px] border border-border/70 bg-white/85 p-4">
         <h3 className="mb-3 font-display text-sm font-semibold text-foreground">
           Capacidade mínima
         </h3>
@@ -116,9 +129,13 @@ export default function SearchScreen({
           placeholder="Ex: 10"
           className="bg-secondary"
         />
+        <div className="mt-3 flex items-center justify-between text-xs font-medium text-muted-foreground">
+          <span>Pequenos encontros</span>
+          <span>Eventos maiores</span>
+        </div>
       </div>
 
-      <div>
+      <div className="rounded-[24px] border border-border/70 bg-white/85 p-4">
         <h3 className="mb-3 font-display text-sm font-semibold text-foreground">
           Recursos
         </h3>
@@ -140,9 +157,9 @@ export default function SearchScreen({
 
       {activeFilterCount > 0 && (
         <Button
-          variant="ghost"
+          variant="outline"
           onClick={clearFilters}
-          className="w-full border border-destructive/30 text-destructive hover:bg-destructive/5 hover:text-destructive"
+          className="w-full rounded-2xl border-destructive/20 text-destructive hover:bg-destructive/5 hover:text-destructive"
         >
           Limpar filtros ({activeFilterCount})
         </Button>
@@ -151,104 +168,199 @@ export default function SearchScreen({
   );
 
   return (
-    <div className="page-container section-space">
-      <div className="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <h1 className="font-display text-3xl font-semibold text-foreground">
-            Encontrar Espaço
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {filtered.length} espaços encontrados
-          </p>
-        </div>
+    <div className="section-space">
+      <div className="page-container">
+        <div className="mb-8 rounded-[32px] border border-white/70 bg-white/86 p-4 shadow-[0_24px_70px_rgb(15_23_42_/_0.08)] backdrop-blur-xl sm:p-5 lg:p-6">
+          <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-2xl">
+                <span className="eyebrow mb-4">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Busca premium
+                </span>
+                <h1 className="font-display text-3xl font-semibold tracking-[-0.04em] text-foreground sm:text-4xl">
+                  Encontrar Espaço
+                </h1>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground sm:text-base">
+                  Compare espaços com uma leitura mais clara de estrutura,
+                  capacidade e valor. A busca foi organizada para facilitar
+                  decisões rápidas sem perder sofisticação visual.
+                </p>
+              </div>
 
-        <div className="flex w-full items-center gap-3 sm:w-auto">
-          <div className="relative flex-1 sm:w-72">
-            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Buscar espaço..."
-              className="bg-card pl-10"
-            />
-          </div>
-          <Button
-            variant="secondary"
-            size="icon"
-            className="lg:hidden"
-            onClick={() => setMobileFilters(true)}
-          >
-            <SlidersHorizontal className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+              <div className="grid grid-cols-3 gap-3 sm:w-auto">
+                {resultHighlights.map((item) => (
+                  <div
+                    key={item.label}
+                    className="rounded-[22px] border border-border/70 bg-secondary/55 px-4 py-3"
+                  >
+                    <p className="text-xl font-semibold tracking-[-0.04em] text-foreground">
+                      {item.value}
+                    </p>
+                    <p className="mt-1 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                      {item.label}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-      <div className="mb-5 flex items-center gap-2 overflow-x-auto pb-1 lg:hidden">
-        <FilterChip variant="count">{activeFilterCount}</FilterChip>
-        {selectedCategories.map((cat) => (
-          <FilterChip
-            key={cat}
-            variant="selected"
-            removable
-            onClick={() =>
-              setSelectedCategories(selectedCategories.filter((item) => item !== cat))
-            }
-          >
-            {categoryLabels[cat]}
-          </FilterChip>
-        ))}
-        {selectedResources.slice(0, 3).map((resource) => (
-          <FilterChip
-            key={resource}
-            variant="selected"
-            removable
-            onClick={() =>
-              setSelectedResources(
-                selectedResources.filter((item) => item !== resource),
-              )
-            }
-          >
-            {resource}
-          </FilterChip>
-        ))}
-      </div>
-
-      <div className="flex gap-8">
-        <aside className="hidden w-72 flex-shrink-0 lg:block">
-          <div className="sticky top-24 rounded-xl border border-border bg-card p-6 card-shadow">
-            <h2 className="mb-6 flex items-center gap-2 font-display text-lg font-semibold text-foreground">
-              <SlidersHorizontal className="h-4 w-4" /> Filtros
-            </h2>
-            <FilterContent />
-          </div>
-        </aside>
-
-        <div className="flex-1">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {filtered.map((space, i) => (
-              <SpaceCard key={space.id} space={space} index={i} />
-            ))}
-          </div>
-
-          {filtered.length === 0 && (
-            <div className="py-20 text-center">
-              <p className="text-lg text-muted-foreground">
-                Nenhum espaço encontrado com esses filtros.
-              </p>
+            <div className="grid gap-3 lg:grid-cols-[minmax(0,1.2fr)_0.8fr_auto]">
+              <div className="rounded-[24px] border border-border/70 bg-white p-3 shadow-sm shadow-slate-950/5">
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Buscar por nome do espaço"
+                    className="border-none bg-secondary pl-11 shadow-none"
+                  />
+                </div>
+              </div>
+              <div className="rounded-[24px] border border-border/70 bg-white p-4">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  <Users className="h-3.5 w-3.5" />
+                  Filtros ativos
+                </div>
+                <p className="mt-2 text-lg font-semibold tracking-[-0.03em] text-foreground">
+                  {activeFilterCount} seleç{activeFilterCount === 1 ? "ão" : "ões"}
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {filtered.length} espaços encontrados com a configuração atual
+                </p>
+              </div>
               <Button
-                variant="link"
-                onClick={clearFilters}
-                className="mt-4 text-sm font-medium"
+                variant="secondary"
+                size="lg"
+                className="h-full min-h-14 rounded-[24px] lg:hidden"
+                onClick={() => setMobileFilters(true)}
               >
-                Limpar filtros
+                <SlidersHorizontal className="h-4 w-4" />
+                Abrir filtros
               </Button>
             </div>
-          )}
+
+            <div className="flex flex-wrap items-center gap-2">
+              <FilterChip variant="count">{activeFilterCount}</FilterChip>
+              {selectedCategories.map((cat) => (
+                <FilterChip
+                  key={cat}
+                  variant="selected"
+                  removable
+                  onClick={() =>
+                    setSelectedCategories(
+                      selectedCategories.filter((item) => item !== cat),
+                    )
+                  }
+                >
+                  {categoryLabels[cat]}
+                </FilterChip>
+              ))}
+              {selectedResources.slice(0, 4).map((resource) => (
+                <FilterChip
+                  key={resource}
+                  variant="selected"
+                  removable
+                  onClick={() =>
+                    setSelectedResources(
+                      selectedResources.filter((item) => item !== resource),
+                    )
+                  }
+                >
+                  {resource}
+                </FilterChip>
+              ))}
+              {minCapacity > 0 && (
+                <FilterChip
+                  variant="selected"
+                  removable
+                  onClick={() => setMinCapacity(0)}
+                >
+                  {minCapacity}+ pessoas
+                </FilterChip>
+              )}
+              {activeFilterCount > 0 && (
+                <Button
+                  variant="ghost"
+                  className="rounded-full px-4 text-sm"
+                  onClick={clearFilters}
+                >
+                  Limpar tudo
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-8">
+          <aside className="hidden w-[310px] flex-shrink-0 lg:block">
+            <div className="sticky top-28 rounded-[30px] border border-white/65 bg-white/82 p-5 shadow-[0_20px_60px_rgb(15_23_42_/_0.08)] backdrop-blur-xl">
+              <div className="mb-6 flex items-center justify-between">
+                <div>
+                  <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-foreground">
+                    <Filter className="h-4 w-4" /> Filtros
+                  </h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Refine a seleção sem perder contexto visual.
+                  </p>
+                </div>
+                {activeFilterCount > 0 && (
+                  <span className="rounded-full bg-primary/8 px-3 py-1 text-xs font-semibold text-primary">
+                    {activeFilterCount} ativos
+                  </span>
+                )}
+              </div>
+              <FilterContent />
+            </div>
+          </aside>
+
+          <div className="min-w-0 flex-1">
+            <div className="mb-5 flex flex-col gap-3 rounded-[26px] border border-border/70 bg-white/76 p-4 shadow-sm shadow-slate-950/5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Mostrando uma curadoria com foco em clareza, confiança e boa
+                  leitura de valor.
+                </p>
+              </div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-secondary/70 px-4 py-2 text-sm font-medium text-foreground">
+                Ver detalhes e comparar
+                <ArrowRight className="h-4 w-4 text-primary" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {filtered.map((space, i) => (
+                <SpaceCard key={space.id} space={space} index={i} />
+              ))}
+            </div>
+
+            {filtered.length === 0 && (
+              <div className="rounded-[30px] border border-dashed border-border bg-white/65 px-6 py-16 text-center shadow-sm shadow-slate-950/5">
+                <p className="text-xl font-semibold tracking-[-0.03em] text-foreground">
+                  Nenhum espaço encontrado com esses filtros.
+                </p>
+                <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-muted-foreground">
+                  Ajuste os critérios para ampliar a busca e visualizar outras
+                  combinações de categoria, capacidade e recursos.
+                </p>
+                <Button
+                  variant="secondary"
+                  onClick={clearFilters}
+                  className="mt-6 rounded-full px-5"
+                >
+                  Limpar filtros
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       <Sheet open={mobileFilters} onOpenChange={setMobileFilters}>
-        <SheetContent side="bottom" className="h-[85vh] overflow-y-auto rounded-t-xl p-5">
+        <SheetContent
+          side="bottom"
+          className="h-[85vh] overflow-y-auto rounded-t-[28px] border-white/60 bg-background/98 p-5"
+        >
           <SheetHeader className="mb-5 text-left">
             <SheetTitle className="font-display">Filtros</SheetTitle>
           </SheetHeader>
