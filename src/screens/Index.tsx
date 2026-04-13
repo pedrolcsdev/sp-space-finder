@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { SpaceCard } from "@/components/SpaceCard";
 import type { Space } from "@/lib/data/contracts";
 import { Button } from "@/components/ui/button";
+import { useResolvedSpaces } from "@/hooks/use-mock-store";
 
 const categorySections = [
   { id: "auditorium", name: "Auditórios" },
@@ -18,8 +19,9 @@ interface HomeScreenProps {
 }
 
 export default function HomeScreen({ spaces }: HomeScreenProps) {
-  const recommended = spaces.filter((s) => s.recommended);
-  const heroSpace = spaces[0];
+  const resolvedSpaces = useResolvedSpaces(spaces);
+  const recommended = resolvedSpaces.filter((s) => s.recommended);
+  const heroSpace = resolvedSpaces[0];
 
   const openAssistant = () => {
     window.dispatchEvent(new CustomEvent("spspaces:open-chat"));
@@ -41,12 +43,10 @@ export default function HomeScreen({ spaces }: HomeScreenProps) {
               className="max-w-3xl"
             >
               <h1 className="mb-5 max-w-4xl font-display text-4xl font-bold leading-[1.02] tracking-[-0.05em] text-primary-foreground sm:text-5xl lg:text-6xl">
-                Encontre o espaço ideal com uma experiência mais elegante,
-                clara e confiável.
+                Encontre o espaço ideal com nosso assistente virtual
               </h1>
               <p className="mb-8 max-w-2xl text-base leading-8 text-primary-foreground lg:text-[17px]">
-                Explore auditórios, salas de reunião e salas odontológicas com
-                comparação simples, visual profissional e decisão mais segura.
+                Explore os espaços da maneira tracicional ou consulte o assistente virtual para receber recomendações personalizadas com base nas suas preferências.
               </p>
               <div className="flex flex-wrap gap-4">
                 <Button
@@ -66,6 +66,7 @@ export default function HomeScreen({ spaces }: HomeScreenProps) {
                   className="border border-primary-foreground/20 bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/18"
                   onClick={openAssistant}
                 >
+                  <MessageCircle className="w-4 h-4" />
                   Conversar com assistente
                 </Button>
               </div>
@@ -106,7 +107,7 @@ export default function HomeScreen({ spaces }: HomeScreenProps) {
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-foreground/72 sm:text-base">
                 Espaços com melhor percepção de valor, boa localização e
-                estrutura pronta para receber reuniões, atendimentos ou eventos.
+                estrutura pronta.
               </p>
             </div>
             <Link
@@ -136,7 +137,7 @@ export default function HomeScreen({ spaces }: HomeScreenProps) {
         <div className="page-container">
           <div className="space-y-12">
             {categorySections.map((category, categoryIndex) => {
-              const spacesByCategory = spaces
+              const spacesByCategory = resolvedSpaces
                 .filter((space) => space.category === category.id)
                 .slice(0, 3);
 

@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { FilterChip } from "@/components/ui/filter-chip";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { useResolvedSpaces } from "@/hooks/use-mock-store";
 
 const categoryLabels: Record<string, string> = {
   auditorium: "Auditórios",
@@ -31,9 +32,10 @@ export default function SearchScreen({
   spaces,
   initialCategory,
 }: SearchScreenProps) {
+  const resolvedSpaces = useResolvedSpaces(spaces);
   const allResources = useMemo(
-    () => Array.from(new Set(spaces.flatMap((s) => s.resources))),
-    [spaces],
+    () => Array.from(new Set(resolvedSpaces.flatMap((s) => s.resources))),
+    [resolvedSpaces],
   );
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -64,7 +66,7 @@ export default function SearchScreen({
   };
 
   const filtered = useMemo(() => {
-    return spaces.filter((s) => {
+    return resolvedSpaces.filter((s) => {
       if (
         searchTerm &&
         !s.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -80,7 +82,7 @@ export default function SearchScreen({
         return false;
       return true;
     });
-  }, [searchTerm, selectedCategories, selectedResources, minCapacity, spaces]);
+  }, [searchTerm, selectedCategories, selectedResources, minCapacity, resolvedSpaces]);
 
   const activeFilterCount =
     selectedCategories.length +
@@ -370,4 +372,3 @@ export default function SearchScreen({
     </div>
   );
 }
-

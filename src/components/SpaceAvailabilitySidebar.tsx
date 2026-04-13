@@ -199,7 +199,7 @@ export function SpaceAvailabilitySidebar({
 
             {unavailableTimes.length >= DEFAULT_TIME_SLOTS.length && (
               <p className="text-sm text-rose-600">
-                Esse dia está totalmente ocupado no protótipo. Tente outra data.
+                Esse dia está totalmente ocupado. Tente outra data.
               </p>
             )}
           </div>

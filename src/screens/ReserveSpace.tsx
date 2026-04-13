@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   AlertCircle,
   CalendarDays,
@@ -26,13 +26,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MOCK_AUTH_COOKIE } from "@/lib/auth/mockAuth";
 import {
   DEFAULT_TIME_SLOTS,
   getTodayISODate,
   getUnavailableTimes,
   sanitizeReservationPreselection,
 } from "@/lib/availability/spaceAvailability";
+import { useAuth } from "@/hooks/use-auth";
+import { useResolvedSpace } from "@/hooks/use-mock-store";
+import {
+  createMockReservation,
+  type MockReservation,
+} from "@/lib/mock/mockStore";
+import { ReservationStatusBadge } from "@/components/ReservationStatusBadge";
+import { toast } from "@/hooks/use-toast";
 
 type AvailabilityStatus = "idle" | "available" | "unavailable";
 type ReservationType = "single" | "package";
@@ -81,17 +88,22 @@ const formatDate = (value: string) => {
   }).format(date);
 };
 
-const buildWhatsAppMessage = (space: Space, form: ReservationForm) => {
+const buildWhatsAppMessage = (
+  space: Space,
+  form: ReservationForm,
+  reservation?: MockReservation | null,
+) => {
   const lines = [
     "Olá! Gostaria de reservar este espaço:",
     "",
+    reservation ? `Código da reserva: ${reservation.code}` : null,
     `Espaço: ${space.name}`,
     `Local: ${space.location}`,
     `Data: ${formatDate(form.date)}`,
     `Horário: ${form.time}`,
     `Pessoas: ${form.people}`,
     `Referência de valor: R$ ${space.pricePerHour}/hora`,
-  ];
+  ].filter(Boolean) as string[];
 
   if (form.notes.trim()) {
     lines.push(`Observações: ${form.notes.trim()}`);
@@ -102,16 +114,21 @@ const buildWhatsAppMessage = (space: Space, form: ReservationForm) => {
   return lines.join("\n");
 };
 
-const buildPackageWhatsAppMessage = (space: Space, packageForm: PackageForm) => {
+const buildPackageWhatsAppMessage = (
+  space: Space,
+  packageForm: PackageForm,
+  reservation?: MockReservation | null,
+) => {
   const lines = [
     "Olá! Gostaria de solicitar um pacote de reservas:",
     "",
+    reservation ? `Código da reserva: ${reservation.code}` : null,
     `Espaço: ${space.name}`,
     `Local: ${space.location}`,
     `Recorrência: ${packageRecurrenceLabel[packageForm.recurrence]}`,
     `Quantidade de ocorrências: ${packageForm.occurrences}`,
     `Referência de valor: R$ ${space.pricePerHour}/hora`,
-  ];
+  ].filter(Boolean) as string[];
 
   if (packageForm.notes.trim()) {
     lines.push(`Observações: ${packageForm.notes.trim()}`);
@@ -130,16 +147,18 @@ interface ReserveSpaceScreenProps {
 }
 
 export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
+  const router = useRouter();
   const searchParams = useSearchParams();
+  const resolvedSpace = useResolvedSpace(space);
+  const { session } = useAuth();
   const todayISODate = useMemo(() => getTodayISODate(), []);
   const preselectedDate = searchParams.get("date");
   const preselectedTime = searchParams.get("time");
   const [reservationType, setReservationType] = useState<ReservationType>("single");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [form, setForm] = useState<ReservationForm>({
     date: todayISODate,
     time: "",
-    people: Math.min(2, space.capacity),
+    people: Math.min(2, resolvedSpace.capacity),
     notes: "",
   });
   const [packageForm, setPackageForm] = useState<PackageForm>({
@@ -149,10 +168,11 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
   });
   const [availabilityStatus, setAvailabilityStatus] =
     useState<AvailabilityStatus>("idle");
+  const [createdReservation, setCreatedReservation] = useState<MockReservation | null>(null);
 
   const unavailableTimes = useMemo(
-    () => getUnavailableTimes(space.id, form.date),
-    [space.id, form.date],
+    () => getUnavailableTimes(resolvedSpace.id, form.date),
+    [resolvedSpace.id, form.date],
   );
 
   const isTimeUnavailable = form.time ? unavailableTimes.includes(form.time) : false;
@@ -160,15 +180,19 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
   const isPackageReady = Boolean(packageForm.recurrence && packageForm.occurrences > 0);
 
   const whatsappLink = useMemo(() => {
-    const message = buildWhatsAppMessage(space, form);
+    const message = buildWhatsAppMessage(resolvedSpace, form, createdReservation);
 
     return `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(message)}`;
-  }, [space, form]);
+  }, [createdReservation, resolvedSpace, form]);
   const packageWhatsappLink = useMemo(() => {
-    const message = buildPackageWhatsAppMessage(space, packageForm);
+    const message = buildPackageWhatsAppMessage(
+      resolvedSpace,
+      packageForm,
+      createdReservation,
+    );
 
     return `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(message)}`;
-  }, [space, packageForm]);
+  }, [createdReservation, resolvedSpace, packageForm]);
 
   const handleCheckAvailability = () => {
     if (!canCheckAvailability) {
@@ -185,15 +209,12 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
 
   const handleEditReservation = () => {
     setAvailabilityStatus("idle");
+    setCreatedReservation(null);
   };
 
   useEffect(() => {
-    setIsLoggedIn(document.cookie.includes(`${MOCK_AUTH_COOKIE}=1`));
-  }, []);
-
-  useEffect(() => {
     const normalizedSelection = sanitizeReservationPreselection(
-      space.id,
+      resolvedSpace.id,
       {
         date: preselectedDate,
         time: preselectedTime,
@@ -207,24 +228,70 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
       time: normalizedSelection.time,
     }));
     setAvailabilityStatus("idle");
-  }, [preselectedDate, preselectedTime, space.id, todayISODate]);
+    setCreatedReservation(null);
+  }, [preselectedDate, preselectedTime, resolvedSpace.id, todayISODate]);
 
-  const ensureLoginBeforeCheckout = (targetUrl: string) => {
-    const logged = document.cookie.includes(`${MOCK_AUTH_COOKIE}=1`);
-    setIsLoggedIn(logged);
+  const ensureClientSession = () => {
+    if (!session || session.user.role !== "user") {
+      router.push(`/login?redirect=${encodeURIComponent(`/reservar/${resolvedSpace.id}`)}`);
+      return null;
+    }
 
-    if (!logged) {
-      window.location.assign(`/login?redirect=${encodeURIComponent(`/reservar/${space.id}`)}`);
+    return session.user;
+  };
+
+  const openWhatsApp = (targetUrl: string) => {
+    window.open(targetUrl, "_blank", "noopener,noreferrer");
+  };
+
+  const handleCreateSingleReservation = () => {
+    const user = ensureClientSession();
+
+    if (!user) {
       return;
     }
 
-    window.open(targetUrl, "_blank", "noopener,noreferrer");
+    const reservation = createMockReservation({
+      user,
+      space: resolvedSpace,
+      kind: "single",
+      scheduleLabel: `${formatDate(form.date)} as ${form.time}`,
+      notes: form.notes,
+    });
+
+    setCreatedReservation(reservation);
+    toast({
+      title: "Reserva pendente criada",
+      description: `${reservation.code} já está visível em Minhas reservas e na área administrativa.`,
+    });
+  };
+
+  const handleCreatePackageReservation = () => {
+    const user = ensureClientSession();
+
+    if (!user) {
+      return;
+    }
+
+    const reservation = createMockReservation({
+      user,
+      space: resolvedSpace,
+      kind: "package",
+      scheduleLabel: `Pacote ${packageRecurrenceLabel[packageForm.recurrence].toLowerCase()} com ${packageForm.occurrences} ocorrencias`,
+      notes: packageForm.notes,
+    });
+
+    setCreatedReservation(reservation);
+    toast({
+      title: "Solicitação pendente criada",
+      description: `${reservation.code} foi enviada para acompanhamento interno.`,
+    });
   };
 
   return (
     <div className="page-container section-space">
       <Link
-        href={`/espacos/${space.id}`}
+        href={`/espacos/${resolvedSpace.id}`}
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
         <ChevronLeft className="h-4 w-4" />
@@ -250,12 +317,12 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Espaço selecionado
             </p>
-            <p className="mt-1 text-lg font-semibold text-foreground">{space.name}</p>
-            <p className="mt-1 text-sm text-muted-foreground">{space.location}</p>
+            <p className="mt-1 text-lg font-semibold text-foreground">{resolvedSpace.name}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{resolvedSpace.location}</p>
             <p className="mt-2 text-sm text-foreground">
-              Capacidade até <span className="font-semibold">{space.capacity} pessoas</span>
+              Capacidade até <span className="font-semibold">{resolvedSpace.capacity} pessoas</span>
               {" "}
-              · R$ {space.pricePerHour}/hora
+              · R$ {resolvedSpace.pricePerHour}/hora
             </p>
           </div>
 
@@ -265,14 +332,20 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
               <Button
                 type="button"
                 variant={reservationType === "single" ? "default" : "secondary"}
-                onClick={() => setReservationType("single")}
+                onClick={() => {
+                  setReservationType("single");
+                  setCreatedReservation(null);
+                }}
               >
                 Avulsa
               </Button>
               <Button
                 type="button"
                 variant={reservationType === "package" ? "default" : "secondary"}
-                onClick={() => setReservationType("package")}
+                onClick={() => {
+                  setReservationType("package");
+                  setCreatedReservation(null);
+                }}
               >
                 Pacote
               </Button>
@@ -295,7 +368,7 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
                         const nextDate = event.target.value;
                         setForm((current) => {
                           const nextUnavailableTimes = getUnavailableTimes(
-                            space.id,
+                            resolvedSpace.id,
                             nextDate,
                           );
                           const nextTime = nextUnavailableTimes.includes(current.time)
@@ -353,12 +426,15 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
                       id="reservation-people"
                       type="number"
                       min={1}
-                      max={space.capacity}
+                      max={resolvedSpace.capacity}
                       value={form.people}
                       onChange={(event) => {
                         const parsed = Number(event.target.value);
                         const nextPeople = Number.isNaN(parsed) ? 1 : parsed;
-                        const clampedPeople = Math.max(1, Math.min(space.capacity, nextPeople));
+                        const clampedPeople = Math.max(
+                          1,
+                          Math.min(resolvedSpace.capacity, nextPeople),
+                        );
                         setForm((current) => ({ ...current, people: clampedPeople }));
                         setAvailabilityStatus("idle");
                       }}
@@ -366,7 +442,7 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Máximo permitido para este espaço: {space.capacity} pessoas.
+                    Máximo permitido para este espaço: {resolvedSpace.capacity} pessoas.
                   </p>
                 </div>
 
@@ -385,7 +461,7 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
               </div>
 
               <div className="rounded-lg border border-border bg-card p-3 text-sm text-muted-foreground">
-                Horários simulados como indisponíveis para {formatDate(form.date)}:{" "}
+                Horários indisponíveis para {formatDate(form.date)}:{" "}
                 <span className="font-medium text-foreground">
                   {unavailableTimes.length > 0
                     ? unavailableTimes.join(", ")
@@ -399,7 +475,7 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
                     <AlertCircle className="h-4 w-4" />
                     <AlertTitle>Horário indisponível</AlertTitle>
                     <AlertDescription>
-                      Este horário já está reservado no protótipo. Tente outro horário
+                      Este horário já está reservado. Tente outro horário
                       ou outra data para continuar.
                     </AlertDescription>
                   </Alert>
@@ -421,28 +497,28 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
                   Verificar disponibilidade
                 </Button>
                 <Button asChild variant="secondary" size="lg">
-                  <Link href={`/espacos/${space.id}`}>Voltar aos detalhes</Link>
+                  <Link href={`/espacos/${resolvedSpace.id}`}>Voltar aos detalhes</Link>
                 </Button>
               </div>
             </div>
           )}
 
-          {reservationType === "single" && availabilityStatus === "available" && (
+          {reservationType === "single" && availabilityStatus === "available" && !createdReservation && (
             <div className="space-y-5">
-              <Alert className="border-success/30 bg-success/10 text-foreground [&>svg]:text-success">
-                <CheckCircle2 className="h-4 w-4" />
-                <AlertTitle>Disponibilidade confirmada</AlertTitle>
-                <AlertDescription>
-                  Perfeito! Seu horário está livre e pronto para envio no WhatsApp.
-                </AlertDescription>
-              </Alert>
+                <Alert className="border-success/30 bg-success/10 text-foreground [&>svg]:text-success">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <AlertTitle>Disponibilidade confirmada</AlertTitle>
+                  <AlertDescription>
+                    Perfeito! Seu horário está livre e pronto para gerar uma reserva pendente.
+                  </AlertDescription>
+                </Alert>
 
               <Card className="space-y-3 border border-border bg-secondary/40 p-4">
                 <h2 className="font-display text-xl font-semibold text-foreground">
                   Resumo da solicitação
                 </h2>
                 <p className="text-sm text-foreground">
-                  <span className="font-medium">Espaço:</span> {space.name}
+                  <span className="font-medium">Espaço:</span> {resolvedSpace.name}
                 </p>
                 <p className="text-sm text-foreground">
                   <span className="font-medium">Data:</span> {formatDate(form.date)}
@@ -464,24 +540,77 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
                 <Button variant="secondary" size="lg" onClick={handleEditReservation}>
                   Editar dados
                 </Button>
-                <Button
-                  size="lg"
-                  className="gap-2"
-                  onClick={() => ensureLoginBeforeCheckout(whatsappLink)}
-                >
-                  <MessageCircle className="h-4 w-4" />
-                  Confirmar e continuar no WhatsApp
+                <Button size="lg" className="gap-2" onClick={handleCreateSingleReservation}>
+                  <CheckCircle2 className="h-4 w-4" />
+                  Gerar reserva pendente
                 </Button>
               </div>
-              {!isLoggedIn && (
+              {(!session || session.user.role !== "user") && (
                 <p className="text-sm text-muted-foreground">
-                  Antes de ir para o WhatsApp, faça login para confirmar a solicitação.
+                  Antes de gerar a reserva, faça login com o perfil cliente.
                 </p>
               )}
             </div>
           )}
 
-          {reservationType === "package" && (
+          {reservationType === "single" && availabilityStatus === "available" && createdReservation && (
+            <div className="space-y-5">
+                <Alert className="border-success/30 bg-success/10 text-foreground [&>svg]:text-success">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <AlertTitle>Reserva criada com status pendente</AlertTitle>
+                  <AlertDescription>
+                    Sua solicitação foi registrada e pode ser acompanhada pela equipe administrativa.
+                  </AlertDescription>
+                </Alert>
+
+              <Card className="space-y-3 border border-border bg-secondary/40 p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="font-display text-xl font-semibold text-foreground">
+                      {createdReservation.code}
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      Reserva gerada para {createdReservation.fullName}
+                    </p>
+                  </div>
+                  <ReservationStatusBadge status={createdReservation.status} />
+                </div>
+                <p className="text-sm text-foreground">
+                  <span className="font-medium">Espaço:</span> {createdReservation.spaceName}
+                </p>
+                <p className="text-sm text-foreground">
+                  <span className="font-medium">Agenda:</span> {createdReservation.scheduleLabel}
+                </p>
+                <p className="text-sm text-foreground">
+                  <span className="font-medium">Contato:</span> {createdReservation.email}
+                </p>
+              </Card>
+
+                <Alert className="border-primary/20 bg-primary-soft/70 text-foreground">
+                  <MessageCircle className="h-4 w-4 text-primary" />
+                  <AlertTitle>Próximo passo: finalizar no WhatsApp</AlertTitle>
+                  <AlertDescription>
+                    O pagamento e a validação final seguem no WhatsApp. Depois disso, a equipe pode atualizar o status para reservado.
+                  </AlertDescription>
+                </Alert>
+
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Button
+                  size="lg"
+                  className="gap-2"
+                  onClick={() => openWhatsApp(whatsappLink)}
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  Continuar no WhatsApp
+                </Button>
+                <Button asChild variant="secondary" size="lg">
+                  <Link href="/minhas-reservas">Ver minhas reservas</Link>
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {reservationType === "package" && !createdReservation && (
             <div className="space-y-5">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
@@ -547,7 +676,7 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
                   Resumo do pacote
                 </h2>
                 <p className="text-sm text-foreground">
-                  <span className="font-medium">Espaço:</span> {space.name}
+                  <span className="font-medium">Espaço:</span> {resolvedSpace.name}
                 </p>
                 <p className="text-sm text-foreground">
                   <span className="font-medium">Recorrência:</span>{" "}
@@ -578,22 +707,66 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
                   size="lg"
                   disabled={!isPackageReady}
                   className="gap-2"
-                  onClick={() => {
-                    ensureLoginBeforeCheckout(packageWhatsappLink);
-                  }}
+                  onClick={handleCreatePackageReservation}
                 >
-                  <MessageCircle className="h-4 w-4" />
-                  Solicitar pacote via WhatsApp
+                  <CheckCircle2 className="h-4 w-4" />
+                  Gerar solicitação pendente
                 </Button>
                 <Button asChild variant="secondary" size="lg">
-                  <Link href={`/espacos/${space.id}`}>Voltar aos detalhes</Link>
+                  <Link href={`/espacos/${resolvedSpace.id}`}>Voltar aos detalhes</Link>
                 </Button>
               </div>
-              {!isLoggedIn && (
+              {(!session || session.user.role !== "user") && (
                 <p className="text-sm text-muted-foreground">
-                  Antes de solicitar o pacote no WhatsApp, faça login no protótipo.
+                  Antes de solicitar o pacote, faça login com o perfil cliente.
                 </p>
               )}
+            </div>
+          )}
+
+          {reservationType === "package" && createdReservation && (
+            <div className="space-y-5">
+              <Alert className="border-success/30 bg-success/10 text-foreground [&>svg]:text-success">
+                <CheckCircle2 className="h-4 w-4" />
+                <AlertTitle>Solicitação de pacote registrada</AlertTitle>
+                <AlertDescription>
+                  O pacote foi criado como pendente e já pode ser acompanhado no painel.
+                </AlertDescription>
+              </Alert>
+
+              <Card className="space-y-3 border border-border bg-secondary/40 p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="font-display text-xl font-semibold text-foreground">
+                      {createdReservation.code}
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      {createdReservation.scheduleLabel}
+                    </p>
+                  </div>
+                  <ReservationStatusBadge status={createdReservation.status} />
+                </div>
+                <p className="text-sm text-foreground">
+                  <span className="font-medium">Espaço:</span> {createdReservation.spaceName}
+                </p>
+                <p className="text-sm text-foreground">
+                  <span className="font-medium">Cliente:</span> {createdReservation.fullName}
+                </p>
+              </Card>
+
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Button
+                  size="lg"
+                  className="gap-2"
+                  onClick={() => openWhatsApp(packageWhatsappLink)}
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  Continuar no WhatsApp
+                </Button>
+                <Button asChild variant="secondary" size="lg">
+                  <Link href="/minhas-reservas">Ver minhas reservas</Link>
+                </Button>
+              </div>
             </div>
           )}
         </Card>
@@ -605,8 +778,8 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
             </p>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>1. Escolha entre reserva avulsa ou reserva em pacote.</li>
-              <li>2. Preencha os campos do tipo escolhido.</li>
-              <li>3. Confirme e finalize a solicitação no WhatsApp.</li>
+              <li>2. Gere uma reserva pendente dentro do app.</li>
+              <li>3. Continue no WhatsApp e aguarde a atualização da equipe.</li>
             </ul>
           </Card>
 
