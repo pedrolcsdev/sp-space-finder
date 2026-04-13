@@ -29,11 +29,16 @@ interface SpaceCardProps {
   showPricing?: boolean;
 }
 
+const MAX_VISIBLE_RESOURCES = 2;
+
 export function SpaceCard({
   space,
   index = 0,
   showPricing = true,
 }: SpaceCardProps) {
+  const visibleResources = space.resources.slice(0, MAX_VISIBLE_RESOURCES);
+  const hiddenResourcesCount = space.resources.length - visibleResources.length;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -109,7 +114,7 @@ export function SpaceCard({
                 </span>
               </div>
             </div>
-            <div className="shrink-0 rounded-full border border-border/70 bg-secondary/80 px-2.5 py-1.5 text-xs font-semibold text-foreground shadow-sm">
+            <div className="shrink-0 whitespace-nowrap rounded-full border border-border/70 bg-secondary/80 px-2.5 py-1.5 text-xs font-semibold text-foreground shadow-sm">
               <span className="flex items-center gap-1">
                 <Star className="h-3.5 w-3.5 fill-current text-amber-500" />
                 4.9
@@ -122,18 +127,18 @@ export function SpaceCard({
           </p>
 
           <div className="flex min-h-[5.5rem] flex-wrap content-start gap-2">
-            {space.resources.slice(0, 3).map((r) => (
+            {visibleResources.map((r) => (
               <span
                 key={r}
-                className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-secondary/70 px-3 py-1.5 text-xs font-medium text-secondary-foreground"
+                className="inline-flex max-w-[42%] min-w-0 items-center gap-1.5 rounded-full border border-border/70 bg-secondary/70 px-3 py-1.5 text-xs font-medium text-secondary-foreground"
               >
                 <Check className="w-3 h-3" />
-                {r}
+                <span className="truncate">{r}</span>
               </span>
             ))}
-            {space.resources.length > 3 && (
+            {hiddenResourcesCount > 0 && (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-secondary/70 px-3 py-1.5 text-xs font-medium text-secondary-foreground">
-                <Check className="w-3 h-3" />+{space.resources.length - 3}
+                <Check className="w-3 h-3" />+{hiddenResourcesCount}
               </span>
             )}
           </div>
