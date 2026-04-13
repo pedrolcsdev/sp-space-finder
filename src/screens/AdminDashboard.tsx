@@ -17,7 +17,6 @@ import {
 import { Bar, BarChart, CartesianGrid, Pie, PieChart, XAxis } from "recharts";
 import type { Space } from "@/lib/data/contracts";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ChartContainer,
@@ -161,10 +160,7 @@ export default function AdminDashboardScreen({
                 avaliações e edição operacional do catálogo.
               </p>
             </div>
-            <div className="flex flex-wrap gap-3">
-              <Badge variant="outline" className="w-fit rounded-full px-4 py-2 text-sm">
-                Operação centralizada
-              </Badge>
+            <div className="flex flex-wrap items-center gap-3">
               <Button asChild variant="secondary" className="rounded-full">
                 <Link href="/">Voltar ao site</Link>
               </Button>

@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  ArrowRight,
   Filter,
   Search,
   SlidersHorizontal,
@@ -317,19 +316,6 @@ export default function SearchScreen({
           </aside>
 
           <div className="min-w-0 flex-1">
-            <div className="mb-5 flex flex-col gap-3 rounded-[26px] border border-border/70 bg-white/76 p-4 shadow-sm shadow-slate-950/5 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Mostrando uma curadoria com foco em clareza, confiança e boa
-                  leitura de valor.
-                </p>
-              </div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-secondary/70 px-4 py-2 text-sm font-medium text-foreground">
-                Ver detalhes e comparar
-                <ArrowRight className="h-4 w-4 text-primary" />
-              </div>
-            </div>
-
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
               {filtered.map((space, i) => (
                 <SpaceCard key={space.id} space={space} index={i} />
