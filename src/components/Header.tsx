@@ -1,10 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowRight,
-  Building2,
   Heart,
   LayoutDashboard,
   LogOut,
@@ -70,13 +70,17 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/50 bg-background/80 backdrop-blur-xl">
       <div className="page-container grid h-[82px] grid-cols-[auto_1fr_auto] items-center gap-4">
-        <Link href="/" className="group flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20 transition-transform group-hover:scale-[1.03]">
-            <Building2 className="w-5 h-5 text-primary-foreground" />
+        <Link href="/" className="group block">
+          <div className="relative h-[54px] w-[168px] sm:w-[188px]">
+            <Image
+              src="/logo-sp-header.png"
+              alt="Grupo São Paulo"
+              fill
+              priority
+              sizes="(min-width: 640px) 188px, 168px"
+              className="object-contain object-left transition-transform group-hover:scale-[1.02]"
+            />
           </div>
-          <span className="font-display text-lg font-semibold tracking-[-0.03em] text-foreground sm:text-xl">
-            SP <span className="text-primary">Spaces</span>
-          </span>
         </Link>
 
         <nav

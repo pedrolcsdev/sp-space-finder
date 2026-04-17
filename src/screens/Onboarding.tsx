@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Building2,
   User,
   Briefcase,
   Check,
@@ -15,6 +14,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { BrandLogo } from "@/components/BrandLogo";
 
 const steps = [
   {
@@ -95,13 +95,8 @@ export default function OnboardingScreen() {
       <div className="flex flex-1 items-center justify-center px-4 py-10">
         <div className="w-full max-w-lg">
           <div className="mb-7 text-center">
-            <div className="inline-flex items-center gap-2.5 mb-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary">
-                <Building2 className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <span className="font-display text-lg font-semibold text-foreground">
-                SP Spaces
-              </span>
+            <div className="mb-2 inline-flex">
+              <BrandLogo variant="compact" markClassName="h-9 w-9" />
             </div>
             <div>
               <Badge variant="outline" size="sm">

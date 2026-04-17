@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   AlertCircle,
-  Building2,
   CheckCircle2,
   Lock,
   Mail,
@@ -17,6 +16,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { BrandLogo } from "@/components/BrandLogo";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "@/hooks/use-toast";
 
@@ -142,13 +142,8 @@ export default function LoginScreen({ redirectTo }: LoginScreenProps) {
         className="w-full max-w-md space-y-8"
       >
         <div className="text-center">
-          <Link href="/" className="inline-flex items-center gap-2.5 mb-6">
-            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary">
-              <Building2 className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="font-display text-xl font-semibold text-foreground">
-              SP <span className="text-primary">Spaces</span>
-            </span>
+          <Link href="/" className="mb-6 inline-flex">
+            <BrandLogo variant="compact" />
           </Link>
           <h1 className="font-display text-3xl font-semibold text-foreground">
             Bem-vindo de volta

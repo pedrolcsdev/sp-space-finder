@@ -40,6 +40,7 @@ import {
 } from "@/lib/mock/mockStore";
 import { ReservationStatusBadge } from "@/components/ReservationStatusBadge";
 import { Button } from "@/components/ui/button";
+import { BrandLogo } from "@/components/BrandLogo";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -149,6 +150,7 @@ export default function AdminDashboardScreen({
         <div className="mb-8 rounded-[32px] border border-white/80 bg-white/86 p-6 shadow-[0_24px_70px_rgb(15_23_42_/_0.08)] backdrop-blur-xl sm:p-7">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
+              <BrandLogo variant="compact" className="mb-4 w-fit" markClassName="h-10 w-10" />
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                 Painel administrativo
               </p>
