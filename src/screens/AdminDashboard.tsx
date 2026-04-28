@@ -146,15 +146,15 @@ export default function AdminDashboardScreen({
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(15,118,110,0.10),_transparent_28%),linear-gradient(180deg,#f8fafc_0%,#eef4f7_100%)]">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8 rounded-[32px] border border-white/80 bg-white/86 p-6 shadow-[0_24px_70px_rgb(15_23_42_/_0.08)] backdrop-blur-xl sm:p-7">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        <div className="mb-6 rounded-3xl border border-white/80 bg-white/86 p-5 shadow-[0_24px_70px_rgb(15_23_42_/_0.08)] backdrop-blur-xl sm:mb-8 sm:p-7">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <BrandLogo variant="compact" className="mb-4 w-fit" markClassName="h-10 w-10" />
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              <p className="text-xs font-semibold uppercase tracking-normal text-muted-foreground">
                 Painel administrativo
               </p>
-              <h1 className="mt-3 font-display text-3xl font-semibold tracking-[-0.04em] text-foreground sm:text-4xl">
+              <h1 className="mt-3 font-display text-3xl font-semibold tracking-normal text-foreground sm:text-4xl">
                 SP Spaces Admin
               </h1>
               <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground sm:text-base">
@@ -162,13 +162,13 @@ export default function AdminDashboardScreen({
                 avaliações e edição operacional do catálogo.
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <Button asChild variant="secondary" className="rounded-full">
+            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
+              <Button asChild variant="secondary" className="w-full rounded-full sm:w-auto">
                 <Link href="/">Voltar ao site</Link>
               </Button>
               <Button
                 variant="ghost"
-                className="rounded-full text-destructive hover:text-destructive"
+                className="w-full rounded-full text-destructive hover:text-destructive sm:w-auto"
                 onClick={() => {
                   logout();
                   router.push("/");
@@ -182,49 +182,49 @@ export default function AdminDashboardScreen({
         </div>
 
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="h-auto flex-wrap rounded-[22px] bg-white/85 p-2">
-            <TabsTrigger value="dashboard" className="rounded-2xl">
+          <TabsList className="h-auto w-full justify-start overflow-x-auto rounded-2xl bg-white/85 p-2 sm:flex-wrap">
+            <TabsTrigger value="dashboard" className="shrink-0 rounded-2xl">
               <LayoutDashboard className="mr-2 h-4 w-4" />
               Dashboard
             </TabsTrigger>
-            <TabsTrigger value="spaces" className="rounded-2xl">
+            <TabsTrigger value="spaces" className="shrink-0 rounded-2xl">
               <PencilLine className="mr-2 h-4 w-4" />
               Espaços
             </TabsTrigger>
-            <TabsTrigger value="usage" className="rounded-2xl">
+            <TabsTrigger value="usage" className="shrink-0 rounded-2xl">
               <BarChart3 className="mr-2 h-4 w-4" />
               Uso de espaços
             </TabsTrigger>
-            <TabsTrigger value="reviews" className="rounded-2xl">
+            <TabsTrigger value="reviews" className="shrink-0 rounded-2xl">
               <MessageSquareText className="mr-2 h-4 w-4" />
               Avaliações
             </TabsTrigger>
-            <TabsTrigger value="reservations" className="rounded-2xl">
+            <TabsTrigger value="reservations" className="shrink-0 rounded-2xl">
               <ClipboardCheck className="mr-2 h-4 w-4" />
               Reservas
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <Card className="rounded-[26px] p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                <p className="text-xs font-semibold uppercase tracking-normal text-muted-foreground">
                   Total de reservas
                 </p>
-                <p className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-foreground">
+                <p className="mt-4 text-4xl font-semibold tracking-normal text-foreground">
                   {totalReservations}
                 </p>
               </Card>
               <Card className="rounded-[26px] p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                <p className="text-xs font-semibold uppercase tracking-normal text-muted-foreground">
                   Taxa média de ocupação
                 </p>
-                <p className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-foreground">
+                <p className="mt-4 text-4xl font-semibold tracking-normal text-foreground">
                   {occupancyAverage}%
                 </p>
               </Card>
               <Card className="rounded-[26px] p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                <p className="text-xs font-semibold uppercase tracking-normal text-muted-foreground">
                   Mais reservado
                 </p>
                 <p className="mt-4 text-xl font-semibold text-foreground">
@@ -232,7 +232,7 @@ export default function AdminDashboardScreen({
                 </p>
               </Card>
               <Card className="rounded-[26px] p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                <p className="text-xs font-semibold uppercase tracking-normal text-muted-foreground">
                   Menor saída
                 </p>
                 <p className="mt-4 text-xl font-semibold text-foreground">
@@ -241,8 +241,8 @@ export default function AdminDashboardScreen({
               </Card>
             </div>
 
-            <div className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
-              <Card className="rounded-[30px] p-6">
+            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)]">
+              <Card className="min-w-0 rounded-3xl p-4 sm:p-6">
                 <div className="mb-4">
                   <p className="text-sm font-semibold text-foreground">Reservas por espaço</p>
                   <p className="text-sm text-muted-foreground">
@@ -269,7 +269,7 @@ export default function AdminDashboardScreen({
                 </ChartContainer>
               </Card>
 
-              <Card className="rounded-[30px] p-6">
+              <Card className="min-w-0 rounded-3xl p-4 sm:p-6">
                 <div className="mb-4">
                   <p className="text-sm font-semibold text-foreground">Status das reservas</p>
                   <p className="text-sm text-muted-foreground">
@@ -297,7 +297,7 @@ export default function AdminDashboardScreen({
               </Card>
             </div>
 
-            <Card className="rounded-[30px] p-6">
+            <Card className="rounded-3xl p-4 sm:p-6">
               <div className="mb-4">
                 <p className="text-sm font-semibold text-foreground">Reservas recentes</p>
                 <p className="text-sm text-muted-foreground">
@@ -330,8 +330,8 @@ export default function AdminDashboardScreen({
           </TabsContent>
 
           <TabsContent value="spaces" className="space-y-6">
-            <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
-              <Card className="rounded-[30px] p-5">
+            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
+              <Card className="min-w-0 rounded-3xl p-5">
                 <p className="text-sm font-semibold text-foreground">Espaços cadastrados</p>
                 <div className="mt-4 space-y-2">
                   {resolvedSpaces.map((space) => (
@@ -345,14 +345,16 @@ export default function AdminDashboardScreen({
                           : "border-border/70 bg-secondary/35 hover:bg-secondary/55"
                       }`}
                     >
-                      <p className="font-semibold text-foreground">{space.name}</p>
-                      <p className="mt-1 text-sm text-muted-foreground">{space.location}</p>
+                      <p className="break-words font-semibold text-foreground">{space.name}</p>
+                      <p className="mt-1 break-words text-sm text-muted-foreground">
+                        {space.location}
+                      </p>
                     </button>
                   ))}
                 </div>
               </Card>
 
-              <Card className="rounded-[30px] p-6">
+              <Card className="min-w-0 rounded-3xl p-4 sm:p-6">
                 <div className="mb-5">
                   <p className="text-sm font-semibold text-foreground">Editar espaço</p>
                   <p className="text-sm text-muted-foreground">
@@ -435,14 +437,16 @@ export default function AdminDashboardScreen({
                   </div>
                 </div>
                 <div className="mt-5">
-                  <Button onClick={handleSaveSpace}>Salvar alterações</Button>
+                  <Button className="w-full sm:w-auto" onClick={handleSaveSpace}>
+                    Salvar alterações
+                  </Button>
                 </div>
               </Card>
             </div>
           </TabsContent>
 
           <TabsContent value="usage">
-            <Card className="rounded-[30px] p-6">
+            <Card className="rounded-3xl p-4 sm:p-6">
               <div className="mb-4 flex items-center gap-2">
                 <Activity className="h-4 w-4 text-primary" />
                 <div>
@@ -474,7 +478,7 @@ export default function AdminDashboardScreen({
           </TabsContent>
 
           <TabsContent value="reviews">
-            <Card className="rounded-[30px] p-6">
+            <Card className="rounded-3xl p-4 sm:p-6">
               <div className="mb-4 flex items-center gap-2">
                 <Star className="h-4 w-4 text-primary" />
                 <div>
@@ -508,7 +512,7 @@ export default function AdminDashboardScreen({
           </TabsContent>
 
           <TabsContent value="reservations">
-            <Card className="rounded-[30px] p-6">
+            <Card className="rounded-3xl p-4 sm:p-6">
               <div className="mb-4">
                 <p className="text-sm font-semibold text-foreground">Gestão de reservas</p>
                 <p className="text-sm text-muted-foreground">

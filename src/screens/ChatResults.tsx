@@ -49,8 +49,8 @@ export default function ChatResultsScreen({ spaces }: ChatResultsScreenProps) {
           <ArrowLeft className="h-4 w-4" /> Voltar
         </Link>
 
-        <Card className="overflow-hidden p-6 sm:p-7">
-          <div className="mb-5 flex items-center justify-between gap-4">
+        <Card className="overflow-hidden p-5 sm:p-7">
+          <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="mb-2 flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary-soft">
                 <Bot className="h-5 w-5 text-primary" />
@@ -65,7 +65,7 @@ export default function ChatResultsScreen({ spaces }: ChatResultsScreenProps) {
             </div>
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div>
               <h1 className="font-display text-2xl font-semibold text-foreground lg:text-3xl">
                 Resultados guiados pela conversa
@@ -92,8 +92,8 @@ export default function ChatResultsScreen({ spaces }: ChatResultsScreenProps) {
               )}
             </div>
 
-            <div className="rounded-[24px] border border-border/70 bg-secondary/45 p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+            <div className="rounded-2xl border border-border/70 bg-secondary/45 p-4 sm:p-5">
+              <p className="text-xs font-semibold uppercase tracking-normal text-muted-foreground">
                 Critérios lembrados
               </p>
               <div className="mt-4 space-y-3 text-sm text-foreground/78">
@@ -124,15 +124,15 @@ export default function ChatResultsScreen({ spaces }: ChatResultsScreenProps) {
         </Card>
       </motion.div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 xl:gap-6">
         {rankedSpaces.map((space, index) => (
           <SpaceCard key={space.id} space={space} index={index} />
         ))}
       </div>
 
       {rankedSpaces.length === 0 && (
-        <div className="mt-8 rounded-[28px] border border-dashed border-border bg-white/65 px-6 py-14 text-center shadow-sm shadow-slate-950/5">
-          <p className="text-xl font-semibold tracking-[-0.03em] text-foreground">
+        <div className="mt-8 rounded-3xl border border-dashed border-border bg-white/65 px-5 py-12 text-center shadow-sm shadow-slate-950/5 sm:px-6 sm:py-14">
+          <p className="text-xl font-semibold tracking-normal text-foreground">
             Nenhum espaço apareceu com esse recorte.
           </p>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-muted-foreground">

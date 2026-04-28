@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MessageCircle, X, Send, Bot, User, RotateCcw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ export function ChatWidget() {
     confirmResourceSelection,
   } = useChatAssistant();
   const [input, setInput] = useState("");
+  const [showInitialTooltip, setShowInitialTooltip] = useState(true);
 
   const showIntroSuggestions = useMemo(
     () => conversationStage === "initial",
@@ -43,6 +44,12 @@ export function ChatWidget() {
   const showLocationSuggestions = conversationStage === "awaitingLocation";
   const showResourceSelector = conversationStage === "awaitingResources";
 
+  useEffect(() => {
+    if (open) {
+      setShowInitialTooltip(false);
+    }
+  }, [open]);
+
   const handleSend = () => {
     if (!input.trim()) return;
     sendMessage(input.trim());
@@ -53,16 +60,34 @@ export function ChatWidget() {
     <>
       <AnimatePresence>
         {!open && (
-          <motion.button
+          <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0 }}
-            onClick={() => openChat()}
-            className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-xl bg-primary text-primary-foreground card-shadow-lg transition-transform hover:scale-105 hover:bg-primary-hover"
-            aria-label="Abrir chat"
+            className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 z-50 flex items-center gap-3 sm:bottom-6 sm:right-6"
           >
-            <MessageCircle className="h-6 w-6" />
-          </motion.button>
+            {showInitialTooltip && (
+              <motion.div
+                initial={{ opacity: 0, x: 8 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 8 }}
+                className="pointer-events-none max-w-[210px] rounded-xl border border-border/80 bg-white px-3 py-2 text-xs font-medium leading-5 text-foreground shadow-lg"
+              >
+                Precisa de ajuda? Fale com o assistente
+              </motion.div>
+            )}
+            <button
+              onClick={() => {
+                setShowInitialTooltip(false);
+                openChat();
+              }}
+              className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground card-shadow-lg transition-transform hover:scale-105 hover:bg-primary-hover"
+              aria-label="Abrir chat"
+            >
+              <span className="absolute inset-0 rounded-xl bg-primary/30 motion-safe:animate-ping" />
+              <MessageCircle className="relative h-6 w-6" />
+            </button>
+          </motion.div>
         )}
       </AnimatePresence>
 
@@ -72,18 +97,18 @@ export function ChatWidget() {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-4 right-4 z-50 flex h-[74vh] max-h-[560px] w-[380px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-xl border border-border bg-card card-shadow-lg sm:bottom-6 sm:right-6"
+            className="fixed inset-x-2 bottom-[calc(0.5rem+env(safe-area-inset-bottom))] z-50 flex h-[calc(100dvh-1rem-env(safe-area-inset-bottom))] max-h-[640px] flex-col overflow-hidden rounded-2xl border border-border bg-card card-shadow-lg sm:inset-x-auto sm:bottom-6 sm:right-6 sm:h-[74vh] sm:max-h-[560px] sm:w-[380px]"
           >
-            <div className="gradient-hero flex items-center justify-between px-5 py-4">
-              <div className="flex items-center gap-3">
+            <div className="gradient-hero flex items-center justify-between gap-3 px-4 py-3 sm:px-5 sm:py-4">
+              <div className="flex min-w-0 items-center gap-3">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-foreground/20">
                   <Bot className="h-4 w-4 text-primary-foreground" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-semibold text-primary-foreground">
                     Assistente SP Spaces
                   </p>
-                  <p className="text-xs text-primary-foreground/60">
+                  <p className="truncate text-xs text-primary-foreground/60">
                     Recomendações consultivas em tempo real
                   </p>
                 </div>
@@ -107,14 +132,14 @@ export function ChatWidget() {
               </div>
             </div>
 
-            <div className="flex-1 space-y-3 overflow-y-auto p-4">
+            <div className="flex-1 space-y-3 overflow-y-auto p-3 sm:p-4">
               {messages.map((message, index) => (
                 <div key={message.id} className="space-y-2">
                   <div
                     className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`flex max-w-[85%] items-end gap-2 ${message.type === "user" ? "flex-row-reverse" : ""}`}
+                      className={`flex max-w-[92%] items-end gap-2 sm:max-w-[85%] ${message.type === "user" ? "flex-row-reverse" : ""}`}
                     >
                       <div
                         className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full ${
@@ -140,7 +165,7 @@ export function ChatWidget() {
                   </div>
 
                   {showIntroSuggestions && index === 0 && (
-                    <div className="space-y-2 pl-8">
+                    <div className="space-y-2 pl-0 sm:pl-8">
                       <div className="flex flex-wrap gap-2">
                         {introSuggestions.map((suggestion) => (
                           <FilterChip
@@ -160,7 +185,7 @@ export function ChatWidget() {
                   {showLocationSuggestions &&
                     index === messages.length - 1 &&
                     message.type === "bot" && (
-                      <div className="space-y-2 pl-8">
+                      <div className="space-y-2 pl-0 sm:pl-8">
                         <div className="flex flex-wrap gap-2">
                           {locationSuggestions.map((suggestion) => (
                             <FilterChip
@@ -180,7 +205,7 @@ export function ChatWidget() {
                   {showResourceSelector &&
                     index === messages.length - 1 &&
                     message.type === "bot" && (
-                      <div className="space-y-3 pl-8">
+                      <div className="space-y-3 pl-0 sm:pl-8">
                         <div className="flex flex-wrap gap-2">
                           {resourceOptions.map((resource) => {
                             const selected = selectedResourceOptions.includes(resource);
@@ -210,7 +235,7 @@ export function ChatWidget() {
               ))}
 
               {isSearching && (
-                <div className="pl-8">
+                <div className="pl-0 sm:pl-8">
                   <p className="text-sm italic text-muted-foreground/70">
                     Buscando os espaços ideais para você...
                   </p>

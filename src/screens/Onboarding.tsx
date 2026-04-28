@@ -92,7 +92,7 @@ export default function OnboardingScreen() {
         />
       </div>
 
-      <div className="flex flex-1 items-center justify-center px-4 py-10">
+      <div className="flex flex-1 items-center justify-center px-4 py-8 sm:py-10">
         <div className="w-full max-w-lg">
           <div className="mb-7 text-center">
             <div className="mb-2 inline-flex">
@@ -113,7 +113,7 @@ export default function OnboardingScreen() {
               exit={{ opacity: 0, x: -30 }}
               transition={{ duration: 0.3 }}
             >
-              <Card size="lg" className="p-7 sm:p-8">
+              <Card size="lg" className="p-5 sm:p-8">
                 <h2 className="mb-1 font-display text-2xl font-semibold text-foreground">
                   {current.title}
                 </h2>
@@ -154,7 +154,7 @@ export default function OnboardingScreen() {
                               : "border-border hover:border-primary/40"
                           }`}
                         >
-                          <div className="flex items-center gap-4">
+                          <div className="flex items-start gap-3 sm:items-center sm:gap-4">
                             <div
                               className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
                                 isSelected
@@ -166,7 +166,7 @@ export default function OnboardingScreen() {
                                 <Check className="w-3.5 h-3.5 text-primary-foreground" />
                               )}
                             </div>
-                            <div>
+                            <div className="min-w-0">
                               <p className="text-sm font-semibold text-foreground">
                                 {opt.label}
                               </p>
@@ -181,7 +181,7 @@ export default function OnboardingScreen() {
                   </div>
                 )}
 
-                <div className="mt-8 flex items-center justify-between">
+                <div className="mt-8 flex items-center justify-between gap-3">
                   <Button
                     onClick={() => step > 0 && setStep(step - 1)}
                     variant="ghost"
@@ -194,7 +194,7 @@ export default function OnboardingScreen() {
                   </Button>
                   <Button
                     onClick={next}
-                    className="gap-2 px-6"
+                    className="gap-2 px-5 sm:px-6"
                   >
                     {step === steps.length - 1 ? "Concluir" : "Continuar"}
                     <ArrowRight className="w-4 h-4" />

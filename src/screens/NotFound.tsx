@@ -18,7 +18,7 @@ export default function NotFoundScreen() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-lg text-center" size="lg">
+      <Card className="w-full max-w-lg p-5 text-center sm:p-6" size="lg">
         <p className="text-sm font-semibold uppercase tracking-[0.08em] text-muted-foreground">
           Erro 404
         </p>
@@ -26,10 +26,11 @@ export default function NotFoundScreen() {
           Página não encontrada
         </h1>
         <p className="mx-auto mt-3 max-w-md text-sm text-muted-foreground">
-          O endereço <span className="font-medium text-foreground">{pathname}</span>{" "}
+          O endereço{" "}
+          <span className="break-all font-medium text-foreground">{pathname}</span>{" "}
           não existe ou foi movido.
         </p>
-        <Button asChild className="mt-8">
+        <Button asChild className="mt-8 w-full sm:w-auto">
           <Link href="/">Voltar para o início</Link>
         </Button>
       </Card>

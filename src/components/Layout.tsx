@@ -16,7 +16,7 @@ export function Layout({ children, chatFlow }: LayoutProps) {
       <div className="flex min-h-screen flex-col bg-background text-foreground">
         <Suspense
           fallback={
-            <div className="h-[82px] border-b border-white/50 bg-background/80 backdrop-blur-xl" />
+            <div className="h-16 border-b border-white/50 bg-background/80 backdrop-blur-xl sm:h-20" />
           }
         >
           <Header />

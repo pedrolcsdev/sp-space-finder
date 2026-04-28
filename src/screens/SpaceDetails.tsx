@@ -51,13 +51,13 @@ export default function SpaceDetailsScreen({ space }: SpaceDetailsScreenProps) {
         Voltar para resultados
       </Link>
 
-      <div className="grid gap-8 xl:grid-cols-[1fr_360px]">
-        <div className="space-y-6">
+      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_360px] xl:gap-8">
+        <div className="min-w-0 space-y-6">
           <div className="overflow-hidden rounded-2xl border border-border bg-card card-shadow">
             <img
               src={gallery[0]}
               alt={resolvedSpace.name}
-              className="h-[320px] w-full object-cover sm:h-[420px]"
+              className="h-64 w-full object-cover sm:h-[420px]"
             />
           </div>
 
@@ -78,21 +78,24 @@ export default function SpaceDetailsScreen({ space }: SpaceDetailsScreenProps) {
             </div>
           )}
 
-          <Card className="space-y-6 p-6 sm:p-7">
+          <Card className="space-y-6 p-5 sm:p-7">
             <div className="space-y-3">
               <Badge variant="outline" className="w-fit">
                 {categoryLabel[resolvedSpace.category]}
               </Badge>
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="space-y-3">
-                  <h1 className="font-display text-3xl font-semibold leading-tight text-foreground sm:text-4xl">
+                  <h1 className="font-display text-3xl font-semibold leading-tight tracking-normal text-foreground sm:text-4xl">
                     {resolvedSpace.name}
                   </h1>
                   <p className="text-base leading-relaxed text-muted-foreground">
                     {resolvedSpace.description}
                   </p>
                 </div>
-                <FavoriteSpaceButton spaceId={resolvedSpace.id} />
+                <FavoriteSpaceButton
+                  spaceId={resolvedSpace.id}
+                  className="w-full sm:w-auto"
+                />
               </div>
             </div>
 
@@ -120,7 +123,7 @@ export default function SpaceDetailsScreen({ space }: SpaceDetailsScreenProps) {
             </div>
           </Card>
 
-          <Card className="space-y-4 p-6">
+          <Card className="space-y-4 p-5 sm:p-6">
             <h2 className="flex items-center gap-2 font-display text-xl font-semibold text-foreground">
               <Sparkles className="h-5 w-5 text-primary" />
               Comodidades
@@ -139,7 +142,7 @@ export default function SpaceDetailsScreen({ space }: SpaceDetailsScreenProps) {
             </div>
           </Card>
 
-          <Card className="space-y-4 p-6">
+          <Card className="space-y-4 p-5 sm:p-6">
             <h2 className="flex items-center gap-2 font-display text-xl font-semibold text-foreground">
               <ShieldCheck className="h-5 w-5 text-primary" />
               Regras de uso
@@ -155,7 +158,7 @@ export default function SpaceDetailsScreen({ space }: SpaceDetailsScreenProps) {
           </Card>
         </div>
 
-        <aside className="space-y-4 xl:sticky xl:top-24 xl:h-fit">
+        <aside className="min-w-0 space-y-4 xl:sticky xl:top-24 xl:h-fit">
           <Card className="space-y-5 p-6">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">

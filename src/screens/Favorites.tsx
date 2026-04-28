@@ -32,13 +32,13 @@ export default function FavoritesScreen({ spaces }: FavoritesScreenProps) {
       currentPath="/favoritos"
     >
       {favoriteSpaces.length > 0 ? (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 xl:gap-6">
           {favoriteSpaces.map((space, index) => (
             <SpaceCard key={space.id} space={space} index={index} />
           ))}
         </div>
       ) : (
-        <Card className="flex flex-col items-center justify-center gap-3 p-10 text-center">
+        <Card className="flex flex-col items-center justify-center gap-3 p-6 text-center sm:p-10">
           <div className="rounded-full bg-primary/10 p-3 text-primary">
             <Heart className="h-5 w-5" />
           </div>

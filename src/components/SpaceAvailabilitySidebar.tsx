@@ -71,7 +71,7 @@ export function SpaceAvailabilitySidebar({
   }, [reservePath, selectedDate, selectedTime, spaceId]);
 
   return (
-    <Card className="space-y-5 p-6">
+    <Card className="min-w-0 space-y-5 p-4 sm:p-6">
       <div className="space-y-1">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Disponibilidade
@@ -81,7 +81,7 @@ export function SpaceAvailabilitySidebar({
         </p>
       </div>
 
-      <div className="rounded-lg border border-border bg-secondary/50 p-3">
+      <div className="overflow-x-auto rounded-lg border border-border bg-secondary/50 p-2 sm:p-3">
         <Calendar
           mode="single"
           selected={selectedDay}
