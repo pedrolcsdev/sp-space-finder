@@ -27,13 +27,13 @@ export default function MyReservationsScreen() {
     >
       <div className="grid gap-4">
         {reservations.map((reservation) => (
-          <Card key={reservation.id} className="space-y-4 p-6 sm:p-7">
+          <Card key={reservation.id} className="min-w-0 space-y-4 p-5 sm:p-7">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                <p className="text-xs font-semibold uppercase tracking-normal text-muted-foreground">
                   Código da reserva
                 </p>
-                <h2 className="mt-2 font-display text-2xl font-semibold text-foreground">
+                <h2 className="mt-2 font-display text-2xl font-semibold tracking-normal text-foreground">
                   {reservation.code}
                 </h2>
                 <p className="mt-2 text-sm text-muted-foreground">{reservation.spaceName}</p>
@@ -73,8 +73,8 @@ export default function MyReservationsScreen() {
               </div>
             )}
 
-            <div className="flex flex-wrap gap-3">
-              <Button asChild variant="secondary">
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <Button asChild variant="secondary" className="w-full sm:w-auto">
                 <a
                   href="https://wa.me/5511999999999"
                   target="_blank"

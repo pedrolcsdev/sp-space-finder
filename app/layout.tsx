@@ -5,6 +5,11 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "SP Spaces",
   description: "Encontre o espaço ideal para eventos e reuniões em São Paulo.",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default function RootLayout({

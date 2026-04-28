@@ -124,6 +124,17 @@
       "calt" 1;
   }
 
+  html,
+  body {
+    @apply min-h-screen overflow-x-hidden;
+  }
+
+  img,
+  video,
+  canvas {
+    @apply max-w-full;
+  }
+
   h1,
   h2,
   h3,
@@ -141,11 +152,11 @@
 
 @layer utilities {
   .page-container {
-    @apply container px-4 sm:px-6 lg:px-8;
+    @apply container w-full px-4 sm:px-6 lg:px-8;
   }
 
   .section-space {
-    @apply py-12 lg:py-16;
+    @apply py-10 sm:py-12 lg:py-16;
   }
 
   .gradient-hero {

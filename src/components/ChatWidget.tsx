@@ -1,145 +1,93 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { MessageCircle, X, Send, Bot, User } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { MessageCircle, X, Send, Bot, User, RotateCcw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import type { ChatFlowStep } from "@/lib/data/contracts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FilterChip } from "@/components/ui/filter-chip";
+import { useChatAssistant } from "@/hooks/use-chat-assistant";
 
-interface Message {
-  type: "bot" | "user";
-  text: string;
-  options?: string[];
-}
-
-interface ChatWidgetProps {
-  chatFlow: ChatFlowStep[];
-}
-
-interface ChatOpenDetail {
-  message?: string;
-  autoSend?: boolean;
-}
-
-export function ChatWidget({ chatFlow }: ChatWidgetProps) {
-  const initialMessages = chatFlow.length > 0 ? [chatFlow[0]] : [];
-  const initialStep = chatFlow.length > 0 ? 1 : 0;
-  const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
-  const [step, setStep] = useState(initialStep);
+export function ChatWidget() {
+  const {
+    open,
+    messages,
+    introSuggestions,
+    followUpActions,
+    locationSuggestions,
+    resourceOptions,
+    hasSearchContext,
+    conversationStage,
+    selectedResourceOptions,
+    isSearching,
+    closeChat,
+    openChat,
+    resetConversation,
+    sendMessage,
+    handleQuickAction,
+    toggleResourceOption,
+    confirmResourceSelection,
+  } = useChatAssistant();
   const [input, setInput] = useState("");
-  const router = useRouter();
+  const [showInitialTooltip, setShowInitialTooltip] = useState(true);
 
-  const resetConversation = () => {
-    setMessages(initialMessages);
-    setStep(initialStep);
-    setInput("");
-  };
+  const showIntroSuggestions = useMemo(
+    () => conversationStage === "initial",
+    [conversationStage],
+  );
 
-  const applyUserMessage = (
-    userText: string,
-    currentMessages: Message[],
-    currentStep: number,
-  ) => {
-    const trimmed = userText.trim();
+  const showFollowUpActions = useMemo(
+    () => hasSearchContext && messages.length > 2 && conversationStage === "results",
+    [conversationStage, hasSearchContext, messages.length],
+  );
 
-    if (!trimmed) return;
-
-    const nextMessages: Message[] = [
-      ...currentMessages,
-      { type: "user", text: trimmed },
-    ];
-
-    if (currentStep < chatFlow.length) {
-      nextMessages.push(chatFlow[currentStep]);
-      setMessages(nextMessages);
-      setStep(currentStep + 1);
-
-      if (currentStep === chatFlow.length - 1) {
-        setTimeout(() => {
-          setOpen(false);
-          router.push("/chat-resultados");
-        }, 2000);
-      }
-
-      return;
-    }
-
-    setMessages(nextMessages);
-  };
+  const showLocationSuggestions = conversationStage === "awaitingLocation";
+  const showResourceSelector = conversationStage === "awaitingResources";
 
   useEffect(() => {
-    const handleOpenChat = (event: Event) => {
-      const detail = (event as CustomEvent<ChatOpenDetail | undefined>).detail;
-      const nextInitialMessages = chatFlow.length > 0 ? [chatFlow[0]] : [];
-      const nextInitialStep = chatFlow.length > 0 ? 1 : 0;
-
-      setOpen(true);
-
-      if (detail?.autoSend && detail.message?.trim()) {
-        const nextMessages: Message[] = [
-          ...nextInitialMessages,
-          { type: "user", text: detail.message.trim() },
-        ];
-
-        if (nextInitialStep < chatFlow.length) {
-          nextMessages.push(chatFlow[nextInitialStep]);
-          setStep(nextInitialStep + 1);
-
-          if (nextInitialStep === chatFlow.length - 1) {
-            setTimeout(() => {
-              setOpen(false);
-              router.push("/chat-resultados");
-            }, 2000);
-          }
-        } else {
-          setStep(nextInitialStep);
-        }
-
-        setMessages(nextMessages);
-        setInput("");
-      }
-    };
-
-    window.addEventListener("spspaces:open-chat", handleOpenChat);
-
-    return () => {
-      window.removeEventListener("spspaces:open-chat", handleOpenChat);
-    };
-  }, [chatFlow, router]);
-
-  const handleOption = (option: string) => {
-    applyUserMessage(option, messages, step);
-  };
+    if (open) {
+      setShowInitialTooltip(false);
+    }
+  }, [open]);
 
   const handleSend = () => {
     if (!input.trim()) return;
-    handleOption(input.trim());
+    sendMessage(input.trim());
     setInput("");
   };
-
-  const lastMsg = messages[messages.length - 1];
 
   return (
     <>
       <AnimatePresence>
         {!open && (
-          <motion.button
+          <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0 }}
-            onClick={() => {
-              resetConversation();
-              setOpen(true);
-            }}
-            className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-xl bg-primary text-primary-foreground card-shadow-lg transition-transform hover:scale-105 hover:bg-primary-hover"
-            aria-label="Abrir chat"
+            className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 z-50 flex items-center gap-3 sm:bottom-6 sm:right-6"
           >
-            <MessageCircle className="w-6 h-6" />
-          </motion.button>
+            {showInitialTooltip && (
+              <motion.div
+                initial={{ opacity: 0, x: 8 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 8 }}
+                className="pointer-events-none max-w-[210px] rounded-xl border border-border/80 bg-white px-3 py-2 text-xs font-medium leading-5 text-foreground shadow-lg"
+              >
+                Precisa de ajuda? Fale com o assistente
+              </motion.div>
+            )}
+            <button
+              onClick={() => {
+                setShowInitialTooltip(false);
+                openChat();
+              }}
+              className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground card-shadow-lg transition-transform hover:scale-105 hover:bg-primary-hover"
+              aria-label="Abrir chat"
+            >
+              <span className="absolute inset-0 rounded-xl bg-primary/30 motion-safe:animate-ping" />
+              <MessageCircle className="relative h-6 w-6" />
+            </button>
+          </motion.div>
         )}
       </AnimatePresence>
 
@@ -149,88 +97,180 @@ export function ChatWidget({ chatFlow }: ChatWidgetProps) {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-4 right-4 z-50 flex h-[78vh] max-h-[560px] w-[380px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-xl border border-border bg-card card-shadow-lg sm:bottom-6 sm:right-6"
+            className="fixed inset-x-2 bottom-[calc(0.5rem+env(safe-area-inset-bottom))] z-50 flex h-[calc(100dvh-1rem-env(safe-area-inset-bottom))] max-h-[640px] flex-col overflow-hidden rounded-2xl border border-border bg-card card-shadow-lg sm:inset-x-auto sm:bottom-6 sm:right-6 sm:h-[74vh] sm:max-h-[560px] sm:w-[380px]"
           >
-            <div className="gradient-hero flex items-center justify-between px-5 py-4">
-              <div className="flex items-center gap-3">
+            <div className="gradient-hero flex items-center justify-between gap-3 px-4 py-3 sm:px-5 sm:py-4">
+              <div className="flex min-w-0 items-center gap-3">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-foreground/20">
-                  <Bot className="w-4 h-4 text-primary-foreground" />
+                  <Bot className="h-4 w-4 text-primary-foreground" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-semibold text-primary-foreground">
                     Assistente SP Spaces
                   </p>
-                  <p className="text-xs text-primary-foreground/60">
-                    Online agora
+                  <p className="truncate text-xs text-primary-foreground/60">
+                    Recomendações consultivas em tempo real
                   </p>
                 </div>
               </div>
-              <button
-                onClick={() => setOpen(false)}
-                className="rounded-md p-1.5 transition-colors hover:bg-primary-foreground/10"
-                aria-label="Fechar chat"
-              >
-                <X className="w-4 h-4 text-primary-foreground" />
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={resetConversation}
+                  className="rounded-md p-1.5 transition-colors hover:bg-primary-foreground/10"
+                  aria-label="Nova busca"
+                  title="Nova busca"
+                >
+                  <RotateCcw className="h-4 w-4 text-primary-foreground" />
+                </button>
+                <button
+                  onClick={closeChat}
+                  className="rounded-md p-1.5 transition-colors hover:bg-primary-foreground/10"
+                  aria-label="Fechar chat"
+                >
+                  <X className="h-4 w-4 text-primary-foreground" />
+                </button>
+              </div>
             </div>
 
-            <div className="flex-1 space-y-3 overflow-y-auto p-4">
-              {messages.map((msg, i) => (
-                <div
-                  key={i}
-                  className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"}`}
-                >
+            <div className="flex-1 space-y-3 overflow-y-auto p-3 sm:p-4">
+              {messages.map((message, index) => (
+                <div key={message.id} className="space-y-2">
                   <div
-                    className={`flex items-end gap-2 max-w-[85%] ${msg.type === "user" ? "flex-row-reverse" : ""}`}
+                    className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        msg.type === "bot" ? "bg-primary/10" : "bg-muted"
-                      }`}
+                      className={`flex max-w-[92%] items-end gap-2 sm:max-w-[85%] ${message.type === "user" ? "flex-row-reverse" : ""}`}
                     >
-                      {msg.type === "bot" ? (
-                        <Bot className="w-3 h-3 text-primary" />
-                      ) : (
-                        <User className="w-3 h-3 text-muted-foreground" />
-                      )}
-                    </div>
-                    <div
-                      className={`px-4 py-2.5 rounded-2xl text-sm ${
-                        msg.type === "bot"
-                          ? "rounded-bl-sm bg-secondary text-foreground"
-                          : "rounded-br-sm bg-primary text-primary-foreground"
-                      }`}
-                    >
-                      {msg.text}
+                      <div
+                        className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full ${
+                          message.type === "bot" ? "bg-primary/10" : "bg-muted"
+                        }`}
+                      >
+                        {message.type === "bot" ? (
+                          <Bot className="h-3 w-3 text-primary" />
+                        ) : (
+                          <User className="h-3 w-3 text-muted-foreground" />
+                        )}
+                      </div>
+                      <div
+                        className={`rounded-2xl px-4 py-2.5 text-sm leading-6 ${
+                          message.type === "bot"
+                            ? "rounded-bl-sm bg-secondary text-foreground"
+                            : "rounded-br-sm bg-primary text-primary-foreground"
+                        }`}
+                      >
+                        {message.text}
+                      </div>
                     </div>
                   </div>
+
+                  {showIntroSuggestions && index === 0 && (
+                    <div className="space-y-2 pl-0 sm:pl-8">
+                      <div className="flex flex-wrap gap-2">
+                        {introSuggestions.map((suggestion) => (
+                          <FilterChip
+                            key={suggestion}
+                            onClick={() => sendMessage(suggestion)}
+                            variant="default"
+                            size="sm"
+                            className="hover:border-primary/40"
+                          >
+                            {suggestion}
+                          </FilterChip>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {showLocationSuggestions &&
+                    index === messages.length - 1 &&
+                    message.type === "bot" && (
+                      <div className="space-y-2 pl-0 sm:pl-8">
+                        <div className="flex flex-wrap gap-2">
+                          {locationSuggestions.map((suggestion) => (
+                            <FilterChip
+                              key={suggestion}
+                              onClick={() => sendMessage(suggestion)}
+                              variant="default"
+                              size="sm"
+                              className="hover:border-primary/40"
+                            >
+                              {suggestion}
+                            </FilterChip>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                  {showResourceSelector &&
+                    index === messages.length - 1 &&
+                    message.type === "bot" && (
+                      <div className="space-y-3 pl-0 sm:pl-8">
+                        <div className="flex flex-wrap gap-2">
+                          {resourceOptions.map((resource) => {
+                            const selected = selectedResourceOptions.includes(resource);
+
+                            return (
+                              <FilterChip
+                                key={resource}
+                                onClick={() => toggleResourceOption(resource)}
+                                variant={selected ? "selected" : "default"}
+                                size="sm"
+                              >
+                                {resource}
+                              </FilterChip>
+                            );
+                          })}
+                        </div>
+                        <Button
+                          onClick={confirmResourceSelection}
+                          size="sm"
+                          className="h-9 rounded-full px-4"
+                        >
+                          Continuar busca
+                        </Button>
+                      </div>
+                    )}
                 </div>
               ))}
 
-              {lastMsg?.options && (
-                <div className="flex flex-wrap gap-2 pl-8">
-                  {lastMsg.options.map((opt) => (
-                    <FilterChip
-                      key={opt}
-                      onClick={() => handleOption(opt)}
-                      variant="default"
-                      size="sm"
-                      className="hover:border-primary/40"
-                    >
-                      {opt}
-                    </FilterChip>
-                  ))}
+              {isSearching && (
+                <div className="pl-0 sm:pl-8">
+                  <p className="text-sm italic text-muted-foreground/70">
+                    Buscando os espaços ideais para você...
+                  </p>
                 </div>
               )}
             </div>
+
+            {showFollowUpActions && (
+              <div className="border-t border-border/80 px-3 py-3">
+                <p className="mb-2 px-1 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                  Continuar recomendação
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {followUpActions.map((action) => (
+                    <FilterChip
+                      key={action}
+                      size="sm"
+                      variant="default"
+                      className="hover:border-primary/40"
+                      onClick={() => handleQuickAction(action)}
+                    >
+                      {action}
+                    </FilterChip>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="border-t border-border p-3">
               <div className="flex items-center gap-2">
                 <Input
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                  placeholder="Digite sua mensagem..."
+                  onChange={(event) => setInput(event.target.value)}
+                  onKeyDown={(event) => event.key === "Enter" && handleSend()}
+                  placeholder="Descreva cidade, evento, capacidade ou recurso"
                   className="h-10 rounded-md border-border bg-secondary"
                 />
                 <Button
@@ -238,7 +278,7 @@ export function ChatWidget({ chatFlow }: ChatWidgetProps) {
                   size="icon"
                   className="h-10 w-10 rounded-md"
                 >
-                  <Send className="w-4 h-4" />
+                  <Send className="h-4 w-4" />
                 </Button>
               </div>
             </div>

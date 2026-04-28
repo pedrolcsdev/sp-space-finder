@@ -23,19 +23,19 @@ export function AccountShell({
 }: AccountShellProps) {
   return (
     <div className="section-space">
-      <div className="page-container grid gap-8 xl:grid-cols-[260px_minmax(0,1fr)]">
+      <div className="page-container grid min-w-0 grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[260px_minmax(0,1fr)] xl:gap-8">
         <aside className="xl:sticky xl:top-24 xl:h-fit">
-          <div className="rounded-[28px] border border-white/70 bg-white/86 p-4 shadow-[0_24px_70px_rgb(15_23_42_/_0.08)] backdrop-blur-xl">
+          <div className="rounded-3xl border border-white/70 bg-white/86 p-4 shadow-[0_24px_70px_rgb(15_23_42_/_0.08)] backdrop-blur-xl">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
               Área do cliente
             </p>
-            <div className="mt-4 space-y-2">
+            <div className="mt-4 flex gap-2 overflow-x-auto pb-1 xl:block xl:space-y-2 xl:overflow-visible xl:pb-0">
               {accountItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all",
+                    "flex shrink-0 items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all xl:shrink",
                     currentPath === item.href
                       ? "bg-primary text-primary-foreground shadow-sm"
                       : "bg-secondary/50 text-foreground hover:bg-secondary",
@@ -49,12 +49,12 @@ export function AccountShell({
           </div>
         </aside>
 
-        <section className="space-y-6">
-          <div className="rounded-[32px] border border-white/70 bg-white/86 p-6 shadow-[0_24px_70px_rgb(15_23_42_/_0.08)] backdrop-blur-xl sm:p-7">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+        <section className="min-w-0 space-y-6">
+          <div className="rounded-3xl border border-white/70 bg-white/86 p-5 shadow-[0_24px_70px_rgb(15_23_42_/_0.08)] backdrop-blur-xl sm:p-7">
+            <p className="text-xs font-semibold uppercase tracking-normal text-muted-foreground">
               Minha conta
             </p>
-            <h1 className="mt-3 font-display text-3xl font-semibold tracking-[-0.04em] text-foreground sm:text-4xl">
+            <h1 className="mt-3 font-display text-3xl font-semibold tracking-normal text-foreground sm:text-4xl">
               {title}
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">

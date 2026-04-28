@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   AlertCircle,
-  Building2,
   CheckCircle2,
   Lock,
   Mail,
@@ -17,6 +16,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { BrandLogo } from "@/components/BrandLogo";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "@/hooks/use-toast";
 
@@ -135,20 +135,15 @@ export default function LoginScreen({ redirectTo }: LoginScreenProps) {
   };
 
   return (
-    <div className="gradient-subtle flex min-h-screen items-center justify-center px-4 py-12">
+    <div className="gradient-subtle flex min-h-screen items-center justify-center px-4 py-8 sm:py-12">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md space-y-8"
+        className="w-full max-w-md space-y-6 sm:space-y-8"
       >
         <div className="text-center">
-          <Link href="/" className="inline-flex items-center gap-2.5 mb-6">
-            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary">
-              <Building2 className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="font-display text-xl font-semibold text-foreground">
-              SP <span className="text-primary">Spaces</span>
-            </span>
+          <Link href="/" className="mb-6 inline-flex">
+            <BrandLogo variant="compact" />
           </Link>
           <h1 className="font-display text-3xl font-semibold text-foreground">
             Bem-vindo de volta
@@ -158,16 +153,16 @@ export default function LoginScreen({ redirectTo }: LoginScreenProps) {
           </p>
         </div>
 
-        <Card size="lg" className="space-y-5">
+        <Card size="lg" className="space-y-5 p-5 sm:p-6">
           <div className="grid gap-3 rounded-2xl border border-border/70 bg-secondary/35 p-4">
             <div className="rounded-xl border border-border/70 bg-white/90 p-3">
               <div className="flex items-center gap-3">
                 <div className="rounded-full bg-primary/10 p-2 text-primary">
                   <ShieldCheck className="h-4 w-4" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-semibold text-foreground">Administrador</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="break-words text-xs text-muted-foreground">
                     admin@gmail.com / admin123
                   </p>
                 </div>
@@ -178,9 +173,9 @@ export default function LoginScreen({ redirectTo }: LoginScreenProps) {
                 <div className="rounded-full bg-primary/10 p-2 text-primary">
                   <UserCircle2 className="h-4 w-4" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-semibold text-foreground">Cliente</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="break-words text-xs text-muted-foreground">
                     cliente@gmail.com / cliente123
                   </p>
                 </div>

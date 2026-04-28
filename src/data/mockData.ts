@@ -60,9 +60,9 @@ const extraGalleryByCategory: Record<Space["category"], string[]> = {
 const baseSpaces: Space[] = [
   {
     id: "1",
-    name: "Auditório Premium Central",
+    name: "Auditório Renascença Prime",
     category: "auditorium",
-    location: "Av. Paulista, 1000 — São Paulo",
+    location: "Av. Colares Moreira, 1000 — Renascença, São Luís - MA",
     capacity: 200,
     pricePerHour: 450,
     image:
@@ -74,9 +74,9 @@ const baseSpaces: Space[] = [
   },
   {
     id: "2",
-    name: "Sala Executiva Alpha",
+    name: "Sala Executiva Ponta d'Areia",
     category: "meeting",
-    location: "Rua Augusta, 500 — São Paulo",
+    location: "Av. dos Holandeses, 500 — Ponta d'Areia, São Luís - MA",
     capacity: 12,
     pricePerHour: 120,
     image:
@@ -87,9 +87,9 @@ const baseSpaces: Space[] = [
   },
   {
     id: "3",
-    name: "Consultório Odonto Prime",
+    name: "Consultório Odonto Renascença",
     category: "dental",
-    location: "Rua Oscar Freire, 300 — São Paulo",
+    location: "Rua das Andirobas, 300 — Jardim Renascença, São Luís - MA",
     capacity: 3,
     pricePerHour: 180,
     image:
@@ -105,9 +105,9 @@ const baseSpaces: Space[] = [
   },
   {
     id: "4",
-    name: "Auditório Jardins",
+    name: "Auditório Lagoa Corporate",
     category: "auditorium",
-    location: "Al. Santos, 800 — São Paulo",
+    location: "Av. Maestro João Nunes, 800 — Ponta do Farol, São Luís - MA",
     capacity: 80,
     pricePerHour: 280,
     image:
@@ -118,22 +118,22 @@ const baseSpaces: Space[] = [
   },
   {
     id: "5",
-    name: "Sala de Reunião Faria Lima",
+    name: "Sala de Reunião Calhau Business",
     category: "meeting",
-    location: "Av. Faria Lima, 2000 — São Paulo",
+    location: "Av. dos Holandeses, 2000 — Calhau, São Luís - MA",
     capacity: 8,
     pricePerHour: 95,
     image:
       "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=600&h=400&fit=crop",
     resources: ['TV 55"', "Wi-Fi", "Quadro Branco", "Ar Condicionado"],
     recommended: true,
-    description: "No coração financeiro de São Paulo.",
+    description: "Em uma das regiões corporativas mais valorizadas de São Luís.",
   },
   {
     id: "6",
-    name: "Consultório Odonto Vila Nova",
+    name: "Consultório Odonto São Francisco",
     category: "dental",
-    location: "Rua Funchal, 150 — São Paulo",
+    location: "Av. Castelo Branco, 150 — São Francisco, São Luís - MA",
     capacity: 3,
     pricePerHour: 160,
     image:
@@ -149,9 +149,9 @@ const baseSpaces: Space[] = [
   },
   {
     id: "7",
-    name: "Sala Board Room",
+    name: "Sala Board Room Península",
     category: "meeting",
-    location: "Av. Berrini, 1500 — São Paulo",
+    location: "Av. dos Holandeses, 1500 — Ponta d'Areia, São Luís - MA",
     capacity: 20,
     pricePerHour: 200,
     image:
@@ -162,9 +162,9 @@ const baseSpaces: Space[] = [
   },
   {
     id: "8",
-    name: "Auditório Ibirapuera",
+    name: "Auditório Península da Ilha",
     category: "auditorium",
-    location: "Av. República do Líbano, 400 — São Paulo",
+    location: "Av. Mário Meireles, 400 — Ponta d'Areia, São Luís - MA",
     capacity: 150,
     pricePerHour: 380,
     image:
@@ -177,13 +177,13 @@ const baseSpaces: Space[] = [
       "Acessibilidade",
     ],
     recommended: false,
-    description: "Auditório espaçoso próximo ao parque.",
+    description: "Auditório espaçoso em uma das áreas mais valorizadas da orla.",
   },
   {
     id: "9",
-    name: "Consultório Odonto Higienópolis",
+    name: "Consultório Odonto Cohama Prime",
     category: "dental",
-    location: "Rua Maranhão, 200 — São Paulo",
+    location: "Av. Daniel de La Touche, 200 — Cohama, São Luís - MA",
     capacity: 4,
     pricePerHour: 200,
     image:
@@ -196,13 +196,13 @@ const baseSpaces: Space[] = [
       "Estacionamento",
     ],
     recommended: true,
-    description: "Consultório de alto padrão em bairro nobre.",
+    description: "Consultório de alto padrão em uma região valorizada de São Luís.",
   },
   {
     id: "10",
-    name: "Auditório Atlântico São Luís",
+    name: "Auditório Atlântico Holandeses",
     category: "auditorium",
-    location: "Av. dos Holandeses, 2200 — São Luís",
+    location: "Av. dos Holandeses, 2200 — Calhau, São Luís - MA",
     capacity: 120,
     pricePerHour: 320,
     image:
@@ -220,9 +220,9 @@ const baseSpaces: Space[] = [
   },
   {
     id: "11",
-    name: "Auditório Beira Mar Fortaleza",
+    name: "Auditório Golden Renascença",
     category: "auditorium",
-    location: "Av. Beira Mar, 1700 — Fortaleza",
+    location: "Rua das Mitras, 1700 — Renascença II, São Luís - MA",
     capacity: 95,
     pricePerHour: 290,
     image:
@@ -233,9 +233,9 @@ const baseSpaces: Space[] = [
   },
   {
     id: "12",
-    name: "Consultório Odonto Batista Campos",
+    name: "Consultório Odonto Ponta do Farol",
     category: "dental",
-    location: "Av. Conselheiro Furtado, 980 — Belém",
+    location: "Av. dos Holandeses, 980 — Ponta do Farol, São Luís - MA",
     capacity: 3,
     pricePerHour: 170,
     image:
@@ -251,9 +251,9 @@ const baseSpaces: Space[] = [
   },
   {
     id: "13",
-    name: "Consultório Odonto Meireles",
+    name: "Consultório Odonto Quintas do Calhau",
     category: "dental",
-    location: "Rua Barbosa de Freitas, 1200 — Fortaleza",
+    location: "Rua Principal, 1200 — Quintas do Calhau, São Luís - MA",
     capacity: 4,
     pricePerHour: 190,
     image:
@@ -270,9 +270,9 @@ const baseSpaces: Space[] = [
   },
   {
     id: "14",
-    name: "Sala de Reunião Doca",
+    name: "Sala de Reunião Jardim Renascença",
     category: "meeting",
-    location: "Av. Visconde de Souza Franco, 450 — Belém",
+    location: "Rua das Juçaras, 450 — Jardim Renascença, São Luís - MA",
     capacity: 10,
     pricePerHour: 110,
     image:
@@ -284,9 +284,9 @@ const baseSpaces: Space[] = [
   },
   {
     id: "15",
-    name: "Sala de Reunião Praia de Iracema",
+    name: "Sala de Reunião Holandeses View",
     category: "meeting",
-    location: "Av. Historiador Raimundo Girão, 600 — Fortaleza",
+    location: "Av. dos Holandeses, 600 — Calhau, São Luís - MA",
     capacity: 16,
     pricePerHour: 150,
     image:
@@ -308,26 +308,28 @@ export const spaces: Space[] = baseSpaces.map((space) => ({
 export const chatFlow: ChatFlowStep[] = [
   {
     type: "bot" as const,
-    text: "Olá! 👋 Sou o assistente do SP Spaces. Vou te ajudar a encontrar o espaço ideal.",
+    text: "Olá! Bom dia, sou o assistente do SP Spaces e vou te ajudar a encontrar o espaço ideal.",
   },
   {
     type: "bot" as const,
-    text: "Para quantas pessoas você precisa do espaço?",
-    options: ["Até 5", "5 a 20", "20 a 50", "Mais de 50"],
+    text: "Você tem alguma preferência de localização?",
+    options: ["Renascença", "Calhau", "Ponta d'Areia", "Jardim Renascença"],
   },
   {
     type: "bot" as const,
     text: "Quais recursos são essenciais?",
     options: [
-      "Projetor",
-      "Videoconferência",
       "Wi-Fi",
       "Ar Condicionado",
+      "Projetor",
+      "Videoconferência",
       "Café",
+      "Acessibilidade",
+      "Estacionamento",
     ],
   },
   {
     type: "bot" as const,
-    text: "Perfeito! 🔍 Estou buscando os melhores espaços para você...",
+    text: "Esses são os espaços que mais se adequaram à sua pesquisa.",
   },
 ];

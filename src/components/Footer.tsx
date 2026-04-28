@@ -1,32 +1,35 @@
+import Image from "next/image";
 import Link from "next/link";
-import { Building2, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function Footer() {
   return (
-    <footer className="mt-16 border-t border-border bg-card">
-      <div className="page-container py-14">
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-3">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary">
-                <Building2 className="w-5 h-5 text-primary-foreground" />
+    <footer className="mt-14 border-t border-border bg-card">
+      <div className="page-container py-10 sm:py-12">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-[1.3fr_0.8fr_0.9fr] md:items-start">
+          <div className="space-y-3">
+            <Link href="/" className="inline-block">
+              <div className="relative h-12 w-[160px]">
+                <Image
+                  src="/logo-sp-header.png"
+                  alt="Grupo São Paulo"
+                  fill
+                  sizes="160px"
+                  className="object-contain object-left"
+                />
               </div>
-              <span className="font-display text-lg font-semibold text-foreground">
-                SP Spaces
-              </span>
-            </div>
-            <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">
-              Grupo São Paulo - conectando profissionais aos
-              melhores espaços corporativos da cidade.
+            </Link>
+            <p className="max-w-sm text-sm leading-6 text-muted-foreground">
+              O Grupo São Paulo oferece soluções imobiliárias em São Luís (MA), Imperatriz (MA), Belém (PA), Distrito Federal e Fortaleza(CE).
             </p>
           </div>
 
-          <div className="space-y-4">
-            <h4 className="font-display text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+          <nav className="space-y-3" aria-label="Navegação do rodapé">
+            <h4 className="font-display text-xs font-semibold uppercase tracking-normal text-primary">
               Navegação
             </h4>
-            <div className="flex flex-col gap-2.5">
+            <div className="flex flex-col gap-2">
               <Link
                 href="/"
                 className="text-sm text-secondary-foreground transition-colors hover:text-primary"
@@ -46,17 +49,10 @@ export function Footer() {
                 Entrar
               </Link>
             </div>
-          </div>
+          </nav>
 
-          <div className="space-y-4">
-            <h4 className="font-display text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-              Institucional
-            </h4>
-            <p className="text-sm leading-relaxed text-secondary-foreground">
-              O Grupo São Paulo atua no mercado de espaços
-              corporativos com foco em qualidade e inovação.
-            </p>
-            <Button variant="secondary" size="sm" asChild>
+          <div className="space-y-3">
+            <Button variant="secondary" size="sm" className="rounded-xl" asChild>
               <a href="https://example.com" target="_blank" rel="noopener noreferrer">
                 Visite nosso site <ExternalLink className="w-3.5 h-3.5" />
               </a>
@@ -64,7 +60,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 border-t border-border pt-8 text-center">
+        <div className="mt-8 border-t border-border pt-6 text-left sm:text-center">
           <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} Grupo São Paulo. Todos os
             direitos reservados.

@@ -171,7 +171,7 @@ export default function SearchScreen({
   return (
     <div className="section-space">
       <div className="page-container">
-        <div className="mb-8 rounded-[32px] border border-white/70 bg-white/86 p-4 shadow-[0_24px_70px_rgb(15_23_42_/_0.08)] backdrop-blur-xl sm:p-5 lg:p-6">
+        <div className="mb-6 rounded-3xl border border-white/70 bg-white/86 p-4 shadow-[0_24px_70px_rgb(15_23_42_/_0.08)] backdrop-blur-xl sm:mb-8 sm:p-5 lg:p-6">
           <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-2xl">
@@ -179,7 +179,7 @@ export default function SearchScreen({
                   <Sparkles className="h-3.5 w-3.5" />
                   Busca premium
                 </span>
-                <h1 className="font-display text-3xl font-semibold tracking-[-0.04em] text-foreground sm:text-4xl">
+                <h1 className="font-display text-3xl font-semibold tracking-normal text-foreground sm:text-4xl">
                   Encontrar Espaço
                 </h1>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground sm:text-base">
@@ -189,16 +189,16 @@ export default function SearchScreen({
                 </p>
               </div>
 
-              <div className="grid grid-cols-3 gap-3 sm:w-auto">
+              <div className="grid grid-cols-3 gap-2 sm:w-auto sm:gap-3">
                 {resultHighlights.map((item) => (
                   <div
                     key={item.label}
-                    className="rounded-[22px] border border-border/70 bg-secondary/55 px-4 py-3"
+                    className="min-w-0 rounded-2xl border border-border/70 bg-secondary/55 px-3 py-3 sm:rounded-[22px] sm:px-4"
                   >
-                    <p className="text-xl font-semibold tracking-[-0.04em] text-foreground">
+                    <p className="text-lg font-semibold tracking-normal text-foreground sm:text-xl">
                       {item.value}
                     </p>
-                    <p className="mt-1 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                    <p className="mt-1 truncate text-[10px] font-medium uppercase tracking-normal text-muted-foreground sm:text-xs">
                       {item.label}
                     </p>
                   </div>
@@ -207,7 +207,7 @@ export default function SearchScreen({
             </div>
 
             <div className="grid gap-3 lg:grid-cols-[minmax(0,1.2fr)_0.8fr_auto]">
-              <div className="rounded-[24px] border border-border/70 bg-white p-3 shadow-sm shadow-slate-950/5">
+              <div className="rounded-2xl border border-border/70 bg-white p-3 shadow-sm shadow-slate-950/5 sm:rounded-[24px]">
                 <div className="relative">
                   <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -218,12 +218,12 @@ export default function SearchScreen({
                   />
                 </div>
               </div>
-              <div className="rounded-[24px] border border-border/70 bg-white p-4">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              <div className="rounded-2xl border border-border/70 bg-white p-4 sm:rounded-[24px]">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-normal text-muted-foreground">
                   <Users className="h-3.5 w-3.5" />
                   Filtros ativos
                 </div>
-                <p className="mt-2 text-lg font-semibold tracking-[-0.03em] text-foreground">
+                <p className="mt-2 text-lg font-semibold tracking-normal text-foreground">
                   {activeFilterCount} seleç{activeFilterCount === 1 ? "ão" : "ões"}
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -233,7 +233,7 @@ export default function SearchScreen({
               <Button
                 variant="secondary"
                 size="lg"
-                className="h-full min-h-14 rounded-[24px] lg:hidden"
+                className="h-full min-h-14 w-full rounded-2xl lg:hidden"
                 onClick={() => setMobileFilters(true)}
               >
                 <SlidersHorizontal className="h-4 w-4" />
@@ -293,7 +293,7 @@ export default function SearchScreen({
           </div>
         </div>
 
-        <div className="flex gap-8">
+        <div className="flex min-w-0 gap-8">
           <aside className="hidden w-[310px] flex-shrink-0 lg:block">
             <div className="sticky top-28 rounded-[30px] border border-white/65 bg-white/82 p-5 shadow-[0_20px_60px_rgb(15_23_42_/_0.08)] backdrop-blur-xl">
               <div className="mb-6 flex items-center justify-between">
@@ -316,15 +316,15 @@ export default function SearchScreen({
           </aside>
 
           <div className="min-w-0 flex-1">
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 xl:gap-6">
               {filtered.map((space, i) => (
                 <SpaceCard key={space.id} space={space} index={i} />
               ))}
             </div>
 
             {filtered.length === 0 && (
-              <div className="rounded-[30px] border border-dashed border-border bg-white/65 px-6 py-16 text-center shadow-sm shadow-slate-950/5">
-                <p className="text-xl font-semibold tracking-[-0.03em] text-foreground">
+              <div className="rounded-3xl border border-dashed border-border bg-white/65 px-5 py-12 text-center shadow-sm shadow-slate-950/5 sm:px-6 sm:py-16">
+                <p className="text-xl font-semibold tracking-normal text-foreground">
                   Nenhum espaço encontrado com esses filtros.
                 </p>
                 <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-muted-foreground">
@@ -347,7 +347,7 @@ export default function SearchScreen({
       <Sheet open={mobileFilters} onOpenChange={setMobileFilters}>
         <SheetContent
           side="bottom"
-          className="h-[85vh] overflow-y-auto rounded-t-[28px] border-white/60 bg-background/98 p-5"
+          className="h-[85dvh] overflow-y-auto rounded-t-3xl border-white/60 bg-background/98 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:p-5"
         >
           <SheetHeader className="mb-5 text-left">
             <SheetTitle className="font-display">Filtros</SheetTitle>

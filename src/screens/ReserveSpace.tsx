@@ -298,13 +298,13 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
         Voltar aos detalhes
       </Link>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <Card className="space-y-6 p-6 sm:p-7">
+      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <Card className="min-w-0 space-y-6 p-5 sm:p-7">
           <div className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Fluxo de reserva
             </p>
-            <h1 className="font-display text-3xl font-semibold text-foreground">
+            <h1 className="font-display text-3xl font-semibold tracking-normal text-foreground">
               Reservar espaço
             </h1>
             <p className="text-sm text-muted-foreground">
@@ -493,10 +493,15 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
               )}
 
               <div className="flex flex-col gap-3 sm:flex-row">
-                <Button size="lg" onClick={handleCheckAvailability} disabled={!canCheckAvailability}>
+                <Button
+                  size="lg"
+                  className="w-full sm:w-auto"
+                  onClick={handleCheckAvailability}
+                  disabled={!canCheckAvailability}
+                >
                   Verificar disponibilidade
                 </Button>
-                <Button asChild variant="secondary" size="lg">
+                <Button asChild variant="secondary" size="lg" className="w-full sm:w-auto">
                   <Link href={`/espacos/${resolvedSpace.id}`}>Voltar aos detalhes</Link>
                 </Button>
               </div>
@@ -537,10 +542,19 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
               </Card>
 
               <div className="flex flex-col gap-3 sm:flex-row">
-                <Button variant="secondary" size="lg" onClick={handleEditReservation}>
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  className="w-full sm:w-auto"
+                  onClick={handleEditReservation}
+                >
                   Editar dados
                 </Button>
-                <Button size="lg" className="gap-2" onClick={handleCreateSingleReservation}>
+                <Button
+                  size="lg"
+                  className="w-full gap-2 sm:w-auto"
+                  onClick={handleCreateSingleReservation}
+                >
                   <CheckCircle2 className="h-4 w-4" />
                   Gerar reserva pendente
                 </Button>
@@ -597,13 +611,13 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button
                   size="lg"
-                  className="gap-2"
+                  className="w-full gap-2 sm:w-auto"
                   onClick={() => openWhatsApp(whatsappLink)}
                 >
                   <MessageCircle className="h-4 w-4" />
                   Continuar no WhatsApp
                 </Button>
-                <Button asChild variant="secondary" size="lg">
+                <Button asChild variant="secondary" size="lg" className="w-full sm:w-auto">
                   <Link href="/minhas-reservas">Ver minhas reservas</Link>
                 </Button>
               </div>
@@ -706,13 +720,13 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
                 <Button
                   size="lg"
                   disabled={!isPackageReady}
-                  className="gap-2"
+                  className="w-full gap-2 sm:w-auto"
                   onClick={handleCreatePackageReservation}
                 >
                   <CheckCircle2 className="h-4 w-4" />
                   Gerar solicitação pendente
                 </Button>
-                <Button asChild variant="secondary" size="lg">
+                <Button asChild variant="secondary" size="lg" className="w-full sm:w-auto">
                   <Link href={`/espacos/${resolvedSpace.id}`}>Voltar aos detalhes</Link>
                 </Button>
               </div>
@@ -757,13 +771,13 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button
                   size="lg"
-                  className="gap-2"
+                  className="w-full gap-2 sm:w-auto"
                   onClick={() => openWhatsApp(packageWhatsappLink)}
                 >
                   <MessageCircle className="h-4 w-4" />
                   Continuar no WhatsApp
                 </Button>
-                <Button asChild variant="secondary" size="lg">
+                <Button asChild variant="secondary" size="lg" className="w-full sm:w-auto">
                   <Link href="/minhas-reservas">Ver minhas reservas</Link>
                 </Button>
               </div>
@@ -771,7 +785,7 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
           )}
         </Card>
 
-        <aside className="space-y-4 xl:sticky xl:top-24 xl:h-fit">
+        <aside className="min-w-0 space-y-4 xl:sticky xl:top-24 xl:h-fit">
           <Card className="space-y-3 p-5">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Como funciona

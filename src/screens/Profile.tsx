@@ -25,7 +25,7 @@ export default function ProfileScreen() {
       description="Consulte seus dados de cadastro e mantenha suas informações sempre acessíveis."
       currentPath="/perfil"
     >
-      <Card className="grid gap-4 p-6 sm:grid-cols-2 sm:p-7">
+      <Card className="grid gap-4 p-5 sm:grid-cols-2 sm:p-7">
         {profileItems.map((item) => (
           <div
             key={item.label}
@@ -35,11 +35,13 @@ export default function ProfileScreen() {
               <div className="rounded-full bg-primary/10 p-2 text-primary">
                 <item.icon className="h-4 w-4" />
               </div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-normal text-muted-foreground">
                   {item.label}
                 </p>
-                <p className="mt-2 text-base font-semibold text-foreground">{item.value}</p>
+                <p className="mt-2 break-words text-base font-semibold text-foreground">
+                  {item.value}
+                </p>
               </div>
             </div>
           </div>
