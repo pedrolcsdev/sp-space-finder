@@ -53,7 +53,7 @@ export function Footer() {
 
           <div className="space-y-3">
             <Button variant="secondary" size="sm" className="rounded-xl" asChild>
-              <a href="https://example.com" target="_blank" rel="noopener noreferrer">
+              <a href="https://saopauloparticipacoes.com.br" target="_blank" rel="noopener noreferrer">
                 Visite nosso site <ExternalLink className="w-3.5 h-3.5" />
               </a>
             </Button>
