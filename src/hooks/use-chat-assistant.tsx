@@ -6,47 +6,73 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
-import { useRouter } from "next/navigation";
 import type { ChatFlowStep, Space } from "@/lib/data/contracts";
 
 type MessageType = "bot" | "user";
-type ConversationStage =
-  | "initial"
-  | "awaitingLocation"
-  | "awaitingResources"
-  | "searching"
-  | "results";
+type ConversationStage = "initial" | "searching" | "results";
+type PricePreference = "bestMatch" | "lowest";
+type AskedField = "spaceType" | "location" | "budget" | "capacity" | "refinement";
+
+export interface ChatRecommendation extends Space {
+  matchPercent: number;
+  reasons: string[];
+}
 
 export interface ChatMessage {
   id: string;
   type: MessageType;
   text: string;
+  recommendations?: ChatRecommendation[];
+  followUpActions?: string[];
 }
 
-type PricePreference = "bestMatch" | "lowest";
+interface ChatApiIntent {
+  tipoEspaco?: string;
+  tipoEvento?: string;
+  cidade?: string;
+  cidadeIncluida?: string;
+  locations: string[];
+  quantidadePessoas?: number;
+  recursosDesejados: string[];
+  orcamentoMaximo?: number;
+  cidadesExcluidas: string[];
+  recursosExcluidos: string[];
+}
+
+interface ChatApiResponse {
+  mode: "ask" | "recommend";
+  reply: string;
+  conversationalIntent?: "conversation" | "search" | "clarification" | "cancel" | "unknown";
+  shouldRecommend?: boolean;
+  intent: ChatApiIntent;
+  conversationSummary?: string;
+  recommendations: ChatRecommendation[];
+  followUpActions: string[];
+  askedField?: AskedField;
+}
 
 export interface ChatCriteria {
   city?: string;
+  excludedCities: string[];
   capacity?: number;
   eventType?: string;
-  category?: Space["category"];
   resources: string[];
+  excludedResources: string[];
   pricePreference: PricePreference;
+  budgetMax?: number;
+  category?: Space["category"];
 }
 
 interface StoredChatState {
   open: boolean;
   messages: ChatMessage[];
-  step: number;
   criteria: ChatCriteria;
-  pendingResultsAnnouncement: boolean;
   conversationStage: ConversationStage;
-  selectedResourceOptions: string[];
-  pendingSearchNavigation: boolean;
+  conversationSummary: string;
+  lastAskedField?: AskedField;
 }
 
 interface ChatOpenDetail {
@@ -57,105 +83,26 @@ interface ChatOpenDetail {
 interface ChatAssistantContextValue {
   open: boolean;
   messages: ChatMessage[];
-  step: number;
   criteria: ChatCriteria;
   introSuggestions: string[];
-  followUpActions: string[];
-  locationSuggestions: string[];
-  resourceOptions: string[];
   hasSearchContext: boolean;
   conversationStage: ConversationStage;
-  selectedResourceOptions: string[];
   isSearching: boolean;
   openChat: (detail?: ChatOpenDetail) => void;
   closeChat: () => void;
   resetConversation: () => void;
-  sendMessage: (text: string) => void;
-  handleQuickAction: (action: string) => void;
-  toggleResourceOption: (resource: string) => void;
-  confirmResourceSelection: () => void;
+  sendMessage: (text: string) => Promise<void>;
   announceResults: (count: number) => void;
 }
 
 const SESSION_STORAGE_KEY = "sp-spaces-chat-state";
 
 const introSuggestions = [
-  "Quero um coworking com Wi-Fi e ar-condicionado",
-  "Preciso de uma sala para reunião com projetor",
+  "Quero uma sala para 10 pessoas",
+  "Preciso de um auditório com projetor",
 ] as const;
 
-const locationSuggestions = [
-  "Renascença",
-  "Calhau",
-  "Ponta d'Areia",
-  "Jardim Renascença",
-] as const;
-
-const essentialResourceOptions = [
-  "Wi-Fi",
-  "Ar Condicionado",
-  "Projetor",
-  "Videoconferência",
-  "Café",
-  "Acessibilidade",
-  "Estacionamento",
-] as const;
-
-const followUpActions = [
-  "Refinar busca",
-  "Ver apenas os mais baratos",
-  "Ver os mais compatíveis",
-  "Mudar cidade",
-  "Falar com atendimento",
-] as const;
-
-const cityPatterns = [
-  { label: "Renascença", pattern: /renascenca|renascença/i },
-  { label: "Renascença II", pattern: /renascenca ii|renascença ii/i },
-  { label: "Jardim Renascença", pattern: /jardim renascenca|jardim renascença/i },
-  { label: "Calhau", pattern: /calhau/i },
-  { label: "Quintas do Calhau", pattern: /quintas do calhau/i },
-  { label: "Ponta d'Areia", pattern: /ponta d'?areia/i },
-  { label: "Ponta do Farol", pattern: /ponta do farol/i },
-  { label: "São Francisco", pattern: /sao francisco|são francisco/i },
-  { label: "Cohama", pattern: /cohama/i },
-  { label: "São Luís", pattern: /sao luis|são luís/i },
-] as const;
-
-const resourceMatchers = [
-  {
-    resource: "Projetor",
-    pattern: /projetor|apresenta(c|ç)(a|ã)o|tela/i,
-  },
-  {
-    resource: "Videoconferência",
-    pattern: /videoconfer|videochamada|hibrid|híbrido/i,
-  },
-  {
-    resource: "Wi-Fi",
-    pattern: /wi[\s-]?fi|internet/i,
-  },
-  {
-    resource: "Ar Condicionado",
-    pattern: /ar condicionado|climatiza/i,
-  },
-  {
-    resource: "Café",
-    pattern: /caf[eé]|coffee break/i,
-  },
-  {
-    resource: "Acessibilidade",
-    pattern: /acessib/i,
-  },
-  {
-    resource: "Estacionamento",
-    pattern: /estacionamento|vaga/i,
-  },
-] as const;
-
-const ChatAssistantContext = createContext<ChatAssistantContextValue | null>(
-  null,
-);
+const ChatAssistantContext = createContext<ChatAssistantContextValue | null>(null);
 
 const toMessage = (text: string, type: MessageType): ChatMessage => ({
   id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -163,22 +110,35 @@ const toMessage = (text: string, type: MessageType): ChatMessage => ({
   text,
 });
 
+const toBotMessage = (
+  text: string,
+  recommendations?: ChatRecommendation[],
+  followUpActions?: string[],
+): ChatMessage => ({
+  ...toMessage(text, "bot"),
+  recommendations,
+  followUpActions,
+});
+
 const normalizeText = (value: string) =>
   value
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
     .toLowerCase();
 
 const uniqueResources = (resources: string[]) => Array.from(new Set(resources));
 
 const getBaseCriteria = (): ChatCriteria => ({
   resources: [],
+  excludedCities: [],
+  excludedResources: [],
   pricePreference: "bestMatch",
 });
 
 const getInitialGreeting = (chatFlow: ChatFlowStep[]) =>
   chatFlow[0]?.text ??
-  "Olá! Bom dia, sou o assistente do SP Spaces e vou te ajudar a encontrar o espaço ideal.";
+  "Olá! Eu posso te ajudar a encontrar o espaço ideal. Me diga o tipo de espaço, pessoas, bairro ou orçamento.";
 
 const inferCategory = (
   eventType?: string,
@@ -203,145 +163,43 @@ const inferCategory = (
   return undefined;
 };
 
-const parseCapacity = (text: string): number | undefined => {
-  const normalized = normalizeText(text);
-  const match = normalized.match(/(\d{1,3})/);
-  if (match) return Number(match[1]);
-  if (normalized.includes("ate 30")) return 30;
-  if (normalized.includes("mais de 50")) return 50;
-  if (normalized.includes("5 a 20")) return 20;
-  if (normalized.includes("20 a 50")) return 50;
-  if (normalized.includes("ate 5")) return 5;
+const criteriaToApiIntent = (criteria: ChatCriteria): ChatApiIntent => ({
+  tipoEspaco: criteria.eventType,
+  tipoEvento: criteria.eventType,
+  cidade: criteria.city,
+  cidadeIncluida: criteria.city,
+  locations: criteria.city ? [criteria.city] : [],
+  quantidadePessoas: criteria.capacity,
+  recursosDesejados: criteria.resources,
+  orcamentoMaximo: criteria.budgetMax,
+  cidadesExcluidas: criteria.excludedCities,
+  recursosExcluidos: criteria.excludedResources,
+});
 
-  return undefined;
-};
-
-const parseEventType = (text: string): string | undefined => {
-  const normalized = normalizeText(text);
-
-  if (normalized.includes("evento corporativo")) return "Evento corporativo";
-  if (normalized.includes("reuniao")) return "Reunião";
-  if (normalized.includes("treinamento")) return "Treinamento";
-  if (normalized.includes("workshop")) return "Workshop";
-  if (normalized.includes("palestra")) return "Palestra";
-
-  return undefined;
-};
-
-const parseCity = (text: string): string | undefined => {
-  const found = cityPatterns.find(({ pattern }) => pattern.test(text));
-  return found?.label;
-};
-
-const parseResources = (text: string): string[] =>
-  resourceMatchers
-    .filter(({ pattern }) => pattern.test(text))
-    .map(({ resource }) => resource);
-
-const summarizeCriteria = (criteria: ChatCriteria) => {
-  const summaryItems = [
-    criteria.city && `cidade`,
-    criteria.capacity && `capacidade`,
-    criteria.eventType && `tipo de evento`,
-    criteria.resources.length > 0 && `recursos essenciais`,
-  ].filter(Boolean) as string[];
-
-  if (summaryItems.length === 0) {
-    return "Considerei os critérios que você já compartilhou para montar essa seleção.";
-  }
-
-  return `Considerei ${summaryItems.join(", ")} para montar essa seleção.`;
-};
-
-const buildSearchReadyReply = (criteria: ChatCriteria) => {
-  const parts: string[] = [];
-
-  if (criteria.eventType) {
-    parts.push(`Para ${criteria.eventType.toLowerCase()}, vou priorizar espaços`);
-  } else {
-    parts.push("Vou priorizar espaços");
-  }
-
-  if (criteria.capacity) {
-    parts.push(`com capacidade adequada para cerca de ${criteria.capacity} pessoas`);
-  }
-
-  if (criteria.resources.length > 0) {
-    parts.push(
-      `e estrutura com ${criteria.resources
-        .slice(0, 2)
-        .map((resource) => resource.toLowerCase())
-        .join(" e ")}`,
-    );
-  }
-
-  if (criteria.city) {
-    parts.push(`em ${criteria.city}`);
-  }
-
-  return `${parts.join(" ")}.`;
-};
-
-const buildResultsMessage = (criteria: ChatCriteria, count: number) => {
-  const opener =
-    count > 0
-      ? "Esses são os espaços que mais se adequaram à sua pesquisa."
-      : "Não encontrei combinações perfeitas com todos os critérios, mas separei a melhor aproximação possível.";
-
-  return `${opener} ${summarizeCriteria(criteria)}`;
-};
-
-const mergeCriteriaFromText = (
+const mergeCriteriaWithIntent = (
   current: ChatCriteria,
-  text: string,
+  intent?: Partial<ChatApiIntent>,
 ): ChatCriteria => {
-  const next: ChatCriteria = {
+  if (!intent) return current;
+
+  const city =
+    intent.cidadeIncluida ?? intent.cidade ?? intent.locations?.[0] ?? undefined;
+  const eventType = intent.tipoEvento ?? intent.tipoEspaco ?? undefined;
+  const capacity = intent.quantidadePessoas;
+
+  return {
     ...current,
-    resources: [...current.resources],
+    city,
+    eventType,
+    capacity,
+    resources: uniqueResources(intent.recursosDesejados ?? []),
+    excludedCities: uniqueResources(intent.cidadesExcluidas ?? []).filter(
+      (item) => normalizeText(item) !== normalizeText(city ?? ""),
+    ),
+    excludedResources: uniqueResources(intent.recursosExcluidos ?? []),
+    budgetMax: intent.orcamentoMaximo,
+    category: inferCategory(eventType, capacity),
   };
-
-  const parsedCity = parseCity(text);
-  const parsedCapacity = parseCapacity(text);
-  const parsedEventType = parseEventType(text);
-  const parsedResources = parseResources(text);
-  const normalized = normalizeText(text);
-
-  if (parsedCity) {
-    next.city = parsedCity;
-  }
-
-  if (parsedCapacity) {
-    next.capacity = parsedCapacity;
-  }
-
-  if (parsedEventType) {
-    next.eventType = parsedEventType;
-  }
-
-  if (parsedResources.length > 0) {
-    next.resources = uniqueResources([...next.resources, ...parsedResources]);
-  }
-
-  if (
-    normalized.includes("mais barato") ||
-    normalized.includes("barato") ||
-    normalized.includes("economico")
-  ) {
-    next.pricePreference = "lowest";
-  }
-
-  if (
-    normalized.includes("mais compativel") ||
-    normalized.includes("mais compatível") ||
-    normalized.includes("melhores opcoes") ||
-    normalized.includes("melhores opções")
-  ) {
-    next.pricePreference = "bestMatch";
-  }
-
-  next.category = inferCategory(next.eventType, next.capacity);
-
-  return next;
 };
 
 export const getRankedChatResults = (
@@ -349,11 +207,20 @@ export const getRankedChatResults = (
   criteria: ChatCriteria,
 ): Space[] => {
   const normalizedCity = criteria.city ? normalizeText(criteria.city) : undefined;
+  const normalizedExcludedCities = criteria.excludedCities.map((city) =>
+    normalizeText(city),
+  );
 
-  const scoredSpaces = spaces
+  return spaces
     .filter((space) => {
+      const location = normalizeText(space.location);
+
+      if (normalizedExcludedCities.some((city) => location.includes(city))) {
+        return false;
+      }
+
       if (!normalizedCity) return true;
-      return normalizeText(space.location).includes(normalizedCity);
+      return location.includes(normalizedCity);
     })
     .map((space) => {
       let score = 55;
@@ -363,7 +230,7 @@ export const getRankedChatResults = (
         if (space.capacity >= criteria.capacity) {
           score += 14;
         } else {
-          score -= Math.min(18, criteria.capacity - space.capacity);
+          score -= 25 + Math.min(18, criteria.capacity - space.capacity);
         }
       }
 
@@ -379,6 +246,14 @@ export const getRankedChatResults = (
 
         score += matchedResources * 8;
         score -= (criteria.resources.length - matchedResources) * 4;
+      }
+
+      if (criteria.budgetMax) {
+        if (space.pricePerHour <= criteria.budgetMax) {
+          score += 12;
+        } else {
+          score -= Math.min(20, Math.round((space.pricePerHour - criteria.budgetMax) / 10));
+        }
       }
 
       if (space.recommended) score += 6;
@@ -401,8 +276,6 @@ export const getRankedChatResults = (
           ? undefined
           : Math.max(72, Math.min(98, Math.round(score))),
     }));
-
-  return scoredSpaces;
 };
 
 export function ChatAssistantProvider({
@@ -412,7 +285,6 @@ export function ChatAssistantProvider({
   children: ReactNode;
   chatFlow: ChatFlowStep[];
 }) {
-  const router = useRouter();
   const initialBotMessage = useMemo(
     () => [toMessage(getInitialGreeting(chatFlow), "bot")],
     [chatFlow],
@@ -421,16 +293,13 @@ export function ChatAssistantProvider({
     () => ({
       open: false,
       messages: initialBotMessage,
-      step: 0,
       criteria: getBaseCriteria(),
-      pendingResultsAnnouncement: false,
       conversationStage: "initial",
-      selectedResourceOptions: [],
-      pendingSearchNavigation: false,
+      conversationSummary: "",
+      lastAskedField: undefined,
     }),
     [initialBotMessage],
   );
-  const routeTimerRef = useRef<number | null>(null);
 
   const [state, setState] = useState<StoredChatState>(defaultState);
 
@@ -449,11 +318,16 @@ export function ChatAssistantProvider({
           ...getBaseCriteria(),
           ...parsed.criteria,
           resources: parsed.criteria?.resources ?? [],
+          excludedCities: parsed.criteria?.excludedCities ?? [],
+          excludedResources: parsed.criteria?.excludedResources ?? [],
         },
         conversationStage:
           parsed.conversationStage ?? defaultState.conversationStage,
-        selectedResourceOptions:
-          parsed.selectedResourceOptions ?? parsed.criteria?.resources ?? [],
+        conversationSummary:
+          typeof parsed.conversationSummary === "string"
+            ? parsed.conversationSummary
+            : "",
+        lastAskedField: parsed.lastAskedField ?? defaultState.lastAskedField,
         messages:
           parsed.messages && parsed.messages.length > 0
             ? parsed.messages
@@ -468,77 +342,6 @@ export function ChatAssistantProvider({
     window.sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(state));
   }, [state]);
 
-  useEffect(() => {
-    return () => {
-      if (routeTimerRef.current) {
-        window.clearTimeout(routeTimerRef.current);
-      }
-    };
-  }, []);
-
-  const pushResultsRoute = useCallback(() => {
-    if (routeTimerRef.current) {
-      window.clearTimeout(routeTimerRef.current);
-    }
-
-    routeTimerRef.current = window.setTimeout(() => {
-      router.push("/chat-resultados");
-    }, 2000);
-  }, [router]);
-
-  const triggerSearch = useCallback(
-    (criteria: ChatCriteria, messages: ChatMessage[]) => {
-      setState((current) => ({
-        ...current,
-        open: true,
-        criteria,
-        messages,
-        pendingResultsAnnouncement: true,
-        conversationStage: "searching",
-        pendingSearchNavigation: true,
-      }));
-      pushResultsRoute();
-    },
-    [pushResultsRoute],
-  );
-
-  const openChat = useCallback(
-    (detail?: ChatOpenDetail) => {
-      setState((current) => ({
-        ...current,
-        open: true,
-      }));
-
-      if (detail?.autoSend && detail.message?.trim()) {
-        window.setTimeout(() => {
-          setState((current) => {
-            const nextCriteria = mergeCriteriaFromText(
-              current.criteria,
-              detail.message!.trim(),
-            );
-
-            return {
-              ...current,
-              open: true,
-              step: 1,
-              criteria: nextCriteria,
-              messages: [
-                ...current.messages,
-                toMessage(detail.message!.trim(), "user"),
-                toMessage(
-                  "Perfeito. Você tem alguma preferência de localização?",
-                  "bot",
-                ),
-              ],
-              conversationStage: "awaitingLocation",
-            };
-          });
-        }, 50);
-      }
-    },
-    [],
-  );
-
   const closeChat = useCallback(() => {
     setState((current) => ({ ...current, open: false }));
   }, []);
@@ -550,194 +353,109 @@ export function ChatAssistantProvider({
     });
   }, [defaultState]);
 
-  const sendMessage = useCallback(
-    (text: string) => {
-      const trimmed = text.trim();
-      if (!trimmed) return;
+  const sendMessage = useCallback(async (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+
+    let shouldRequest = true;
+    let requestCriteria = getBaseCriteria();
+    let requestConversationSummary = "";
+    let requestLastAskedField: AskedField | undefined;
+
+    setState((current) => {
+      if (current.conversationStage === "searching") {
+        shouldRequest = false;
+        return current;
+      }
+
+      requestCriteria = current.criteria;
+      requestConversationSummary = current.conversationSummary;
+      requestLastAskedField = current.lastAskedField;
+
+      return {
+        ...current,
+        open: true,
+        messages: [...current.messages, toMessage(trimmed, "user")],
+        conversationStage: "searching",
+      };
+    });
+
+    if (!shouldRequest) return;
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: trimmed,
+          intent: criteriaToApiIntent(requestCriteria),
+          conversationSummary: requestConversationSummary,
+          previousAskedField: requestLastAskedField,
+        }),
+      });
+      const data = (await response.json()) as Partial<ChatApiResponse>;
 
       setState((current) => {
-        const nextMessages = [...current.messages, toMessage(trimmed, "user")];
-        const nextCriteria = mergeCriteriaFromText(
+        const nextCriteria = mergeCriteriaWithIntent(
           current.criteria,
-          trimmed,
+          data.intent,
         );
-        const normalized = normalizeText(trimmed);
-
-        if (current.conversationStage === "searching") {
-          return current;
-        }
-
-        if (current.conversationStage === "initial") {
-          return {
-            ...current,
-            open: true,
-            step: 1,
-            criteria: nextCriteria,
-            messages: [
-              ...nextMessages,
-              toMessage(
-                "Perfeito. Você tem alguma preferência de localização?",
-                "bot",
-              ),
-            ],
-            conversationStage: "awaitingLocation",
-          };
-        }
-
-        if (current.conversationStage === "awaitingLocation") {
-          const nextLocationCriteria = {
-            ...nextCriteria,
-            city: nextCriteria.city ?? trimmed,
-          };
-
-          return {
-            ...current,
-            open: true,
-            step: 2,
-            criteria: nextLocationCriteria,
-            messages: [
-              ...nextMessages,
-              toMessage(
-                "Agora me diga quais recursos são essenciais. Você pode escolher mais de um.",
-                "bot",
-              ),
-            ],
-            conversationStage: "awaitingResources",
-            selectedResourceOptions:
-              nextLocationCriteria.resources.length > 0
-                ? nextLocationCriteria.resources
-                : current.selectedResourceOptions,
-          };
-        }
-
-        if (normalized.includes("mudar cidade")) {
-          return {
-            ...current,
-            open: true,
-            messages: [
-              ...nextMessages,
-              toMessage(
-                "Claro. Me diga a região ou bairro desejado que eu refaço a busca mantendo o restante.",
-                "bot",
-              ),
-            ],
-            conversationStage: "awaitingLocation",
-          };
-        }
-
-        if (normalized.includes("falar com atendimento")) {
-          return {
-            ...current,
-            open: true,
-            messages: [
-              ...nextMessages,
-              toMessage(
-                "Posso seguir te ajudando por aqui e depois encaminhar o contexto para um atendimento consultivo, se você quiser.",
-                "bot",
-              ),
-            ],
-          };
-        }
-
-        const updatedMessages = [
-          ...nextMessages,
-          toMessage(buildSearchReadyReply(nextCriteria), "bot"),
-        ];
-
-        window.setTimeout(() => {
-          triggerSearch(nextCriteria, updatedMessages);
-        }, 80);
 
         return {
           ...current,
           open: true,
-          step: 3,
           criteria: nextCriteria,
-          messages: updatedMessages,
-          conversationStage: "searching",
-          selectedResourceOptions: nextCriteria.resources,
-          pendingSearchNavigation: true,
+          conversationSummary:
+            typeof data.conversationSummary === "string"
+              ? data.conversationSummary
+              : current.conversationSummary,
+          conversationStage: "results",
+          lastAskedField: data.mode === "ask" ? data.askedField : undefined,
+          messages: [
+            ...current.messages,
+            toBotMessage(
+              data.reply ??
+                "Posso continuar refinando a busca se você me passar mais contexto.",
+              data.mode === "recommend" ? data.recommendations ?? [] : [],
+              data.followUpActions ?? [],
+            ),
+          ],
         };
       });
-    },
-    [triggerSearch],
-  );
+    } catch {
+      setState((current) => ({
+        ...current,
+        open: true,
+        conversationStage: "results",
+        lastAskedField: "refinement",
+        messages: [
+          ...current.messages,
+          toBotMessage(
+            "Não consegui consultar a recomendação agora. Me diga tipo de espaço, pessoas, bairro ou orçamento e eu tento de novo.",
+          ),
+        ],
+      }));
+    }
+  }, []);
 
-  const handleQuickAction = useCallback(
-    (action: string) => {
-      sendMessage(action);
+  const openChat = useCallback(
+    (detail?: ChatOpenDetail) => {
+      setState((current) => ({
+        ...current,
+        open: true,
+      }));
+
+      if (detail?.autoSend && detail.message?.trim()) {
+        window.setTimeout(() => {
+          void sendMessage(detail.message!.trim());
+        }, 50);
+      }
     },
     [sendMessage],
   );
 
-  const toggleResourceOption = useCallback((resource: string) => {
-    setState((current) => {
-      const selected = current.selectedResourceOptions.includes(resource)
-        ? current.selectedResourceOptions.filter((item) => item !== resource)
-        : [...current.selectedResourceOptions, resource];
-
-      return {
-        ...current,
-        selectedResourceOptions: selected,
-      };
-    });
-  }, []);
-
-  const confirmResourceSelection = useCallback(() => {
-    setState((current) => {
-      if (current.conversationStage !== "awaitingResources") return current;
-
-      const selectedResources = uniqueResources([
-        ...current.criteria.resources,
-        ...current.selectedResourceOptions,
-      ]);
-      const nextCriteria = {
-        ...current.criteria,
-        resources: selectedResources,
-      };
-      const selectionMessage =
-        selectedResources.length > 0
-          ? `Recursos essenciais: ${selectedResources.join(", ")}`
-          : "Sem recursos obrigatórios";
-      const nextMessages = [
-        ...current.messages,
-        toMessage(selectionMessage, "user"),
-        toMessage(buildSearchReadyReply(nextCriteria), "bot"),
-      ];
-
-      window.setTimeout(() => {
-        triggerSearch(nextCriteria, nextMessages);
-      }, 80);
-
-      return {
-        ...current,
-        open: true,
-        step: 3,
-        criteria: nextCriteria,
-        messages: nextMessages,
-        conversationStage: "searching",
-        selectedResourceOptions: selectedResources,
-        pendingSearchNavigation: true,
-      };
-    });
-  }, [triggerSearch]);
-
-  const announceResults = useCallback((count: number) => {
-    setState((current) => {
-      if (!current.pendingResultsAnnouncement) return current;
-
-      return {
-        ...current,
-        open: true,
-        pendingResultsAnnouncement: false,
-        pendingSearchNavigation: false,
-        conversationStage: "results",
-        messages: [
-          ...current.messages,
-          toMessage(buildResultsMessage(current.criteria, count), "bot"),
-        ],
-      };
-    });
+  const announceResults = useCallback((_count: number) => {
+    return;
   }, []);
 
   useEffect(() => {
@@ -755,42 +473,33 @@ export function ChatAssistantProvider({
     () => ({
       open: state.open,
       messages: state.messages,
-      step: state.step,
       criteria: state.criteria,
       introSuggestions: [...introSuggestions],
-      followUpActions: [...followUpActions],
-      locationSuggestions: [...locationSuggestions],
-      resourceOptions: [...essentialResourceOptions],
       hasSearchContext:
         state.messages.length > 1 ||
         Boolean(
           state.criteria.city ||
             state.criteria.capacity ||
             state.criteria.eventType ||
-            state.criteria.resources.length > 0,
+            state.criteria.resources.length > 0 ||
+            state.criteria.excludedCities.length > 0 ||
+            state.criteria.budgetMax,
         ),
       conversationStage: state.conversationStage,
-      selectedResourceOptions: state.selectedResourceOptions,
       isSearching: state.conversationStage === "searching",
       openChat,
       closeChat,
       resetConversation,
       sendMessage,
-      handleQuickAction,
-      toggleResourceOption,
-      confirmResourceSelection,
       announceResults,
     }),
     [
       announceResults,
       closeChat,
-      confirmResourceSelection,
-      handleQuickAction,
       openChat,
       resetConversation,
       sendMessage,
       state,
-      toggleResourceOption,
     ],
   );
 

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowRight,
+  ChevronDown,
   Heart,
   LayoutDashboard,
   LogOut,
@@ -15,6 +16,15 @@ import {
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { spaceCatalog } from "@/lib/data/spaceCatalog";
 import type { Category } from "@/lib/data/contracts";
 import { useAuth } from "@/hooks/use-auth";
@@ -45,6 +55,12 @@ export function Header() {
   const currentCategory = searchParams.get("category");
   const { session, isReady, isAuthenticated, isAdmin, logout } = useAuth();
   const user = session?.user;
+  const userInitials = user?.fullName
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((name) => name[0]?.toUpperCase())
+    .join("");
 
   const isActive = (path: string) => pathname === path;
   const isCategoryActive = (categoryId: string) =>
@@ -129,14 +145,84 @@ export function Header() {
             </Link>
           ))}
           {isReady && isAuthenticated && user ? (
-            <Button
-              variant="secondary"
-              className="ml-1 rounded-full px-4 xl:ml-2 xl:px-5"
-              onClick={() => router.push(isAdmin ? "/admin" : "/perfil")}
-            >
-              {isAdmin ? "Painel" : "Perfil"}
-              <ArrowRight className="h-4 w-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="ml-1 inline-flex items-center gap-3 rounded-full border border-border/80 bg-card/95 px-2.5 py-2 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-secondary hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/45 xl:ml-2"
+                  aria-label="Abrir menu da conta"
+                >
+                  <Avatar className="h-10 w-10 border border-primary/10">
+                    <AvatarFallback className="bg-primary/10 text-sm font-semibold text-primary">
+                      {userInitials || "SP"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0">
+                    <p className="max-w-[140px] truncate text-sm font-semibold text-foreground">
+                      {user.fullName}
+                    </p>
+                    <p className="max-w-[140px] truncate text-xs text-muted-foreground">
+                      {isAdmin ? "Administrador" : "Minha conta"}
+                    </p>
+                  </div>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64 rounded-2xl p-2">
+                <DropdownMenuLabel className="px-3 py-2">
+                  <div className="space-y-1">
+                    <p className="truncate text-sm font-semibold text-foreground">{user.fullName}</p>
+                    <p className="truncate text-xs font-normal text-muted-foreground">
+                      {isAdmin ? user.email : "Acesse sua conta e acompanhe seus espaços"}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {isAdmin ? (
+                  <DropdownMenuItem
+                    className="rounded-xl px-3 py-2.5"
+                    onSelect={() => router.push("/admin")}
+                  >
+                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                    Painel administrativo
+                  </DropdownMenuItem>
+                ) : (
+                  <>
+                    <DropdownMenuItem
+                      className="rounded-xl px-3 py-2.5"
+                      onSelect={() => router.push("/perfil")}
+                    >
+                      <UserCircle2 className="mr-2 h-4 w-4" />
+                      Meu perfil
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="rounded-xl px-3 py-2.5"
+                      onSelect={() => router.push("/minhas-reservas")}
+                    >
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      Minhas reservas
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="rounded-xl px-3 py-2.5"
+                      onSelect={() => router.push("/favoritos")}
+                    >
+                      <Heart className="mr-2 h-4 w-4" />
+                      Meus favoritos
+                    </DropdownMenuItem>
+                  </>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="rounded-xl px-3 py-2.5 text-destructive focus:text-destructive"
+                  onSelect={() => {
+                    logout();
+                    router.push("/");
+                  }}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sair
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <Button asChild className="ml-1 rounded-full px-4 xl:ml-2 xl:px-5">
               <Link href="/login">

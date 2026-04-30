@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   getDayAvailabilityStatus,
+  getTimeRangeSlots,
   getUnavailableTimes,
+  isTimeRangeAvailableForDate,
   sanitizeReservationPreselection,
 } from "@/lib/availability/spaceAvailability";
 
@@ -14,8 +16,8 @@ describe("spaceAvailability utils", () => {
     ]);
   });
 
-  it("calcula status de dia disponível, parcial e indisponível", () => {
-    expect(getDayAvailabilityStatus("1", "2026-04-01")).toBe("partial");
+  it("calcula status de dia disponível ou indisponível", () => {
+    expect(getDayAvailabilityStatus("1", "2026-04-01")).toBe("available");
     expect(getDayAvailabilityStatus("1", "2026-04-01", ["07:00"])).toBe(
       "available",
     );
@@ -68,5 +70,36 @@ describe("spaceAvailability utils", () => {
       date: "2026-04-06",
       time: "",
     });
+  });
+
+  it("monta a faixa contínua de horários", () => {
+    expect(getTimeRangeSlots("09:00", "11:00")).toEqual([
+      "09:00",
+      "10:00",
+      "11:00",
+    ]);
+    expect(getTimeRangeSlots("11:00", "09:00")).toEqual([]);
+  });
+
+  it("valida quando uma faixa inteira está disponível no dia", () => {
+    expect(
+      isTimeRangeAvailableForDate("1", "2026-04-04", "10:00", "12:00", [
+        "09:00",
+        "10:00",
+        "11:00",
+        "12:00",
+        "13:00",
+      ]),
+    ).toBe(true);
+
+    expect(
+      isTimeRangeAvailableForDate("1", "2026-04-04", "09:00", "13:00", [
+        "09:00",
+        "10:00",
+        "11:00",
+        "12:00",
+        "13:00",
+      ]),
+    ).toBe(false);
   });
 });
