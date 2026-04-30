@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import type { Space } from "@/lib/data/contracts";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { SpaceAvailabilitySidebar } from "@/components/SpaceAvailabilitySidebar";
 import { useResolvedSpace } from "@/hooks/use-mock-store";
@@ -37,12 +38,13 @@ export default function SpaceDetailsScreen({ space }: SpaceDetailsScreenProps) {
   const resolvedSpace = useResolvedSpace(space);
   const gallery = resolvedSpace.images?.length ? resolvedSpace.images : [resolvedSpace.image];
   const rules = resolvedSpace.usageRules?.length ? resolvedSpace.usageRules : defaultRules;
+  const reservePath = `/reservar/${resolvedSpace.id}`;
   const commercialInfo =
     resolvedSpace.commercialInfo ??
     `Disponível por hora, a partir de R$ ${resolvedSpace.pricePerHour}/hora.`;
 
   return (
-    <div className="page-container section-space">
+    <div className="page-container section-space pb-[calc(6.5rem+env(safe-area-inset-bottom))] md:pb-0">
       <Link
         href="/encontrar"
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -183,9 +185,28 @@ export default function SpaceDetailsScreen({ space }: SpaceDetailsScreenProps) {
 
           <SpaceAvailabilitySidebar
             spaceId={resolvedSpace.id}
-            reservePath={`/reservar/${resolvedSpace.id}`}
+            reservePath={reservePath}
           />
         </aside>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-[70] border-t border-border/80 bg-white/95 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-10px_30px_rgb(15_23_42_/_0.08)] backdrop-blur-xl motion-safe:animate-in motion-safe:slide-in-from-bottom-4 motion-safe:fade-in-0 md:hidden">
+        <div className="mx-auto flex max-w-screen-sm items-center justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-lg font-bold leading-none text-foreground">
+              R$ {resolvedSpace.pricePerHour}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">/hora</p>
+          </div>
+
+          <Button
+            asChild
+            size="lg"
+            className="h-12 min-w-[148px] rounded-2xl px-6 shadow-sm shadow-primary/20 active:scale-[0.98]"
+          >
+            <Link href={reservePath}>Reservar</Link>
+          </Button>
+        </div>
       </div>
     </div>
   );

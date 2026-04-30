@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import type { DateRange } from "react-day-picker";
 import {
   AlertCircle,
   CalendarDays,
@@ -13,6 +14,7 @@ import {
   Users,
 } from "lucide-react";
 import type { Space } from "@/lib/data/contracts";
+import { Calendar } from "@/components/ui/calendar";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,9 +30,15 @@ import {
 } from "@/components/ui/select";
 import {
   DEFAULT_TIME_SLOTS,
+  getDayAvailabilityStatus,
+  getTimeRangeSlots,
+  getTimeSlotIndex,
   getTodayISODate,
-  getUnavailableTimes,
+  isTimeAvailableForDate,
+  isTimeRangeAvailableForDate,
+  parseISODate,
   sanitizeReservationPreselection,
+  toISODate,
 } from "@/lib/availability/spaceAvailability";
 import { useAuth } from "@/hooks/use-auth";
 import { useResolvedSpace } from "@/hooks/use-mock-store";
@@ -40,39 +48,64 @@ import {
 } from "@/lib/mock/mockStore";
 import { ReservationStatusBadge } from "@/components/ReservationStatusBadge";
 import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 type AvailabilityStatus = "idle" | "available" | "unavailable";
-type ReservationType = "single" | "package";
-type PackageRecurrence = "weekly" | "monthly" | "specific-dates";
+type BookingMode =
+  | "single-time"
+  | "single-range"
+  | "date-range-shared-time"
+  | "custom-days";
+
+type TimeRange = {
+  startTime: string;
+  endTime: string;
+};
+
+type ReservationEntry = {
+  date: string;
+  startTime: string;
+  endTime: string;
+};
+
+type ReservationDraft = {
+  entries: ReservationEntry[];
+  scheduleLabel: string;
+  detailLines: string[];
+};
 
 type ReservationForm = {
-  date: string;
-  time: string;
   people: number;
   notes: string;
 };
 
-type PackageForm = {
-  recurrence: PackageRecurrence;
-  occurrences: number;
-  notes: string;
-};
-
 const WHATSAPP_PHONE = "5511999999999";
-const PACKAGE_RECURRENCE_OPTIONS: Array<{
-  value: PackageRecurrence;
+const MODE_OPTIONS: Array<{
+  value: BookingMode;
   label: string;
+  description: string;
 }> = [
-  { value: "weekly", label: "Semanal" },
-  { value: "monthly", label: "Mensal" },
-  { value: "specific-dates", label: "Datas específicas" },
+  {
+    value: "single-time",
+    label: "1 dia e 1 horário",
+    description: "Escolha uma data e um único horário.",
+  },
+  {
+    value: "single-range",
+    label: "1 dia e faixa",
+    description: "Escolha uma data com início e fim no mesmo dia.",
+  },
+  {
+    value: "date-range-shared-time",
+    label: "Vários dias iguais",
+    description: "Aplique o mesmo horário para todo o período.",
+  },
+  {
+    value: "custom-days",
+    label: "Dias personalizados",
+    description: "Selecione dias soltos e ajuste a faixa de cada um.",
+  },
 ];
-
-const packageRecurrenceLabel: Record<PackageRecurrence, string> = {
-  weekly: "Semanal",
-  monthly: "Mensal",
-  "specific-dates": "Datas específicas",
-};
 
 const formatDate = (value: string) => {
   const date = new Date(`${value}T00:00:00`);
@@ -88,9 +121,186 @@ const formatDate = (value: string) => {
   }).format(date);
 };
 
+const formatEntryLabel = (entry: ReservationEntry) => {
+  if (entry.startTime === entry.endTime) {
+    return `${formatDate(entry.date)} às ${entry.startTime}`;
+  }
+
+  return `${formatDate(entry.date)} das ${entry.startTime} às ${entry.endTime}`;
+};
+
+const sortDates = (dates: string[]) =>
+  [...dates].sort((left, right) => left.localeCompare(right));
+
+const getDatesInRange = (fromDate: string, toDate: string) => {
+  const start = parseISODate(fromDate);
+  const end = parseISODate(toDate);
+
+  if (!start || !end || fromDate > toDate) {
+    return [];
+  }
+
+  const dates: string[] = [];
+  const cursor = new Date(start);
+
+  while (cursor <= end) {
+    dates.push(toISODate(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  return dates;
+};
+
+const getInitialPerDateRanges = (dates: string[], initialTime: string) =>
+  Object.fromEntries(
+    dates.map((date) => [
+      date,
+      {
+        startTime: initialTime,
+        endTime: initialTime,
+      },
+    ]),
+  ) as Record<string, TimeRange>;
+
+const buildScheduleLabel = (entries: ReservationEntry[]) => {
+  if (entries.length === 0) {
+    return "";
+  }
+
+  if (entries.length === 1) {
+    return formatEntryLabel(entries[0]);
+  }
+
+  const [firstEntry] = entries;
+  const lastEntry = entries[entries.length - 1];
+  const identicalRange = entries.every(
+    (entry) =>
+      entry.startTime === firstEntry.startTime && entry.endTime === firstEntry.endTime,
+  );
+
+  if (identicalRange) {
+    if (firstEntry.startTime === firstEntry.endTime) {
+      return `${formatDate(firstEntry.date)} até ${formatDate(lastEntry.date)}, sempre às ${firstEntry.startTime}`;
+    }
+
+    return `${formatDate(firstEntry.date)} até ${formatDate(lastEntry.date)}, sempre das ${firstEntry.startTime} às ${firstEntry.endTime}`;
+  }
+
+  const preview = entries.slice(0, 3).map(formatEntryLabel).join(" | ");
+  const remaining = entries.length - 3;
+
+  if (remaining > 0) {
+    return `${preview} | +${remaining} ${remaining === 1 ? "data" : "datas"}`;
+  }
+
+  return preview;
+};
+
+const getReservationDraft = (
+  bookingMode: BookingMode,
+  singleDate: string,
+  singleTime: string,
+  singleRange: TimeRange,
+  periodRange: DateRange | undefined,
+  sharedRange: TimeRange,
+  customDates: string[],
+  perDateRanges: Record<string, TimeRange>,
+) => {
+  let entries: ReservationEntry[] = [];
+
+  if (bookingMode === "single-time") {
+    if (!singleDate || !singleTime) {
+      return { error: "Selecione a data e o horário para continuar." };
+    }
+
+    entries = [
+      {
+        date: singleDate,
+        startTime: singleTime,
+        endTime: singleTime,
+      },
+    ];
+  }
+
+  if (bookingMode === "single-range") {
+    if (!singleDate || !singleRange.startTime || !singleRange.endTime) {
+      return { error: "Selecione a data, o horário inicial e o horário final." };
+    }
+
+    if (getTimeRangeSlots(singleRange.startTime, singleRange.endTime).length === 0) {
+      return { error: "O horário final precisa ser igual ou depois do horário inicial." };
+    }
+
+    entries = [
+      {
+        date: singleDate,
+        startTime: singleRange.startTime,
+        endTime: singleRange.endTime,
+      },
+    ];
+  }
+
+  if (bookingMode === "date-range-shared-time") {
+    if (!periodRange?.from || !periodRange?.to) {
+      return { error: "Selecione a data inicial e a data final do período." };
+    }
+
+    if (!sharedRange.startTime || !sharedRange.endTime) {
+      return { error: "Defina o horário que será repetido em todo o período." };
+    }
+
+    if (getTimeRangeSlots(sharedRange.startTime, sharedRange.endTime).length === 0) {
+      return { error: "O horário final precisa ser igual ou depois do horário inicial." };
+    }
+
+    entries = getDatesInRange(toISODate(periodRange.from), toISODate(periodRange.to)).map(
+      (date) => ({
+        date,
+        startTime: sharedRange.startTime,
+        endTime: sharedRange.endTime,
+      }),
+    );
+  }
+
+  if (bookingMode === "custom-days") {
+    if (customDates.length === 0) {
+      return { error: "Selecione pelo menos um dia no calendário." };
+    }
+
+    entries = sortDates(customDates).map((date) => ({
+      date,
+      startTime: perDateRanges[date]?.startTime ?? "",
+      endTime: perDateRanges[date]?.endTime ?? "",
+    }));
+
+    if (entries.some((entry) => !entry.startTime || !entry.endTime)) {
+      return { error: "Defina a faixa de horário de cada dia selecionado." };
+    }
+
+    if (
+      entries.some(
+        (entry) => getTimeRangeSlots(entry.startTime, entry.endTime).length === 0,
+      )
+    ) {
+      return { error: "Revise as faixas de horário. O fim não pode ser antes do início." };
+    }
+  }
+
+  const sortedEntries = [...entries].sort((left, right) => left.date.localeCompare(right.date));
+
+  return {
+    draft: {
+      entries: sortedEntries,
+      detailLines: sortedEntries.map(formatEntryLabel),
+      scheduleLabel: buildScheduleLabel(sortedEntries),
+    },
+  };
+};
+
 const buildWhatsAppMessage = (
   space: Space,
   form: ReservationForm,
+  reservationDraft: ReservationDraft,
   reservation?: MockReservation | null,
 ) => {
   const lines = [
@@ -99,45 +309,19 @@ const buildWhatsAppMessage = (
     reservation ? `Código da reserva: ${reservation.code}` : null,
     `Espaço: ${space.name}`,
     `Local: ${space.location}`,
-    `Data: ${formatDate(form.date)}`,
-    `Horário: ${form.time}`,
+    `Agenda: ${reservationDraft.scheduleLabel}`,
     `Pessoas: ${form.people}`,
     `Referência de valor: R$ ${space.pricePerHour}/hora`,
+    "",
+    "Datas e horários:",
+    ...reservationDraft.detailLines.map((line) => `- ${line}`),
   ].filter(Boolean) as string[];
 
   if (form.notes.trim()) {
-    lines.push(`Observações: ${form.notes.trim()}`);
+    lines.push("", `Observações: ${form.notes.trim()}`);
   }
 
   lines.push("", "Aguardo a confirmação da disponibilidade. Obrigado!");
-
-  return lines.join("\n");
-};
-
-const buildPackageWhatsAppMessage = (
-  space: Space,
-  packageForm: PackageForm,
-  reservation?: MockReservation | null,
-) => {
-  const lines = [
-    "Olá! Gostaria de solicitar um pacote de reservas:",
-    "",
-    reservation ? `Código da reserva: ${reservation.code}` : null,
-    `Espaço: ${space.name}`,
-    `Local: ${space.location}`,
-    `Recorrência: ${packageRecurrenceLabel[packageForm.recurrence]}`,
-    `Quantidade de ocorrências: ${packageForm.occurrences}`,
-    `Referência de valor: R$ ${space.pricePerHour}/hora`,
-  ].filter(Boolean) as string[];
-
-  if (packageForm.notes.trim()) {
-    lines.push(`Observações: ${packageForm.notes.trim()}`);
-  }
-
-  lines.push(
-    "",
-    "Entendo que o pacote será analisado e confirmado via WhatsApp. Obrigado!",
-  );
 
   return lines.join("\n");
 };
@@ -154,63 +338,29 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
   const todayISODate = useMemo(() => getTodayISODate(), []);
   const preselectedDate = searchParams.get("date");
   const preselectedTime = searchParams.get("time");
-  const [reservationType, setReservationType] = useState<ReservationType>("single");
-  const [form, setForm] = useState<ReservationForm>({
-    date: todayISODate,
-    time: "",
-    people: Math.min(2, resolvedSpace.capacity),
-    notes: "",
+  const [bookingMode, setBookingMode] = useState<BookingMode>("single-time");
+  const [singleDate, setSingleDate] = useState(todayISODate);
+  const [singleTime, setSingleTime] = useState("");
+  const [singleRange, setSingleRange] = useState<TimeRange>({
+    startTime: "",
+    endTime: "",
   });
-  const [packageForm, setPackageForm] = useState<PackageForm>({
-    recurrence: "weekly",
-    occurrences: 4,
+  const [periodRange, setPeriodRange] = useState<DateRange | undefined>(undefined);
+  const [sharedRange, setSharedRange] = useState<TimeRange>({
+    startTime: "",
+    endTime: "",
+  });
+  const [customDates, setCustomDates] = useState<string[]>([]);
+  const [perDateRanges, setPerDateRanges] = useState<Record<string, TimeRange>>({});
+  const [form, setForm] = useState<ReservationForm>({
+    people: Math.min(2, resolvedSpace.capacity),
     notes: "",
   });
   const [availabilityStatus, setAvailabilityStatus] =
     useState<AvailabilityStatus>("idle");
+  const [availabilityMessage, setAvailabilityMessage] = useState("");
+  const [checkedDraft, setCheckedDraft] = useState<ReservationDraft | null>(null);
   const [createdReservation, setCreatedReservation] = useState<MockReservation | null>(null);
-
-  const unavailableTimes = useMemo(
-    () => getUnavailableTimes(resolvedSpace.id, form.date),
-    [resolvedSpace.id, form.date],
-  );
-
-  const isTimeUnavailable = form.time ? unavailableTimes.includes(form.time) : false;
-  const canCheckAvailability = Boolean(form.date && form.time && form.people > 0);
-  const isPackageReady = Boolean(packageForm.recurrence && packageForm.occurrences > 0);
-
-  const whatsappLink = useMemo(() => {
-    const message = buildWhatsAppMessage(resolvedSpace, form, createdReservation);
-
-    return `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(message)}`;
-  }, [createdReservation, resolvedSpace, form]);
-  const packageWhatsappLink = useMemo(() => {
-    const message = buildPackageWhatsAppMessage(
-      resolvedSpace,
-      packageForm,
-      createdReservation,
-    );
-
-    return `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(message)}`;
-  }, [createdReservation, resolvedSpace, packageForm]);
-
-  const handleCheckAvailability = () => {
-    if (!canCheckAvailability) {
-      return;
-    }
-
-    if (isTimeUnavailable) {
-      setAvailabilityStatus("unavailable");
-      return;
-    }
-
-    setAvailabilityStatus("available");
-  };
-
-  const handleEditReservation = () => {
-    setAvailabilityStatus("idle");
-    setCreatedReservation(null);
-  };
 
   useEffect(() => {
     const normalizedSelection = sanitizeReservationPreselection(
@@ -222,14 +372,34 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
       { todayISODate },
     );
 
-    setForm((current) => ({
-      ...current,
-      date: normalizedSelection.date,
-      time: normalizedSelection.time,
-    }));
+    setSingleDate(normalizedSelection.date);
+    setSingleTime(normalizedSelection.time);
+    setSingleRange({
+      startTime: normalizedSelection.time,
+      endTime: normalizedSelection.time,
+    });
+    setPeriodRange({
+      from: parseISODate(normalizedSelection.date) ?? undefined,
+      to: parseISODate(normalizedSelection.date) ?? undefined,
+    });
+    setSharedRange({
+      startTime: normalizedSelection.time,
+      endTime: normalizedSelection.time,
+    });
+    setCustomDates(normalizedSelection.date ? [normalizedSelection.date] : []);
+    setPerDateRanges(getInitialPerDateRanges([normalizedSelection.date], normalizedSelection.time));
     setAvailabilityStatus("idle");
+    setAvailabilityMessage("");
+    setCheckedDraft(null);
     setCreatedReservation(null);
   }, [preselectedDate, preselectedTime, resolvedSpace.id, todayISODate]);
+
+  const handleDraftChange = () => {
+    setAvailabilityStatus("idle");
+    setAvailabilityMessage("");
+    setCheckedDraft(null);
+    setCreatedReservation(null);
+  };
 
   const ensureClientSession = () => {
     if (!session || session.user.role !== "user") {
@@ -244,10 +414,115 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
     window.open(targetUrl, "_blank", "noopener,noreferrer");
   };
 
-  const handleCreateSingleReservation = () => {
+  const currentDraftResult = useMemo(
+    () =>
+      getReservationDraft(
+        bookingMode,
+        singleDate,
+        singleTime,
+        singleRange,
+        periodRange,
+        sharedRange,
+        customDates,
+        perDateRanges,
+      ),
+    [
+      bookingMode,
+      singleDate,
+      singleTime,
+      singleRange,
+      periodRange,
+      sharedRange,
+      customDates,
+      perDateRanges,
+    ],
+  );
+
+  const selectedCustomDateObjects = useMemo(
+    () =>
+      sortDates(customDates)
+        .map((date) => parseISODate(date))
+        .filter(Boolean) as Date[],
+    [customDates],
+  );
+
+  const whatsappLink = useMemo(() => {
+    if (!checkedDraft) {
+      return "";
+    }
+
+    const message = buildWhatsAppMessage(
+      resolvedSpace,
+      form,
+      checkedDraft,
+      createdReservation,
+    );
+
+    return `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(message)}`;
+  }, [checkedDraft, createdReservation, resolvedSpace, form]);
+
+  const handleCheckAvailability = () => {
+    if (form.people <= 0) {
+      setAvailabilityStatus("unavailable");
+      setAvailabilityMessage("Informe a quantidade de pessoas para continuar.");
+      setCheckedDraft(null);
+      return;
+    }
+
+    if (currentDraftResult.error) {
+      setAvailabilityStatus("unavailable");
+      setAvailabilityMessage(currentDraftResult.error);
+      setCheckedDraft(null);
+      return;
+    }
+
+    const reservationDraft = currentDraftResult.draft;
+
+    if (!reservationDraft) {
+      setAvailabilityStatus("unavailable");
+      setAvailabilityMessage("Não foi possível montar a solicitação.");
+      setCheckedDraft(null);
+      return;
+    }
+
+    const unavailableEntries = reservationDraft.entries.filter((entry) => {
+      if (entry.startTime === entry.endTime) {
+        return !isTimeAvailableForDate(
+          resolvedSpace.id,
+          entry.date,
+          entry.startTime,
+        );
+      }
+
+      return !isTimeRangeAvailableForDate(
+        resolvedSpace.id,
+        entry.date,
+        entry.startTime,
+        entry.endTime,
+      );
+    });
+
+    if (unavailableEntries.length > 0) {
+      setAvailabilityStatus("unavailable");
+      setAvailabilityMessage(
+        `Encontramos conflito em ${unavailableEntries
+          .slice(0, 3)
+          .map(formatEntryLabel)
+          .join(", ")}.`,
+      );
+      setCheckedDraft(null);
+      return;
+    }
+
+    setAvailabilityStatus("available");
+    setAvailabilityMessage("");
+    setCheckedDraft(reservationDraft);
+  };
+
+  const handleCreateReservation = () => {
     const user = ensureClientSession();
 
-    if (!user) {
+    if (!user || !checkedDraft) {
       return;
     }
 
@@ -255,7 +530,7 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
       user,
       space: resolvedSpace,
       kind: "single",
-      scheduleLabel: `${formatDate(form.date)} as ${form.time}`,
+      scheduleLabel: checkedDraft.scheduleLabel,
       notes: form.notes,
     });
 
@@ -266,26 +541,32 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
     });
   };
 
-  const handleCreatePackageReservation = () => {
-    const user = ensureClientSession();
-
-    if (!user) {
-      return;
+  const customAvailabilitySummary = useMemo(() => {
+    if (customDates.length === 0) {
+      return "Selecione os dias e ajuste os horários de cada um.";
     }
 
-    const reservation = createMockReservation({
-      user,
-      space: resolvedSpace,
-      kind: "package",
-      scheduleLabel: `Pacote ${packageRecurrenceLabel[packageForm.recurrence].toLowerCase()} com ${packageForm.occurrences} ocorrencias`,
-      notes: packageForm.notes,
-    });
+    const unavailableDays = sortDates(customDates).filter(
+      (date) => getDayAvailabilityStatus(resolvedSpace.id, date) === "unavailable",
+    );
 
-    setCreatedReservation(reservation);
-    toast({
-      title: "Solicitação pendente criada",
-      description: `${reservation.code} foi enviada para acompanhamento interno.`,
-    });
+    if (unavailableDays.length === 0) {
+      return "Todos os dias selecionados têm pelo menos algum horário disponível.";
+    }
+
+    return `Dias totalmente bloqueados: ${unavailableDays
+      .map(formatDate)
+      .join(", ")}.`;
+  }, [customDates, resolvedSpace.id]);
+
+  const renderEndTimeOptions = (startTime: string) => {
+    if (!startTime) {
+      return [...DEFAULT_TIME_SLOTS];
+    }
+
+    const slots = [...DEFAULT_TIME_SLOTS] as string[];
+    const startIndex = slots.indexOf(startTime);
+    return slots.slice(startIndex);
   };
 
   return (
@@ -308,8 +589,8 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
               Reservar espaço
             </h1>
             <p className="text-sm text-muted-foreground">
-              Preencha os dados abaixo para verificar disponibilidade e continuar no
-              WhatsApp.
+              Monte uma única solicitação com um dia, um período ou várias datas,
+              tudo no mesmo contrato.
             </p>
           </div>
 
@@ -326,197 +607,604 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
             </p>
           </div>
 
-          <div className="space-y-2">
-            <Label>Tipo de reserva</Label>
-            <div className="grid gap-2 sm:grid-cols-2">
+          <div className="space-y-3">
+            <Label>Como você quer montar a reserva</Label>
+            <div className="grid gap-3 md:grid-cols-2">
+              {MODE_OPTIONS.map((option) => {
+                const selected = bookingMode === option.value;
+
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      setBookingMode(option.value);
+                      handleDraftChange();
+                    }}
+                    className={cn(
+                      "rounded-lg border p-4 text-left transition-colors",
+                      selected
+                        ? "border-primary bg-primary-soft"
+                        : "border-border bg-background hover:border-primary/40",
+                    )}
+                  >
+                    <p className="text-sm font-semibold text-foreground">{option.label}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{option.description}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="space-y-5">
+            {(bookingMode === "single-time" || bookingMode === "single-range") && (
+              <div className="grid gap-5 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
+                <div className="overflow-x-auto rounded-lg border border-border bg-secondary/50 p-2 sm:p-3">
+                  <Calendar
+                    mode="single"
+                    selected={parseISODate(singleDate) ?? undefined}
+                    onSelect={(day) => {
+                      if (!day) {
+                        return;
+                      }
+
+                      setSingleDate(toISODate(day));
+                      handleDraftChange();
+                    }}
+                    disabled={(day) => toISODate(day) < todayISODate}
+                    modifiers={{
+                      available: (day) =>
+                        toISODate(day) >= todayISODate &&
+                        getDayAvailabilityStatus(resolvedSpace.id, toISODate(day)) ===
+                          "available",
+                      unavailable: (day) =>
+                        toISODate(day) >= todayISODate &&
+                        getDayAvailabilityStatus(resolvedSpace.id, toISODate(day)) ===
+                          "unavailable",
+                    }}
+                    modifiersClassNames={{
+                      available:
+                        "relative after:absolute after:bottom-1 after:left-1/2 after:h-1.5 after:w-1.5 after:-translate-x-1/2 after:rounded-full after:bg-emerald-500",
+                      unavailable:
+                        "relative after:absolute after:bottom-1 after:left-1/2 after:h-1.5 after:w-1.5 after:-translate-x-1/2 after:rounded-full after:bg-rose-500",
+                    }}
+                    className="mx-auto w-fit p-0"
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Data selecionada: <span className="font-medium text-foreground">{formatDate(singleDate)}</span>
+                  </p>
+
+                  {bookingMode === "single-time" && (
+                    <div className="space-y-1.5">
+                      <Label htmlFor="single-time">Horário</Label>
+                      <Select
+                        value={singleTime}
+                        onValueChange={(value) => {
+                          setSingleTime(value);
+                          if (!singleRange.startTime) {
+                            setSingleRange({ startTime: value, endTime: value });
+                          }
+                          handleDraftChange();
+                        }}
+                      >
+                        <SelectTrigger id="single-time">
+                          <SelectValue placeholder="Selecione um horário" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {DEFAULT_TIME_SLOTS.map((timeOption) => {
+                            const blocked = !isTimeAvailableForDate(
+                              resolvedSpace.id,
+                              singleDate,
+                              timeOption,
+                            );
+
+                            return (
+                              <SelectItem
+                                key={timeOption}
+                                value={timeOption}
+                                disabled={blocked}
+                              >
+                                {blocked ? `${timeOption} · indisponível` : timeOption}
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {bookingMode === "single-range" && (
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="single-range-start">Início</Label>
+                        <Select
+                          value={singleRange.startTime}
+                          onValueChange={(value) => {
+                            setSingleRange((current) => ({
+                              startTime: value,
+                              endTime:
+                                current.endTime &&
+                                getTimeSlotIndex(current.endTime) >=
+                                  getTimeSlotIndex(value)
+                                  ? current.endTime
+                                  : value,
+                            }));
+                            handleDraftChange();
+                          }}
+                        >
+                          <SelectTrigger id="single-range-start">
+                            <SelectValue placeholder="Horário inicial" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {DEFAULT_TIME_SLOTS.map((timeOption) => (
+                              <SelectItem key={timeOption} value={timeOption}>
+                                {timeOption}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="single-range-end">Fim</Label>
+                        <Select
+                          value={singleRange.endTime}
+                          onValueChange={(value) => {
+                            setSingleRange((current) => ({
+                              ...current,
+                              endTime: value,
+                            }));
+                            handleDraftChange();
+                          }}
+                        >
+                          <SelectTrigger id="single-range-end">
+                            <SelectValue placeholder="Horário final" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {renderEndTimeOptions(singleRange.startTime).map((timeOption) => (
+                              <SelectItem key={timeOption} value={timeOption}>
+                                {timeOption}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {bookingMode === "date-range-shared-time" && (
+              <div className="grid gap-5 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
+                <div className="overflow-x-auto rounded-lg border border-border bg-secondary/50 p-2 sm:p-3">
+                  <Calendar
+                    mode="range"
+                    selected={periodRange}
+                    onSelect={(range) => {
+                      setPeriodRange(range);
+                      handleDraftChange();
+                    }}
+                    disabled={(day) => toISODate(day) < todayISODate}
+                    modifiers={{
+                      available: (day) =>
+                        toISODate(day) >= todayISODate &&
+                        getDayAvailabilityStatus(resolvedSpace.id, toISODate(day)) ===
+                          "available",
+                      unavailable: (day) =>
+                        toISODate(day) >= todayISODate &&
+                        getDayAvailabilityStatus(resolvedSpace.id, toISODate(day)) ===
+                          "unavailable",
+                    }}
+                    modifiersClassNames={{
+                      available:
+                        "relative after:absolute after:bottom-1 after:left-1/2 after:h-1.5 after:w-1.5 after:-translate-x-1/2 after:rounded-full after:bg-emerald-500",
+                      unavailable:
+                        "relative after:absolute after:bottom-1 after:left-1/2 after:h-1.5 after:w-1.5 after:-translate-x-1/2 after:rounded-full after:bg-rose-500",
+                    }}
+                    className="mx-auto w-fit p-0"
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    {periodRange?.from && periodRange?.to
+                      ? `Período: ${formatDate(toISODate(periodRange.from))} até ${formatDate(toISODate(periodRange.to))}`
+                      : "Selecione a data inicial e final no calendário."}
+                  </p>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="shared-range-start">Início</Label>
+                      <Select
+                        value={sharedRange.startTime}
+                        onValueChange={(value) => {
+                          setSharedRange((current) => ({
+                            startTime: value,
+                            endTime:
+                              current.endTime &&
+                              getTimeSlotIndex(current.endTime) >=
+                                getTimeSlotIndex(value)
+                                ? current.endTime
+                                : value,
+                          }));
+                          handleDraftChange();
+                        }}
+                      >
+                        <SelectTrigger id="shared-range-start">
+                          <SelectValue placeholder="Horário inicial" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {DEFAULT_TIME_SLOTS.map((timeOption) => (
+                            <SelectItem key={timeOption} value={timeOption}>
+                              {timeOption}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="shared-range-end">Fim</Label>
+                      <Select
+                        value={sharedRange.endTime}
+                        onValueChange={(value) => {
+                          setSharedRange((current) => ({
+                            ...current,
+                            endTime: value,
+                          }));
+                          handleDraftChange();
+                        }}
+                      >
+                        <SelectTrigger id="shared-range-end">
+                          <SelectValue placeholder="Horário final" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {renderEndTimeOptions(sharedRange.startTime).map((timeOption) => (
+                            <SelectItem key={timeOption} value={timeOption}>
+                              {timeOption}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {bookingMode === "custom-days" && (
+              <div className="grid gap-5 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
+                <div className="overflow-x-auto rounded-lg border border-border bg-secondary/50 p-2 sm:p-3">
+                  <Calendar
+                    mode="multiple"
+                    selected={selectedCustomDateObjects}
+                    onSelect={(days) => {
+                      const nextDates = sortDates(
+                        (days ?? []).map((day) => toISODate(day)).filter((date) => date >= todayISODate),
+                      );
+
+                      setCustomDates(nextDates);
+                      setPerDateRanges((current) => {
+                        const nextEntries = nextDates.map((date) => [
+                          date,
+                          current[date] ?? {
+                            startTime: "",
+                            endTime: "",
+                          },
+                        ]);
+
+                        return Object.fromEntries(nextEntries);
+                      });
+                      handleDraftChange();
+                    }}
+                    disabled={(day) => toISODate(day) < todayISODate}
+                    modifiers={{
+                      available: (day) =>
+                        toISODate(day) >= todayISODate &&
+                        getDayAvailabilityStatus(resolvedSpace.id, toISODate(day)) ===
+                          "available",
+                      unavailable: (day) =>
+                        toISODate(day) >= todayISODate &&
+                        getDayAvailabilityStatus(resolvedSpace.id, toISODate(day)) ===
+                          "unavailable",
+                    }}
+                    modifiersClassNames={{
+                      available:
+                        "relative after:absolute after:bottom-1 after:left-1/2 after:h-1.5 after:w-1.5 after:-translate-x-1/2 after:rounded-full after:bg-emerald-500",
+                      unavailable:
+                        "relative after:absolute after:bottom-1 after:left-1/2 after:h-1.5 after:w-1.5 after:-translate-x-1/2 after:rounded-full after:bg-rose-500",
+                    }}
+                    className="mx-auto w-fit p-0"
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
+                    <p className="text-sm font-medium text-foreground">
+                      Horário rápido para todos os dias
+                    </p>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="bulk-range-start">Início</Label>
+                        <Select
+                          value={sharedRange.startTime}
+                          onValueChange={(value) => {
+                            setSharedRange((current) => ({
+                              startTime: value,
+                              endTime:
+                                current.endTime &&
+                                    getTimeSlotIndex(current.endTime) >=
+                                      getTimeSlotIndex(value)
+                                  ? current.endTime
+                                  : value,
+                            }));
+                          }}
+                        >
+                          <SelectTrigger id="bulk-range-start">
+                            <SelectValue placeholder="Horário inicial" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {DEFAULT_TIME_SLOTS.map((timeOption) => (
+                              <SelectItem key={timeOption} value={timeOption}>
+                                {timeOption}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="bulk-range-end">Fim</Label>
+                        <Select
+                          value={sharedRange.endTime}
+                          onValueChange={(value) => {
+                            setSharedRange((current) => ({
+                              ...current,
+                              endTime: value,
+                            }));
+                          }}
+                        >
+                          <SelectTrigger id="bulk-range-end">
+                            <SelectValue placeholder="Horário final" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {renderEndTimeOptions(sharedRange.startTime).map((timeOption) => (
+                              <SelectItem key={timeOption} value={timeOption}>
+                                {timeOption}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => {
+                        if (
+                          !sharedRange.startTime ||
+                          !sharedRange.endTime ||
+                          customDates.length === 0
+                        ) {
+                          return;
+                        }
+
+                        setPerDateRanges((current) =>
+                          Object.fromEntries(
+                            customDates.map((date) => [
+                              date,
+                              {
+                                startTime: sharedRange.startTime,
+                                endTime: sharedRange.endTime,
+                              },
+                            ]),
+                          ),
+                        );
+                        handleDraftChange();
+                      }}
+                      disabled={
+                        customDates.length === 0 ||
+                        !sharedRange.startTime ||
+                        !sharedRange.endTime
+                      }
+                    >
+                      Aplicar essa faixa em todos os dias
+                    </Button>
+                  </div>
+
+                  <p className="text-sm text-muted-foreground">{customAvailabilitySummary}</p>
+
+                  <div className="space-y-3">
+                    {sortDates(customDates).map((date) => (
+                      <div
+                        key={date}
+                        className="rounded-lg border border-border bg-background p-4"
+                      >
+                        <div className="mb-3 flex items-center justify-between gap-3">
+                          <p className="text-sm font-medium text-foreground">
+                            {formatDate(date)}
+                          </p>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setCustomDates((current) =>
+                                current.filter((currentDate) => currentDate !== date),
+                              );
+                              setPerDateRanges((current) => {
+                                const next = { ...current };
+                                delete next[date];
+                                return next;
+                              });
+                              handleDraftChange();
+                            }}
+                          >
+                            Remover
+                          </Button>
+                        </div>
+
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <div className="space-y-1.5">
+                            <Label>Início</Label>
+                            <Select
+                              value={perDateRanges[date]?.startTime ?? ""}
+                              onValueChange={(value) => {
+                                setPerDateRanges((current) => {
+                                  const currentRange = current[date] ?? {
+                                    startTime: "",
+                                    endTime: "",
+                                  };
+                                  const nextEndTime =
+                                    currentRange.endTime &&
+                                    getTimeSlotIndex(currentRange.endTime) >=
+                                      getTimeSlotIndex(value)
+                                      ? currentRange.endTime
+                                      : value;
+
+                                  return {
+                                    ...current,
+                                    [date]: {
+                                      startTime: value,
+                                      endTime: nextEndTime,
+                                    },
+                                  };
+                                });
+                                handleDraftChange();
+                              }}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Horário inicial" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {DEFAULT_TIME_SLOTS.map((timeOption) => (
+                                  <SelectItem key={timeOption} value={timeOption}>
+                                    {timeOption}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <Label>Fim</Label>
+                            <Select
+                              value={perDateRanges[date]?.endTime ?? ""}
+                              onValueChange={(value) => {
+                                setPerDateRanges((current) => ({
+                                  ...current,
+                                  [date]: {
+                                    startTime: current[date]?.startTime ?? "",
+                                    endTime: value,
+                                  },
+                                }));
+                                handleDraftChange();
+                              }}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Horário final" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {renderEndTimeOptions(perDateRanges[date]?.startTime ?? "").map(
+                                  (timeOption) => (
+                                    <SelectItem key={timeOption} value={timeOption}>
+                                      {timeOption}
+                                    </SelectItem>
+                                  ),
+                                )}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    {customDates.length === 0 && (
+                      <p className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
+                        Escolha os dias no calendário para montar a sua agenda.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="reservation-people">Quantidade de pessoas</Label>
+                <div className="relative">
+                  <Users className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="reservation-people"
+                    type="number"
+                    min={1}
+                    max={resolvedSpace.capacity}
+                    value={form.people}
+                    onChange={(event) => {
+                      const parsed = Number(event.target.value);
+                      const nextPeople = Number.isNaN(parsed) ? 1 : parsed;
+                      const clampedPeople = Math.max(
+                        1,
+                        Math.min(resolvedSpace.capacity, nextPeople),
+                      );
+                      setForm((current) => ({ ...current, people: clampedPeople }));
+                      handleDraftChange();
+                    }}
+                    className="pl-9"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Máximo permitido para este espaço: {resolvedSpace.capacity} pessoas.
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="reservation-notes">Observações (opcional)</Label>
+                <Textarea
+                  id="reservation-notes"
+                  placeholder="Ex: preciso de mesa de apoio e extensão elétrica."
+                  value={form.notes}
+                  onChange={(event) => {
+                    setForm((current) => ({ ...current, notes: event.target.value }));
+                    handleDraftChange();
+                  }}
+                  className="min-h-[96px]"
+                />
+              </div>
+            </div>
+
+            {availabilityStatus === "unavailable" && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Não foi possível confirmar a agenda</AlertTitle>
+                <AlertDescription>{availabilityMessage}</AlertDescription>
+              </Alert>
+            )}
+
+            <div className="flex flex-col gap-3 sm:flex-row">
               <Button
-                type="button"
-                variant={reservationType === "single" ? "default" : "secondary"}
-                onClick={() => {
-                  setReservationType("single");
-                  setCreatedReservation(null);
-                }}
+                size="lg"
+                className="w-full sm:w-auto"
+                onClick={handleCheckAvailability}
               >
-                Avulsa
+                Verificar disponibilidade
               </Button>
-              <Button
-                type="button"
-                variant={reservationType === "package" ? "default" : "secondary"}
-                onClick={() => {
-                  setReservationType("package");
-                  setCreatedReservation(null);
-                }}
-              >
-                Pacote
+              <Button asChild variant="secondary" size="lg" className="w-full sm:w-auto">
+                <Link href={`/espacos/${resolvedSpace.id}`}>Voltar aos detalhes</Link>
               </Button>
             </div>
           </div>
 
-          {reservationType === "single" && availabilityStatus !== "available" && (
+          {availabilityStatus === "available" && checkedDraft && !createdReservation && (
             <div className="space-y-5">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="reservation-date">Data</Label>
-                  <div className="relative">
-                    <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      id="reservation-date"
-                      type="date"
-                      min={todayISODate}
-                      value={form.date}
-                      onChange={(event) => {
-                        const nextDate = event.target.value;
-                        setForm((current) => {
-                          const nextUnavailableTimes = getUnavailableTimes(
-                            resolvedSpace.id,
-                            nextDate,
-                          );
-                          const nextTime = nextUnavailableTimes.includes(current.time)
-                            ? ""
-                            : current.time;
-
-                          return { ...current, date: nextDate, time: nextTime };
-                        });
-                        setAvailabilityStatus("idle");
-                      }}
-                      className="pl-9"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="reservation-time">Horário</Label>
-                  <Select
-                    value={form.time}
-                    onValueChange={(time) => {
-                      setForm((current) => ({ ...current, time }));
-                      setAvailabilityStatus("idle");
-                    }}
-                  >
-                    <SelectTrigger id="reservation-time" className="gap-2">
-                      <Clock3 className="h-4 w-4 text-muted-foreground" />
-                      <SelectValue placeholder="Selecione um horário" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {DEFAULT_TIME_SLOTS.map((timeOption) => {
-                        const blocked = unavailableTimes.includes(timeOption);
-
-                        return (
-                          <SelectItem
-                            key={timeOption}
-                            value={timeOption}
-                            disabled={blocked}
-                            className={blocked ? "text-muted-foreground/60" : undefined}
-                          >
-                            {blocked ? `${timeOption} · indisponível` : timeOption}
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="reservation-people">Quantidade de pessoas</Label>
-                  <div className="relative">
-                    <Users className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      id="reservation-people"
-                      type="number"
-                      min={1}
-                      max={resolvedSpace.capacity}
-                      value={form.people}
-                      onChange={(event) => {
-                        const parsed = Number(event.target.value);
-                        const nextPeople = Number.isNaN(parsed) ? 1 : parsed;
-                        const clampedPeople = Math.max(
-                          1,
-                          Math.min(resolvedSpace.capacity, nextPeople),
-                        );
-                        setForm((current) => ({ ...current, people: clampedPeople }));
-                        setAvailabilityStatus("idle");
-                      }}
-                      className="pl-9"
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Máximo permitido para este espaço: {resolvedSpace.capacity} pessoas.
-                  </p>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="reservation-notes">Observações (opcional)</Label>
-                  <Textarea
-                    id="reservation-notes"
-                    placeholder="Ex: preciso de mesa de apoio e extensão elétrica."
-                    value={form.notes}
-                    onChange={(event) =>
-                      setForm((current) => ({ ...current, notes: event.target.value }))
-                    }
-                    className="min-h-[96px]"
-                  />
-                </div>
-              </div>
-
-              <div className="rounded-lg border border-border bg-card p-3 text-sm text-muted-foreground">
-                Horários indisponíveis para {formatDate(form.date)}:{" "}
-                <span className="font-medium text-foreground">
-                  {unavailableTimes.length > 0
-                    ? unavailableTimes.join(", ")
-                    : "Nenhum horário bloqueado"}
-                </span>
-              </div>
-
-              {availabilityStatus === "unavailable" && (
-                <div className="space-y-3">
-                  <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Horário indisponível</AlertTitle>
-                    <AlertDescription>
-                      Este horário já está reservado. Tente outro horário
-                      ou outra data para continuar.
-                    </AlertDescription>
-                  </Alert>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => {
-                      setForm((current) => ({ ...current, time: "" }));
-                      setAvailabilityStatus("idle");
-                    }}
-                  >
-                    Tentar outra data/horário
-                  </Button>
-                </div>
-              )}
-
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <Button
-                  size="lg"
-                  className="w-full sm:w-auto"
-                  onClick={handleCheckAvailability}
-                  disabled={!canCheckAvailability}
-                >
-                  Verificar disponibilidade
-                </Button>
-                <Button asChild variant="secondary" size="lg" className="w-full sm:w-auto">
-                  <Link href={`/espacos/${resolvedSpace.id}`}>Voltar aos detalhes</Link>
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {reservationType === "single" && availabilityStatus === "available" && !createdReservation && (
-            <div className="space-y-5">
-                <Alert className="border-success/30 bg-success/10 text-foreground [&>svg]:text-success">
-                  <CheckCircle2 className="h-4 w-4" />
-                  <AlertTitle>Disponibilidade confirmada</AlertTitle>
-                  <AlertDescription>
-                    Perfeito! Seu horário está livre e pronto para gerar uma reserva pendente.
-                  </AlertDescription>
-                </Alert>
+              <Alert className="border-success/30 bg-success/10 text-foreground [&>svg]:text-success">
+                <CheckCircle2 className="h-4 w-4" />
+                <AlertTitle>Disponibilidade confirmada</AlertTitle>
+                <AlertDescription>
+                  Sua agenda está livre e pronta para gerar uma única reserva pendente.
+                </AlertDescription>
+              </Alert>
 
               <Card className="space-y-3 border border-border bg-secondary/40 p-4">
                 <h2 className="font-display text-xl font-semibold text-foreground">
@@ -526,10 +1214,7 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
                   <span className="font-medium">Espaço:</span> {resolvedSpace.name}
                 </p>
                 <p className="text-sm text-foreground">
-                  <span className="font-medium">Data:</span> {formatDate(form.date)}
-                </p>
-                <p className="text-sm text-foreground">
-                  <span className="font-medium">Horário:</span> {form.time}
+                  <span className="font-medium">Agenda:</span> {checkedDraft.scheduleLabel}
                 </p>
                 <p className="text-sm text-foreground">
                   <span className="font-medium">Pessoas:</span> {form.people}
@@ -539,6 +1224,15 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
                     <span className="font-medium">Observações:</span> {form.notes.trim()}
                   </p>
                 )}
+
+                <div className="rounded-lg border border-border bg-background p-3">
+                  <p className="text-sm font-medium text-foreground">Datas incluídas</p>
+                  <div className="mt-2 space-y-1 text-sm text-muted-foreground">
+                    {checkedDraft.detailLines.map((line) => (
+                      <p key={line}>{line}</p>
+                    ))}
+                  </div>
+                </div>
               </Card>
 
               <div className="flex flex-col gap-3 sm:flex-row">
@@ -546,14 +1240,14 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
                   variant="secondary"
                   size="lg"
                   className="w-full sm:w-auto"
-                  onClick={handleEditReservation}
+                  onClick={handleDraftChange}
                 >
                   Editar dados
                 </Button>
                 <Button
                   size="lg"
                   className="w-full gap-2 sm:w-auto"
-                  onClick={handleCreateSingleReservation}
+                  onClick={handleCreateReservation}
                 >
                   <CheckCircle2 className="h-4 w-4" />
                   Gerar reserva pendente
@@ -567,15 +1261,15 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
             </div>
           )}
 
-          {reservationType === "single" && availabilityStatus === "available" && createdReservation && (
+          {availabilityStatus === "available" && checkedDraft && createdReservation && (
             <div className="space-y-5">
-                <Alert className="border-success/30 bg-success/10 text-foreground [&>svg]:text-success">
-                  <CheckCircle2 className="h-4 w-4" />
-                  <AlertTitle>Reserva criada com status pendente</AlertTitle>
-                  <AlertDescription>
-                    Sua solicitação foi registrada e pode ser acompanhada pela equipe administrativa.
-                  </AlertDescription>
-                </Alert>
+              <Alert className="border-success/30 bg-success/10 text-foreground [&>svg]:text-success">
+                <CheckCircle2 className="h-4 w-4" />
+                <AlertTitle>Reserva criada com status pendente</AlertTitle>
+                <AlertDescription>
+                  Sua solicitação foi registrada e agora segue para confirmação final.
+                </AlertDescription>
+              </Alert>
 
               <Card className="space-y-3 border border-border bg-secondary/40 p-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -600,179 +1294,19 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
                 </p>
               </Card>
 
-                <Alert className="border-primary/20 bg-primary-soft/70 text-foreground">
-                  <MessageCircle className="h-4 w-4 text-primary" />
-                  <AlertTitle>Próximo passo: finalizar no WhatsApp</AlertTitle>
-                  <AlertDescription>
-                    O pagamento e a validação final seguem no WhatsApp. Depois disso, a equipe pode atualizar o status para reservado.
-                  </AlertDescription>
-                </Alert>
+              <Alert className="border-primary/20 bg-primary-soft/70 text-foreground">
+                <MessageCircle className="h-4 w-4 text-primary" />
+                <AlertTitle>Próximo passo: finalizar no WhatsApp</AlertTitle>
+                <AlertDescription>
+                  O pagamento e a validação final seguem no WhatsApp. Depois disso, a equipe pode atualizar o status para reservado.
+                </AlertDescription>
+              </Alert>
 
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button
                   size="lg"
                   className="w-full gap-2 sm:w-auto"
                   onClick={() => openWhatsApp(whatsappLink)}
-                >
-                  <MessageCircle className="h-4 w-4" />
-                  Continuar no WhatsApp
-                </Button>
-                <Button asChild variant="secondary" size="lg" className="w-full sm:w-auto">
-                  <Link href="/minhas-reservas">Ver minhas reservas</Link>
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {reservationType === "package" && !createdReservation && (
-            <div className="space-y-5">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="package-recurrence">Tipo de recorrência</Label>
-                  <Select
-                    value={packageForm.recurrence}
-                    onValueChange={(value) =>
-                      setPackageForm((current) => ({
-                        ...current,
-                        recurrence: value as PackageRecurrence,
-                      }))
-                    }
-                  >
-                    <SelectTrigger id="package-recurrence">
-                      <SelectValue placeholder="Selecione a recorrência" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PACKAGE_RECURRENCE_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="package-occurrences">
-                    Duração do pacote / ocorrências
-                  </Label>
-                  <Input
-                    id="package-occurrences"
-                    type="number"
-                    min={1}
-                    value={packageForm.occurrences}
-                    onChange={(event) => {
-                      const parsed = Number(event.target.value);
-                      const nextValue = Number.isNaN(parsed) ? 1 : parsed;
-                      setPackageForm((current) => ({
-                        ...current,
-                        occurrences: Math.max(1, nextValue),
-                      }));
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="package-notes">Observações (opcional)</Label>
-                <Textarea
-                  id="package-notes"
-                  placeholder="Ex: pacote para treinos da equipe às terças e quintas."
-                  value={packageForm.notes}
-                  onChange={(event) =>
-                    setPackageForm((current) => ({ ...current, notes: event.target.value }))
-                  }
-                  className="min-h-[96px]"
-                />
-              </div>
-
-              <Card className="space-y-3 border border-border bg-secondary/40 p-4">
-                <h2 className="font-display text-xl font-semibold text-foreground">
-                  Resumo do pacote
-                </h2>
-                <p className="text-sm text-foreground">
-                  <span className="font-medium">Espaço:</span> {resolvedSpace.name}
-                </p>
-                <p className="text-sm text-foreground">
-                  <span className="font-medium">Recorrência:</span>{" "}
-                  {packageRecurrenceLabel[packageForm.recurrence]}
-                </p>
-                <p className="text-sm text-foreground">
-                  <span className="font-medium">Ocorrências:</span> {packageForm.occurrences}
-                </p>
-                {packageForm.notes.trim() && (
-                  <p className="text-sm text-foreground">
-                    <span className="font-medium">Observações:</span>{" "}
-                    {packageForm.notes.trim()}
-                  </p>
-                )}
-              </Card>
-
-              <Alert className="border-primary/20 bg-primary-soft/70 text-foreground">
-                <CheckCircle2 className="h-4 w-4 text-primary" />
-                <AlertTitle>Pacote sujeito a análise</AlertTitle>
-                <AlertDescription>
-                  Sua solicitação de pacote será analisada e confirmada pela equipe no
-                  WhatsApp.
-                </AlertDescription>
-              </Alert>
-
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <Button
-                  size="lg"
-                  disabled={!isPackageReady}
-                  className="w-full gap-2 sm:w-auto"
-                  onClick={handleCreatePackageReservation}
-                >
-                  <CheckCircle2 className="h-4 w-4" />
-                  Gerar solicitação pendente
-                </Button>
-                <Button asChild variant="secondary" size="lg" className="w-full sm:w-auto">
-                  <Link href={`/espacos/${resolvedSpace.id}`}>Voltar aos detalhes</Link>
-                </Button>
-              </div>
-              {(!session || session.user.role !== "user") && (
-                <p className="text-sm text-muted-foreground">
-                  Antes de solicitar o pacote, faça login com o perfil cliente.
-                </p>
-              )}
-            </div>
-          )}
-
-          {reservationType === "package" && createdReservation && (
-            <div className="space-y-5">
-              <Alert className="border-success/30 bg-success/10 text-foreground [&>svg]:text-success">
-                <CheckCircle2 className="h-4 w-4" />
-                <AlertTitle>Solicitação de pacote registrada</AlertTitle>
-                <AlertDescription>
-                  O pacote foi criado como pendente e já pode ser acompanhado no painel.
-                </AlertDescription>
-              </Alert>
-
-              <Card className="space-y-3 border border-border bg-secondary/40 p-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <h2 className="font-display text-xl font-semibold text-foreground">
-                      {createdReservation.code}
-                    </h2>
-                    <p className="text-sm text-muted-foreground">
-                      {createdReservation.scheduleLabel}
-                    </p>
-                  </div>
-                  <ReservationStatusBadge status={createdReservation.status} />
-                </div>
-                <p className="text-sm text-foreground">
-                  <span className="font-medium">Espaço:</span> {createdReservation.spaceName}
-                </p>
-                <p className="text-sm text-foreground">
-                  <span className="font-medium">Cliente:</span> {createdReservation.fullName}
-                </p>
-              </Card>
-
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <Button
-                  size="lg"
-                  className="w-full gap-2 sm:w-auto"
-                  onClick={() => openWhatsApp(packageWhatsappLink)}
                 >
                   <MessageCircle className="h-4 w-4" />
                   Continuar no WhatsApp
@@ -791,9 +1325,9 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
               Como funciona
             </p>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>1. Escolha entre reserva avulsa ou reserva em pacote.</li>
-              <li>2. Gere uma reserva pendente dentro do app.</li>
-              <li>3. Continue no WhatsApp e aguarde a atualização da equipe.</li>
+              <li>1. Escolha o formato de agenda que mais combina com a sua locação.</li>
+              <li>2. Monte todas as datas e horários dentro de uma única solicitação.</li>
+              <li>3. Confirme a disponibilidade e siga para o WhatsApp.</li>
             </ul>
           </Card>
 

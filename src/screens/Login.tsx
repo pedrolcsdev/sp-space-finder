@@ -137,7 +137,7 @@ export default function LoginScreen({ redirectTo }: LoginScreenProps) {
   return (
     <div className="gradient-subtle flex min-h-screen items-center justify-center px-4 py-8 sm:py-12">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={false}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md space-y-6 sm:space-y-8"
       >

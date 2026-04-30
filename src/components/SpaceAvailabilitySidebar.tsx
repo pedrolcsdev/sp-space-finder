@@ -77,7 +77,7 @@ export function SpaceAvailabilitySidebar({
           Disponibilidade
         </p>
         <p className="text-sm text-muted-foreground">
-          Selecione a data e o horário para chegar na reserva com tudo preenchido.
+          Selecione a data e, se quiser, já deixe um horário inicial separado.
         </p>
       </div>
 
@@ -107,13 +107,6 @@ export function SpaceAvailabilitySidebar({
                 getDayAvailabilityStatus(spaceId, dayISODate) === "available"
               );
             },
-            partial: (day) => {
-              const dayISODate = toISODate(day);
-              return (
-                dayISODate >= todayISODate &&
-                getDayAvailabilityStatus(spaceId, dayISODate) === "partial"
-              );
-            },
             unavailable: (day) => {
               const dayISODate = toISODate(day);
               return (
@@ -125,8 +118,6 @@ export function SpaceAvailabilitySidebar({
           modifiersClassNames={{
             available:
               "relative after:absolute after:bottom-1 after:left-1/2 after:h-1.5 after:w-1.5 after:-translate-x-1/2 after:rounded-full after:bg-emerald-500",
-            partial:
-              "relative after:absolute after:bottom-1 after:left-1/2 after:h-1.5 after:w-1.5 after:-translate-x-1/2 after:rounded-full after:bg-amber-500",
             unavailable:
               "relative after:absolute after:bottom-1 after:left-1/2 after:h-1.5 after:w-1.5 after:-translate-x-1/2 after:rounded-full after:bg-rose-500",
           }}
@@ -138,10 +129,6 @@ export function SpaceAvailabilitySidebar({
         <span className="inline-flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-emerald-500" />
           Disponível
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-amber-500" />
-          Parcial
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-rose-500" />

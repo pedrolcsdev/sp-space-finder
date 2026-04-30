@@ -38,7 +38,7 @@ export default function ChatResultsScreen({ spaces }: ChatResultsScreenProps) {
   return (
     <div className="page-container section-space">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={false}
         animate={{ opacity: 1, y: 0 }}
         className="mb-10"
       >

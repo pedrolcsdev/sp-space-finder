@@ -67,7 +67,7 @@ export default function HomeScreen({ spaces }: HomeScreenProps) {
         <div className="page-container relative py-6 sm:py-10 lg:py-12">
           <div className="mx-auto max-w-3xl text-center">
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7 }}
               className="min-w-0"
@@ -114,7 +114,7 @@ export default function HomeScreen({ spaces }: HomeScreenProps) {
                   {heroPrompts.map((prompt, index) => (
                     <motion.div
                       key={prompt}
-                      initial={{ opacity: 0, y: 14 }}
+                      initial={false}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.45, delay: 0.08 * index }}
                       className="flex-none"
@@ -139,7 +139,7 @@ export default function HomeScreen({ spaces }: HomeScreenProps) {
       <section className="section-space">
         <div className="page-container">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={false}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
@@ -188,7 +188,7 @@ export default function HomeScreen({ spaces }: HomeScreenProps) {
               return (
                 <motion.div
                   key={category.id}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={false}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.45, delay: categoryIndex * 0.08 }}

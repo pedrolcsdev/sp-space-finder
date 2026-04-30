@@ -1,4 +1,4 @@
-export type DayAvailabilityStatus = "available" | "partial" | "unavailable";
+export type DayAvailabilityStatus = "available" | "unavailable";
 
 export const DEFAULT_TIME_SLOTS = [
   "08:00",
@@ -100,7 +100,7 @@ export const getDayAvailabilityStatus = (
     return "unavailable";
   }
 
-  return "partial";
+  return "available";
 };
 
 export const isTimeAvailableForDate = (
@@ -114,6 +114,48 @@ export const isTimeAvailableForDate = (
   }
 
   return !getUnavailableTimes(spaceId, date, slots).includes(time);
+};
+
+export const getTimeSlotIndex = (
+  time: string,
+  slots: readonly string[] = DEFAULT_TIME_SLOTS,
+) => slots.indexOf(time);
+
+export const getTimeRangeSlots = (
+  startTime: string,
+  endTime: string,
+  slots: readonly string[] = DEFAULT_TIME_SLOTS,
+) => {
+  const startIndex = getTimeSlotIndex(startTime, slots);
+  const endIndex = getTimeSlotIndex(endTime, slots);
+
+  if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
+    return [];
+  }
+
+  return slots.slice(startIndex, endIndex + 1);
+};
+
+export const isTimeRangeAvailableForDate = (
+  spaceId: string,
+  date: string,
+  startTime: string,
+  endTime: string,
+  slots: readonly string[] = DEFAULT_TIME_SLOTS,
+) => {
+  if (!isISODate(date)) {
+    return false;
+  }
+
+  const selectedSlots = getTimeRangeSlots(startTime, endTime, slots);
+
+  if (selectedSlots.length === 0) {
+    return false;
+  }
+
+  const unavailableTimes = getUnavailableTimes(spaceId, date, slots);
+
+  return selectedSlots.every((slot) => !unavailableTimes.includes(slot));
 };
 
 interface ReservationPreselectionInput {

@@ -1,7 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { MessageCircle, X, Send, Bot, User, RotateCcw } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import {
+  ArrowUpRight,
+  MapPin,
+  MessageCircle,
+  X,
+  Send,
+  Bot,
+  User,
+  RotateCcw,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,36 +25,22 @@ export function ChatWidget() {
     open,
     messages,
     introSuggestions,
-    followUpActions,
-    locationSuggestions,
-    resourceOptions,
-    hasSearchContext,
     conversationStage,
-    selectedResourceOptions,
     isSearching,
     closeChat,
     openChat,
     resetConversation,
     sendMessage,
-    handleQuickAction,
-    toggleResourceOption,
-    confirmResourceSelection,
   } = useChatAssistant();
   const [input, setInput] = useState("");
   const [showInitialTooltip, setShowInitialTooltip] = useState(true);
+  const messagesViewportRef = useRef<HTMLDivElement | null>(null);
+  const bottomAnchorRef = useRef<HTMLDivElement | null>(null);
 
   const showIntroSuggestions = useMemo(
     () => conversationStage === "initial",
     [conversationStage],
   );
-
-  const showFollowUpActions = useMemo(
-    () => hasSearchContext && messages.length > 2 && conversationStage === "results",
-    [conversationStage, hasSearchContext, messages.length],
-  );
-
-  const showLocationSuggestions = conversationStage === "awaitingLocation";
-  const showResourceSelector = conversationStage === "awaitingResources";
 
   useEffect(() => {
     if (open) {
@@ -50,9 +48,18 @@ export function ChatWidget() {
     }
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+
+    bottomAnchorRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "end",
+    });
+  }, [open, messages, isSearching]);
+
   const handleSend = () => {
-    if (!input.trim()) return;
-    sendMessage(input.trim());
+    if (!input.trim() || isSearching) return;
+    void sendMessage(input.trim());
     setInput("");
   };
 
@@ -132,7 +139,10 @@ export function ChatWidget() {
               </div>
             </div>
 
-            <div className="flex-1 space-y-3 overflow-y-auto p-3 sm:p-4">
+            <div
+              ref={messagesViewportRef}
+              className="flex-1 space-y-3 overflow-y-auto p-3 sm:p-4"
+            >
               {messages.map((message, index) => (
                 <div key={message.id} className="space-y-2">
                   <div
@@ -170,7 +180,7 @@ export function ChatWidget() {
                         {introSuggestions.map((suggestion) => (
                           <FilterChip
                             key={suggestion}
-                            onClick={() => sendMessage(suggestion)}
+                            onClick={() => void sendMessage(suggestion)}
                             variant="default"
                             size="sm"
                             className="hover:border-primary/40"
@@ -182,87 +192,96 @@ export function ChatWidget() {
                     </div>
                   )}
 
-                  {showLocationSuggestions &&
-                    index === messages.length - 1 &&
-                    message.type === "bot" && (
-                      <div className="space-y-2 pl-0 sm:pl-8">
-                        <div className="flex flex-wrap gap-2">
-                          {locationSuggestions.map((suggestion) => (
-                            <FilterChip
-                              key={suggestion}
-                              onClick={() => sendMessage(suggestion)}
-                              variant="default"
-                              size="sm"
-                              className="hover:border-primary/40"
-                            >
-                              {suggestion}
-                            </FilterChip>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                  {showResourceSelector &&
-                    index === messages.length - 1 &&
-                    message.type === "bot" && (
-                      <div className="space-y-3 pl-0 sm:pl-8">
-                        <div className="flex flex-wrap gap-2">
-                          {resourceOptions.map((resource) => {
-                            const selected = selectedResourceOptions.includes(resource);
-
-                            return (
-                              <FilterChip
-                                key={resource}
-                                onClick={() => toggleResourceOption(resource)}
-                                variant={selected ? "selected" : "default"}
-                                size="sm"
-                              >
-                                {resource}
-                              </FilterChip>
-                            );
-                          })}
-                        </div>
-                        <Button
-                          onClick={confirmResourceSelection}
-                          size="sm"
-                          className="h-9 rounded-full px-4"
+                  {message.recommendations && message.recommendations.length > 0 && (
+                    <div className="space-y-2 pl-0 sm:pl-8">
+                      {message.recommendations.map((space) => (
+                        <Link
+                          key={space.id}
+                          href={`/espacos/${space.id}`}
+                          className="block rounded-lg border border-border/80 bg-white p-3 text-left shadow-sm transition-colors hover:border-primary/45 hover:bg-secondary/40"
                         >
-                          Continuar busca
-                        </Button>
-                      </div>
-                    )}
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="line-clamp-2 text-sm font-semibold leading-5 text-foreground">
+                                {space.name}
+                              </p>
+                              <p className="mt-1 flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+                                <MapPin className="h-3.5 w-3.5 shrink-0" />
+                                <span className="truncate">{space.location}</span>
+                              </p>
+                            </div>
+                            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-success/10 px-2 py-1 text-xs font-semibold text-success">
+                              <TrendingUp className="h-3 w-3" />
+                              {space.matchPercent}%
+                            </span>
+                          </div>
+
+                          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-foreground/75">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-1">
+                              <Users className="h-3 w-3" />
+                              Até {space.capacity}
+                            </span>
+                            <span className="rounded-full bg-secondary px-2 py-1">
+                              R$ {space.pricePerHour}/hora
+                            </span>
+                          </div>
+
+                          <div className="mt-3 space-y-1">
+                            {space.reasons.slice(0, 2).map((reason) => (
+                              <p
+                                key={reason}
+                                className="text-xs leading-5 text-muted-foreground"
+                              >
+                                {reason}
+                              </p>
+                            ))}
+                          </div>
+
+                          <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                            Ver detalhes
+                            <ArrowUpRight className="h-3 w-3" />
+                          </span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+
                 </div>
               ))}
 
               {isSearching && (
-                <div className="pl-0 sm:pl-8">
-                  <p className="text-sm italic text-muted-foreground/70">
-                    Buscando os espaços ideais para você...
-                  </p>
+                <div className="flex justify-start pl-0 sm:pl-8">
+                  <div className="flex max-w-[92%] items-end gap-2 sm:max-w-[85%]">
+                    <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary/10">
+                      <Bot className="h-3 w-3 text-primary" />
+                    </div>
+                    <div className="rounded-2xl rounded-bl-sm bg-secondary px-4 py-3 text-foreground">
+                      <div className="flex items-center gap-1.5" aria-label="Assistente digitando">
+                        <span className="sr-only">Assistente digitando</span>
+                        {[0, 1, 2].map((dot) => (
+                          <motion.span
+                            key={dot}
+                            className="h-2 w-2 rounded-full bg-primary/60"
+                            animate={{
+                              opacity: [0.35, 1, 0.35],
+                              y: [0, -3, 0],
+                            }}
+                            transition={{
+                              duration: 0.9,
+                              repeat: Number.POSITIVE_INFINITY,
+                              ease: "easeInOut",
+                              delay: dot * 0.15,
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
-            </div>
 
-            {showFollowUpActions && (
-              <div className="border-t border-border/80 px-3 py-3">
-                <p className="mb-2 px-1 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                  Continuar recomendação
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {followUpActions.map((action) => (
-                    <FilterChip
-                      key={action}
-                      size="sm"
-                      variant="default"
-                      className="hover:border-primary/40"
-                      onClick={() => handleQuickAction(action)}
-                    >
-                      {action}
-                    </FilterChip>
-                  ))}
-                </div>
-              </div>
-            )}
+              <div ref={bottomAnchorRef} />
+            </div>
 
             <div className="border-t border-border p-3">
               <div className="flex items-center gap-2">
@@ -270,13 +289,15 @@ export function ChatWidget() {
                   value={input}
                   onChange={(event) => setInput(event.target.value)}
                   onKeyDown={(event) => event.key === "Enter" && handleSend()}
-                  placeholder="Descreva cidade, evento, capacidade ou recurso"
-                  className="h-10 rounded-md border-border bg-secondary"
+                  placeholder="Descreva o espaço que você precisa"
+                  className="h-10 rounded-md border-border bg-secondary text-base shadow-none"
+                  disabled={isSearching}
                 />
                 <Button
                   onClick={handleSend}
                   size="icon"
                   className="h-10 w-10 rounded-md"
+                  disabled={isSearching}
                 >
                   <Send className="h-4 w-4" />
                 </Button>

@@ -41,14 +41,14 @@ export function SpaceCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={false}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.08 }}
       className="h-full motion-safe:will-change-transform"
     >
       <Link
         href={`/espacos/${space.id}`}
-        className="group flex min-h-[520px] min-w-0 cursor-pointer flex-col overflow-hidden rounded-2xl border border-white/70 bg-card/95 shadow-sm shadow-slate-950/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_64px_rgb(15_23_42_/_0.12)] focus-visible:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/45 focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:h-[560px]"
+        className="group flex h-full min-h-[560px] min-w-0 cursor-pointer flex-col overflow-hidden rounded-2xl border border-white/70 bg-card/95 shadow-sm shadow-slate-950/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_64px_rgb(15_23_42_/_0.12)] focus-visible:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/45 focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:min-h-[620px]"
       >
         <div className="relative h-48 shrink-0 overflow-hidden bg-muted sm:h-52">
           <img
@@ -97,7 +97,7 @@ export function SpaceCard({
           </div>
         </div>
 
-        <div className="flex h-full min-w-0 flex-col gap-4 p-4 sm:p-6">
+        <div className="flex flex-1 min-w-0 flex-col gap-4 p-4 pb-5 sm:p-6 sm:pb-7">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 space-y-2">
               <h3 className="line-clamp-2 text-lg font-semibold leading-tight tracking-normal text-foreground sm:text-[20px]">
