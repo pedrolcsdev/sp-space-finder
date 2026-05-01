@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -16,7 +17,6 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { BrandLogo } from "@/components/BrandLogo";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "@/hooks/use-toast";
 
@@ -143,7 +143,14 @@ export default function LoginScreen({ redirectTo }: LoginScreenProps) {
       >
         <div className="text-center">
           <Link href="/" className="mb-6 inline-flex">
-            <BrandLogo variant="compact" />
+            <Image
+              src="/logo-sp-header.png"
+              alt="Grupo São Paulo"
+              width={320}
+              height={96}
+              priority
+              className="h-auto w-[220px] sm:w-[260px]"
+            />
           </Link>
           <h1 className="font-display text-3xl font-semibold text-foreground">
             Bem-vindo de volta

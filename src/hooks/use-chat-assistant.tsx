@@ -15,6 +15,8 @@ type MessageType = "bot" | "user";
 type ConversationStage = "initial" | "searching" | "results";
 type PricePreference = "bestMatch" | "lowest";
 type AskedField = "spaceType" | "location" | "budget" | "capacity" | "refinement";
+type ChatMode = "reply" | "ask" | "recommend";
+type ChatAction = "reply_only" | "ask_followup" | "recommend" | "no_exact_match";
 
 export interface ChatRecommendation extends Space {
   matchPercent: number;
@@ -43,15 +45,22 @@ interface ChatApiIntent {
 }
 
 interface ChatApiResponse {
-  mode: "ask" | "recommend";
+  mode: ChatMode;
   reply: string;
-  conversationalIntent?: "conversation" | "search" | "clarification" | "cancel" | "unknown";
-  shouldRecommend?: boolean;
+  conversationalIntent?:
+    | "casual"
+    | "search"
+    | "clarification"
+    | "cancel"
+    | "thanks"
+    | "unknown";
+  action?: ChatAction;
   intent: ChatApiIntent;
   conversationSummary?: string;
   recommendations: ChatRecommendation[];
   followUpActions: string[];
   askedField?: AskedField;
+  resetContext?: boolean;
 }
 
 export interface ChatCriteria {
@@ -189,16 +198,25 @@ const mergeCriteriaWithIntent = (
 
   return {
     ...current,
-    city,
-    eventType,
-    capacity,
-    resources: uniqueResources(intent.recursosDesejados ?? []),
-    excludedCities: uniqueResources(intent.cidadesExcluidas ?? []).filter(
+    city: city ?? current.city,
+    eventType: eventType ?? current.eventType,
+    capacity: capacity ?? current.capacity,
+    resources:
+      intent.recursosDesejados && intent.recursosDesejados.length > 0
+        ? uniqueResources(intent.recursosDesejados)
+        : current.resources,
+    excludedCities: uniqueResources([
+      ...current.excludedCities,
+      ...(intent.cidadesExcluidas ?? []),
+    ]).filter(
       (item) => normalizeText(item) !== normalizeText(city ?? ""),
     ),
-    excludedResources: uniqueResources(intent.recursosExcluidos ?? []),
-    budgetMax: intent.orcamentoMaximo,
-    category: inferCategory(eventType, capacity),
+    excludedResources:
+      intent.recursosExcluidos && intent.recursosExcluidos.length > 0
+        ? uniqueResources(intent.recursosExcluidos)
+        : current.excludedResources,
+    budgetMax: intent.orcamentoMaximo ?? current.budgetMax,
+    category: inferCategory(eventType ?? current.eventType, capacity ?? current.capacity),
   };
 };
 
@@ -396,27 +414,33 @@ export function ChatAssistantProvider({
       const data = (await response.json()) as Partial<ChatApiResponse>;
 
       setState((current) => {
-        const nextCriteria = mergeCriteriaWithIntent(
-          current.criteria,
-          data.intent,
-        );
+        const nextCriteria = data.resetContext
+          ? getBaseCriteria()
+          : mergeCriteriaWithIntent(current.criteria, data.intent);
 
         return {
           ...current,
           open: true,
           criteria: nextCriteria,
           conversationSummary:
-            typeof data.conversationSummary === "string"
+            data.resetContext
+              ? ""
+              : typeof data.conversationSummary === "string"
               ? data.conversationSummary
               : current.conversationSummary,
           conversationStage: "results",
-          lastAskedField: data.mode === "ask" ? data.askedField : undefined,
+          lastAskedField:
+            data.action === "ask_followup" || data.mode === "ask"
+              ? data.askedField
+              : undefined,
           messages: [
             ...current.messages,
             toBotMessage(
               data.reply ??
                 "Posso continuar refinando a busca se você me passar mais contexto.",
-              data.mode === "recommend" ? data.recommendations ?? [] : [],
+              data.mode === "recommend" || data.action === "no_exact_match"
+                ? data.recommendations ?? []
+                : [],
               data.followUpActions ?? [],
             ),
           ],
