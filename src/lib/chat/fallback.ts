@@ -1,6 +1,6 @@
 import type { AiDecision, ChatIntent, QuestionField } from "./types";
 import { canonicalizeLocation, emptyIntent, mergeIntent } from "./intent";
-import { cityMatchers, normalizeText, resourceMatchers, unique } from "./shared";
+import { cityMatchers, isBaseCity, normalizeText, resourceMatchers, unique } from "./shared";
 
 interface LocalParseOptions {
   previousAskedField?: QuestionField;
@@ -38,6 +38,10 @@ export const parseLocalIntent = (
 
   for (const city of cityMatchers) {
     if (city.aliases.some((alias) => normalized.includes(normalizeText(alias)))) {
+      if (isBaseCity(city.label)) {
+        continue;
+      }
+
       if (/(nao quero|nao pode|evita|exceto|menos|fora|sem ser)/.test(normalized)) {
         intent.cidadesExcluidas.push(city.label);
       } else {
@@ -89,13 +93,11 @@ export const buildFallbackDecision = (
     missingFields.push("tipoEspaco");
   } else if (!fallbackIntent.quantidadePessoas) {
     missingFields.push("quantidadePessoas");
-  } else if (!fallbackIntent.cidadeIncluida && fallbackIntent.locations.length === 0) {
-    missingFields.push("cidade");
   }
 
   return {
     reply:
-      "Tive uma instabilidade agora, mas posso continuar te ajudando se voce me disser o tipo de espaco, quantidade de pessoas e regiao.",
+      "Tive uma instabilidade agora, mas posso continuar te ajudando se voce me disser o tipo de espaco, quantidade de pessoas, bairro ou orcamento.",
     intent: "unknown",
     action: "ask_followup",
     extracted: {

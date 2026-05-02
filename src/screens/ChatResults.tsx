@@ -99,7 +99,7 @@ export default function ChatResultsScreen({ spaces }: ChatResultsScreenProps) {
               <div className="mt-4 space-y-3 text-sm text-foreground/78">
                 <p className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-primary" />
-                  {criteria.city ?? "Cidade em aberto"}
+                  {criteria.city ?? "São Luís - MA"}
                 </p>
                 <p className="flex items-center gap-2">
                   <Users className="h-4 w-4 text-primary" />
@@ -136,7 +136,7 @@ export default function ChatResultsScreen({ spaces }: ChatResultsScreenProps) {
             Nenhum espaço apareceu com esse recorte.
           </p>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-muted-foreground">
-            Continue no chat para ajustar cidade, orçamento, capacidade ou
+            Continue no chat para ajustar bairro, orçamento, capacidade ou
             recursos sem perder o que já foi informado.
           </p>
         </div>

@@ -175,8 +175,8 @@ const inferCategory = (
 const criteriaToApiIntent = (criteria: ChatCriteria): ChatApiIntent => ({
   tipoEspaco: criteria.eventType,
   tipoEvento: criteria.eventType,
-  cidade: criteria.city,
-  cidadeIncluida: criteria.city,
+  cidade: undefined,
+  cidadeIncluida: undefined,
   locations: criteria.city ? [criteria.city] : [],
   quantidadePessoas: criteria.capacity,
   recursosDesejados: criteria.resources,
@@ -192,7 +192,7 @@ const mergeCriteriaWithIntent = (
   if (!intent) return current;
 
   const city =
-    intent.cidadeIncluida ?? intent.cidade ?? intent.locations?.[0] ?? undefined;
+    intent.locations?.[0] ?? intent.cidadeIncluida ?? intent.cidade ?? undefined;
   const eventType = intent.tipoEvento ?? intent.tipoEspaco ?? undefined;
   const capacity = intent.quantidadePessoas;
 
@@ -493,7 +493,7 @@ export function ChatAssistantProvider({
     };
   }, [openChat]);
 
-  const value = useMemo<ChatAssistantContextValue>(
+const value = useMemo<ChatAssistantContextValue>(
     () => ({
       open: state.open,
       messages: state.messages,

@@ -1,6 +1,6 @@
 import type { Space, SpaceCategory } from "@/lib/data/contracts";
 import type { ChatIntent, ChatRecommendation, MatchMode } from "./types";
-import { normalizeText } from "./shared";
+import { isBaseCity, normalizeText } from "./shared";
 
 export const QUALITY_THRESHOLD = 62;
 
@@ -101,7 +101,7 @@ const getSemanticScore = (space: Space, intent: ChatIntent) => {
 };
 
 const getLocationScore = (space: Space, intent: ChatIntent) => {
-  if (!intent.cidadeIncluida) return 0.78;
+  if (!intent.cidadeIncluida || isBaseCity(intent.cidadeIncluida)) return 0.78;
   return normalizeText(space.location).includes(normalizeText(intent.cidadeIncluida)) ? 1 : 0.12;
 };
 
@@ -144,9 +144,10 @@ const buildReasons = (
 
   if (
     intent.cidadeIncluida &&
+    !isBaseCity(intent.cidadeIncluida) &&
     normalizeText(space.location).includes(normalizeText(intent.cidadeIncluida))
   ) {
-    reasons.push(`Fica em ${intent.cidadeIncluida}`);
+    reasons.push(`Na regiao de ${intent.cidadeIncluida}`);
   }
 
   if (intent.recursosDesejados.length > 0 && resourceScore > 0) {
@@ -199,7 +200,9 @@ const buildExactReply = (intent: ChatIntent, recommendations: ChatRecommendation
   const lead = recommendations[0];
   const scope: string[] = [];
 
-  if (intent.cidadeIncluida) scope.push(`na regiao de ${intent.cidadeIncluida}`);
+  if (intent.cidadeIncluida && !isBaseCity(intent.cidadeIncluida)) {
+    scope.push(`na regiao de ${intent.cidadeIncluida}`);
+  }
   if (intent.cidadesExcluidas.length > 0) {
     scope.push(`evitando ${intent.cidadesExcluidas.join(", ")}`);
   }

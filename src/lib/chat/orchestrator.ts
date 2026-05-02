@@ -1,31 +1,17 @@
 import type { AiDecision, ChatIntent, ChatResponse, ChatTurnInput, QuestionField } from "./types";
 import { emptyIntent, extractedToIntent, getAskedField, mergeIntent } from "./intent";
 import { parseLocalIntent } from "./fallback";
-import { normalizeText } from "./shared";
 import { rankRecommendations } from "./ranking";
 import type { Space } from "@/lib/data/contracts";
-
-const hasExplicitLocationWaiver = (decision: AiDecision) =>
-  !decision.missingFields.some((field) =>
-    ["cidade", "cidadeIncluida", "locations", "localizacao", "regiao", "bairro"].includes(
-      normalizeText(field),
-    ),
-  );
 
 const canRecommend = (intent: ChatIntent, decision: AiDecision) => {
   const hasType = Boolean(intent.tipoEspaco || intent.tipoEvento);
   const hasCapacity = Boolean(intent.quantidadePessoas);
-  const hasLocation = Boolean(intent.cidadeIncluida || intent.locations.length > 0);
   const recommendationRequested =
     decision.intent === "search" &&
     (decision.action === "recommend" || decision.action === "no_exact_match");
 
-  return (
-    recommendationRequested &&
-    hasType &&
-    hasCapacity &&
-    (hasLocation || hasExplicitLocationWaiver(decision))
-  );
+  return recommendationRequested && hasType && hasCapacity;
 };
 
 const hasValueForField = (intent: ChatIntent, field: QuestionField) => {
@@ -46,13 +32,12 @@ const hasValueForField = (intent: ChatIntent, field: QuestionField) => {
 const getNextCriticalField = (intent: ChatIntent): QuestionField | null => {
   if (!hasValueForField(intent, "spaceType")) return "spaceType";
   if (!hasValueForField(intent, "capacity")) return "capacity";
-  if (!hasValueForField(intent, "location")) return "location";
   return null;
 };
 
 const followUpByField: Record<QuestionField, string> = {
   spaceType: "Que tipo de espaco combina melhor com o que voce precisa?",
-  location: "Qual regiao voce prefere em Sao Luis?",
+  location: "Se quiser, posso refinar por bairro ou regiao dentro de Sao Luis.",
   capacity: "Para quantas pessoas voce precisa do espaco?",
   budget: "Se quiser, eu tambem posso considerar uma faixa de valor por hora. Qual teto faz sentido?",
   refinement: "Me passa mais um detalhe para eu refinar a busca.",
@@ -101,7 +86,7 @@ const buildConversationSummary = (
 const buildFollowUpActions = (intent: ChatIntent) => {
   const actions: string[] = [];
 
-  if (!intent.cidadeIncluida) actions.push("Definir regiao");
+  if (!intent.cidadeIncluida) actions.push("Refinar por bairro");
   if (!intent.orcamentoMaximo) actions.push("Informar orcamento");
   if (!intent.recursosDesejados.length) actions.push("Adicionar recursos");
   if (intent.quantidadePessoas) actions.push("Ajustar lotacao");

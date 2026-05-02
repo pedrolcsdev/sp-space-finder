@@ -91,18 +91,18 @@ describe("chat engine", () => {
             recursosDesejados: [],
             orcamentoMaximo: null,
           },
-          missingFields: ["cidade"],
+          missingFields: ["orcamento"],
         }),
       },
       spaces,
     );
 
     expect(response.mode).toBe("ask");
-    expect(response.askedField).toBe("location");
+    expect(response.askedField).toBe("budget");
     expect(response.intent.quantidadePessoas).toBe(7);
   });
 
-  it('"em São Luís" completa contexto e recomenda', () => {
+  it('"em São Luís" nao vira requisito e ainda recomenda', () => {
     const baseIntent: ChatIntent = {
       tipoEspaco: "Sala de reunião",
       tipoEvento: "Reunião",
@@ -140,7 +140,7 @@ describe("chat engine", () => {
 
     expect(response.mode).toBe("recommend");
     expect(response.recommendations.length).toBeGreaterThan(0);
-    expect(response.intent.cidadeIncluida).toBe("São Luís");
+    expect(response.intent.cidadeIncluida).toBeUndefined();
   });
 
   it("nao repete cidade quando ela ja esta clara no contexto", () => {
@@ -235,6 +235,34 @@ describe("chat engine", () => {
     expect(result.matchMode).toBe("no_exact_match");
     expect(result.recommendations[0]?.capacity).toBe(200);
     expect(result.reply).toContain("Nao encontrei");
+  });
+
+  it('"quero um auditório para 140 alunos" recomenda direto em Sao Luis', () => {
+    const response = resolveChatTurn(
+      {
+        message: "quero um auditorio para 140 alunos",
+        previousSummary: "",
+        baseIntent: emptyIntent(),
+        aiDecision: buildDecision({
+          intent: "search",
+          action: "recommend",
+          extracted: {
+            tipoEspaco: "Auditório",
+            tipoEvento: "Aulão",
+            cidade: null,
+            locations: [],
+            excludedLocations: [],
+            quantidadePessoas: 140,
+            recursosDesejados: [],
+            orcamentoMaximo: null,
+          },
+        }),
+      },
+      spaces,
+    );
+
+    expect(response.mode).toBe("recommend");
+    expect(response.recommendations.length).toBeGreaterThan(0);
   });
 
   it('entende "umas 70" como resposta de capacidade quando esse era o campo perguntado', () => {
@@ -335,6 +363,86 @@ describe("chat engine", () => {
     );
 
     expect(decision.extracted.quantidadePessoas).toBe(70);
+  });
+
+  it('"prefiro na renascença" aplica refinamento opcional de regiao', () => {
+    const response = resolveChatTurn(
+      {
+        message: "prefiro na renascença",
+        previousSummary: "",
+        baseIntent: {
+          tipoEspaco: "Auditório",
+          tipoEvento: "Aulão",
+          quantidadePessoas: 120,
+          cidade: undefined,
+          cidadeIncluida: undefined,
+          locations: [],
+          recursosDesejados: [],
+          orcamentoMaximo: undefined,
+          cidadesExcluidas: [],
+        },
+        aiDecision: buildDecision({
+          intent: "search",
+          action: "recommend",
+          extracted: {
+            tipoEspaco: null,
+            tipoEvento: null,
+            cidade: null,
+            locations: ["Renascença"],
+            excludedLocations: [],
+            quantidadePessoas: null,
+            recursosDesejados: [],
+            orcamentoMaximo: null,
+          },
+        }),
+      },
+      spaces,
+    );
+
+    expect(response.mode).toBe("recommend");
+    expect(response.intent.cidadeIncluida).toBe("Renascença");
+    expect(response.reply).toContain("regiao de Renascença");
+  });
+
+  it('"quero evitar ponta d’areia" exclui bairro sem pedir cidade', () => {
+    const response = resolveChatTurn(
+      {
+        message: "quero evitar ponta d'areia",
+        previousSummary: "",
+        baseIntent: {
+          tipoEspaco: "Auditório",
+          tipoEvento: "Aulão",
+          quantidadePessoas: 120,
+          cidade: undefined,
+          cidadeIncluida: undefined,
+          locations: [],
+          recursosDesejados: [],
+          orcamentoMaximo: undefined,
+          cidadesExcluidas: [],
+        },
+        aiDecision: buildDecision({
+          intent: "search",
+          action: "recommend",
+          extracted: {
+            tipoEspaco: null,
+            tipoEvento: null,
+            cidade: null,
+            locations: [],
+            excludedLocations: ["Ponta d'Areia"],
+            quantidadePessoas: null,
+            recursosDesejados: [],
+            orcamentoMaximo: null,
+          },
+        }),
+      },
+      spaces,
+    );
+
+    expect(response.mode).toBe("recommend");
+    expect(response.intent.cidadesExcluidas).toContain("Ponta d'Areia");
+    expect(
+      response.recommendations.every((space) => !space.location.includes("Ponta d'Areia")),
+    ).toBe(true);
   });
 
   it("nao repete tipo de espaco quando a descricao ja trouxe contexto suficiente", () => {

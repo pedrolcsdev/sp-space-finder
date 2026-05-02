@@ -65,7 +65,7 @@ export async function POST(request: Request) {
       {
         mode: "ask",
         reply:
-          "Tive uma instabilidade agora, mas posso te ajudar se voce me disser tipo de espaco, quantidade de pessoas e regiao.",
+          "Tive uma instabilidade agora, mas posso te ajudar se voce me disser tipo de espaco, quantidade de pessoas, bairro ou orcamento.",
         conversationalIntent: "unknown",
         action: "ask_followup",
         intent: emptyIntent(),

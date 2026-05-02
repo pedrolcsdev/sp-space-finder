@@ -1,5 +1,5 @@
 import type { StructuredExtracted, ChatIntent, AiDecision, QuestionField } from "./types";
-import { cityMatchers, normalizeText, unique } from "./shared";
+import { cityMatchers, isBaseCity, normalizeText, unique } from "./shared";
 
 const parseNumber = (value: unknown) => {
   if (typeof value === "number" && Number.isFinite(value)) return value;
@@ -19,7 +19,9 @@ const sanitizeStringArray = (value: unknown) =>
     : [];
 
 const sanitizeLocationArray = (value: unknown) =>
-  sanitizeStringArray(value).map(canonicalizeLocation);
+  sanitizeStringArray(value)
+    .map(canonicalizeLocation)
+    .filter((item) => !isBaseCity(item));
 
 export const canonicalizeLocation = (value: string) => {
   const normalized = normalizeText(value);
@@ -28,6 +30,12 @@ export const canonicalizeLocation = (value: string) => {
   );
 
   return found?.label ?? value.trim();
+};
+
+const toRegionPreference = (value?: string | null) => {
+  if (!value?.trim()) return undefined;
+  const canonical = canonicalizeLocation(value);
+  return isBaseCity(canonical) ? undefined : canonical;
 };
 
 export const emptyIntent = (): ChatIntent => ({
@@ -41,11 +49,7 @@ export const sanitizeIntent = (value: unknown): ChatIntent | null => {
 
   const input = value as Partial<ChatIntent>;
   const cidade =
-    typeof input.cidadeIncluida === "string" && input.cidadeIncluida.trim()
-      ? canonicalizeLocation(input.cidadeIncluida)
-      : typeof input.cidade === "string" && input.cidade.trim()
-        ? canonicalizeLocation(input.cidade)
-        : undefined;
+    toRegionPreference(input.cidadeIncluida) ?? toRegionPreference(input.cidade);
   const locations = sanitizeLocationArray(input.locations);
 
   return {
@@ -111,7 +115,7 @@ export const sanitizeAiDecision = (value: unknown): AiDecision | null => {
           : null,
       cidade:
         typeof extracted.cidade === "string" && extracted.cidade.trim()
-          ? canonicalizeLocation(extracted.cidade)
+          ? toRegionPreference(extracted.cidade) ?? null
           : null,
       locations: sanitizeLocationArray(extracted.locations),
       excludedLocations: sanitizeLocationArray(extracted.excludedLocations),
@@ -128,11 +132,11 @@ export const sanitizeAiDecision = (value: unknown): AiDecision | null => {
 };
 
 export const extractedToIntent = (extracted: StructuredExtracted): Partial<ChatIntent> => {
-  const cidade = extracted.cidade ? canonicalizeLocation(extracted.cidade) : undefined;
+  const cidade = toRegionPreference(extracted.cidade);
   const locations = unique([
     ...(cidade ? [cidade] : []),
     ...extracted.locations.map(canonicalizeLocation),
-  ]);
+  ]).filter((item) => !isBaseCity(item));
 
   return {
     tipoEspaco: extracted.tipoEspaco ?? undefined,
@@ -152,19 +156,17 @@ export const extractedToIntent = (extracted: StructuredExtracted): Partial<ChatI
 export const mergeIntent = (base: ChatIntent, patch?: Partial<ChatIntent> | null): ChatIntent => {
   if (!patch) return base;
 
-  const hasNewLocation =
-    typeof patch.cidadeIncluida === "string" ||
-    typeof patch.cidade === "string" ||
-    Boolean(patch.locations && patch.locations.length > 0);
+  const patchLocations = (patch.locations ?? [])
+    .map(canonicalizeLocation)
+    .filter((item) => !isBaseCity(item));
   const nextCidade =
-    patch.cidadeIncluida ??
-    patch.cidade ??
-    (hasNewLocation ? patch.locations?.[0] : undefined);
-  const cidade = nextCidade
-    ? canonicalizeLocation(nextCidade)
-    : base.cidadeIncluida ?? base.cidade;
+    toRegionPreference(patch.cidadeIncluida) ??
+    toRegionPreference(patch.cidade) ??
+    patchLocations[0];
+  const hasNewLocation = Boolean(nextCidade || patchLocations.length > 0);
+  const cidade = nextCidade ?? base.cidadeIncluida ?? base.cidade;
   const nextLocations = hasNewLocation
-    ? unique([...(cidade ? [cidade] : []), ...(patch.locations ?? []).map(canonicalizeLocation)])
+    ? unique([...(cidade ? [cidade] : []), ...patchLocations])
     : base.locations;
 
   return {
@@ -215,7 +217,6 @@ export const getAskedField = (
 
   if (!intent.tipoEspaco && !intent.tipoEvento) return "spaceType";
   if (!intent.quantidadePessoas) return "capacity";
-  if (!intent.cidadeIncluida && intent.locations.length === 0) return "location";
   if (!intent.orcamentoMaximo) return "budget";
   return "refinement";
 };

@@ -1,3 +1,5 @@
+export const BASE_CITY = "São Luís";
+
 export const cityMatchers = [
   { label: "Jardim Renascença", aliases: ["jardim renascença", "jardim renascenca"] },
   { label: "Renascença II", aliases: ["renascença ii", "renascenca ii"] },
@@ -11,7 +13,7 @@ export const cityMatchers = [
   { label: "Ponta do Farol", aliases: ["ponta do farol"] },
   { label: "São Francisco", aliases: ["são francisco", "sao francisco"] },
   { label: "Cohama", aliases: ["cohama"] },
-  { label: "São Luís", aliases: ["são luís", "sao luis"] },
+  { label: BASE_CITY, aliases: ["são luís", "sao luis"] },
 ] as const;
 
 export const resourceMatchers = [
@@ -30,5 +32,8 @@ export const normalizeText = (value: string) =>
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[’']/g, "")
     .toLowerCase();
+
+export const isBaseCity = (value: string) =>
+  normalizeText(value) === normalizeText(BASE_CITY);
 
 export const unique = (items: string[]) => Array.from(new Set(items.filter(Boolean)));
