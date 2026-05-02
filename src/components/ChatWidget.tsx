@@ -15,12 +15,14 @@ import {
   Users,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FilterChip } from "@/components/ui/filter-chip";
 import { useChatAssistant } from "@/hooks/use-chat-assistant";
 
 export function ChatWidget() {
+  const pathname = usePathname();
   const {
     open,
     messages,
@@ -36,11 +38,20 @@ export function ChatWidget() {
   const [showInitialTooltip, setShowInitialTooltip] = useState(true);
   const messagesViewportRef = useRef<HTMLDivElement | null>(null);
   const bottomAnchorRef = useRef<HTMLDivElement | null>(null);
+  const isSpaceDetailsPage = /^\/espacos\/[^/]+$/.test(pathname);
 
   const showIntroSuggestions = useMemo(
     () => conversationStage === "initial",
     [conversationStage],
   );
+
+  const closedChatBottomClass = isSpaceDetailsPage
+    ? "bottom-[calc(7rem+env(safe-area-inset-bottom))] sm:bottom-6"
+    : "bottom-[calc(1rem+env(safe-area-inset-bottom))] sm:bottom-6";
+
+  const openChatBottomClass = isSpaceDetailsPage
+    ? "bottom-[calc(7rem+env(safe-area-inset-bottom))] h-[calc(100dvh-7.5rem-env(safe-area-inset-bottom))] sm:bottom-6 sm:h-[74vh]"
+    : "bottom-[calc(0.5rem+env(safe-area-inset-bottom))] h-[calc(100dvh-1rem-env(safe-area-inset-bottom))] sm:bottom-6 sm:h-[74vh]";
 
   useEffect(() => {
     if (open) {
@@ -71,7 +82,7 @@ export function ChatWidget() {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0 }}
-            className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 z-50 flex items-center gap-3 sm:bottom-6 sm:right-6"
+            className={`fixed right-4 z-50 flex items-center gap-3 sm:right-6 ${closedChatBottomClass}`}
           >
             {showInitialTooltip && (
               <motion.div
@@ -104,7 +115,7 @@ export function ChatWidget() {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed inset-x-2 bottom-[calc(0.5rem+env(safe-area-inset-bottom))] z-50 flex h-[calc(100dvh-1rem-env(safe-area-inset-bottom))] max-h-[640px] flex-col overflow-hidden rounded-2xl border border-border bg-card card-shadow-lg sm:inset-x-auto sm:bottom-6 sm:right-6 sm:h-[74vh] sm:max-h-[560px] sm:w-[380px]"
+            className={`fixed inset-x-2 z-50 flex max-h-[640px] flex-col overflow-hidden rounded-2xl border border-border bg-card card-shadow-lg sm:inset-x-auto sm:right-6 sm:max-h-[560px] sm:w-[380px] ${openChatBottomClass}`}
           >
             <div className="gradient-hero flex items-center justify-between gap-3 px-4 py-3 sm:px-5 sm:py-4">
               <div className="flex min-w-0 items-center gap-3">
