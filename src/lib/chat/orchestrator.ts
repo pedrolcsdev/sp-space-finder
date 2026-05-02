@@ -2,16 +2,73 @@ import type { AiDecision, ChatIntent, ChatResponse, ChatTurnInput, QuestionField
 import { emptyIntent, extractedToIntent, getAskedField, mergeIntent } from "./intent";
 import { parseLocalIntent } from "./fallback";
 import { rankRecommendations } from "./ranking";
+import { normalizeText } from "./shared";
 import type { Space } from "@/lib/data/contracts";
 
-const canRecommend = (intent: ChatIntent, decision: AiDecision) => {
+const hasSearchContext = (intent: ChatIntent) => {
   const hasType = Boolean(intent.tipoEspaco || intent.tipoEvento);
   const hasCapacity = Boolean(intent.quantidadePessoas);
+
+  return hasType && hasCapacity;
+};
+
+const canRecommend = (intent: ChatIntent, decision: AiDecision) => {
   const recommendationRequested =
     decision.intent === "search" &&
     (decision.action === "recommend" || decision.action === "no_exact_match");
 
-  return recommendationRequested && hasType && hasCapacity;
+  return recommendationRequested && hasSearchContext(intent);
+};
+
+const normalizeList = (items: string[]) => items.map((item) => normalizeText(item)).sort();
+
+const arraysMatch = (left: string[], right: string[]) =>
+  left.length === right.length && left.every((item, index) => item === right[index]);
+
+const hasSearchIntentMutation = (previous: ChatIntent, next: ChatIntent) => {
+  if (normalizeText(previous.tipoEspaco ?? "") !== normalizeText(next.tipoEspaco ?? "")) return true;
+  if (normalizeText(previous.tipoEvento ?? "") !== normalizeText(next.tipoEvento ?? "")) return true;
+  if ((previous.quantidadePessoas ?? null) !== (next.quantidadePessoas ?? null)) return true;
+  if (normalizeText(previous.cidadeIncluida ?? "") !== normalizeText(next.cidadeIncluida ?? "")) return true;
+  if (
+    !arraysMatch(normalizeList(previous.locations), normalizeList(next.locations)) ||
+    !arraysMatch(normalizeList(previous.cidadesExcluidas), normalizeList(next.cidadesExcluidas))
+  ) {
+    return true;
+  }
+
+  return false;
+};
+
+const isAffirmationMessage = (message: string) =>
+  /^(sim|s|isso|isso mesmo|ok|okay|certo|claro|pode|pode sim|pode mandar|manda|envia|quero sim)$/i.test(
+    message.trim(),
+  );
+
+const shouldForceRecommend = (
+  input: ChatTurnInput,
+  nextIntent: ChatIntent,
+  aiDecision: AiDecision,
+) => {
+  if (!hasSearchContext(nextIntent)) return false;
+  if (aiDecision.intent === "cancel" || aiDecision.intent === "thanks" || aiDecision.intent === "casual") {
+    return false;
+  }
+  if (canRecommend(nextIntent, aiDecision)) return true;
+
+  if (input.previousAskedField && hasValueForField(nextIntent, input.previousAskedField)) {
+    return true;
+  }
+
+  if (hasSearchIntentMutation(input.baseIntent, nextIntent)) {
+    return true;
+  }
+
+  if (isAffirmationMessage(input.message) && hasSearchContext(input.baseIntent)) {
+    return true;
+  }
+
+  return aiDecision.action === "ask_followup" || aiDecision.action === "reply_only";
 };
 
 const hasValueForField = (intent: ChatIntent, field: QuestionField) => {
@@ -94,6 +151,30 @@ const buildFollowUpActions = (intent: ChatIntent) => {
   return actions.slice(0, 3);
 };
 
+const buildRecommendationResponse = (
+  spaces: Space[],
+  intent: ChatIntent,
+  conversationSummary: string,
+  confidence: number,
+): ChatResponse => {
+  const recommendationResult = rankRecommendations(spaces, intent);
+  const action =
+    recommendationResult.matchMode === "no_exact_match" ? "no_exact_match" : "recommend";
+
+  return {
+    mode: "recommend",
+    reply: recommendationResult.reply,
+    conversationalIntent: "search",
+    action,
+    intent,
+    conversationSummary,
+    recommendations: recommendationResult.recommendations,
+    followUpActions: buildFollowUpActions(intent),
+    confidence,
+    matchMode: recommendationResult.matchMode,
+  };
+};
+
 export const resolveChatTurn = (
   input: ChatTurnInput,
   spaces: Space[],
@@ -134,23 +215,13 @@ export const resolveChatTurn = (
     };
   }
 
-  if (canRecommend(nextIntent, input.aiDecision)) {
-    const recommendationResult = rankRecommendations(spaces, nextIntent);
-    const action =
-      recommendationResult.matchMode === "no_exact_match" ? "no_exact_match" : "recommend";
-
-    return {
-      mode: "recommend",
-      reply: recommendationResult.reply,
-      conversationalIntent: input.aiDecision.intent,
-      action,
-      intent: nextIntent,
-      conversationSummary: nextSummary,
-      recommendations: recommendationResult.recommendations,
-      followUpActions: buildFollowUpActions(nextIntent),
-      confidence: input.aiDecision.confidence,
-      matchMode: recommendationResult.matchMode,
-    };
+  if (shouldForceRecommend(input, nextIntent, input.aiDecision)) {
+    return buildRecommendationResponse(
+      spaces,
+      nextIntent,
+      nextSummary,
+      input.aiDecision.confidence,
+    );
   }
 
   if (input.aiDecision.action === "ask_followup" || input.aiDecision.intent === "search") {
@@ -160,22 +231,12 @@ export const resolveChatTurn = (
       const nextCriticalField = getNextCriticalField(nextIntent);
 
       if (!nextCriticalField) {
-        const recommendationResult = rankRecommendations(spaces, nextIntent);
-        const action =
-          recommendationResult.matchMode === "no_exact_match" ? "no_exact_match" : "recommend";
-
-        return {
-          mode: "recommend",
-          reply: recommendationResult.reply,
-          conversationalIntent: "search",
-          action,
-          intent: nextIntent,
-          conversationSummary: nextSummary,
-          recommendations: recommendationResult.recommendations,
-          followUpActions: buildFollowUpActions(nextIntent),
-          confidence: input.aiDecision.confidence,
-          matchMode: recommendationResult.matchMode,
-        };
+        return buildRecommendationResponse(
+          spaces,
+          nextIntent,
+          nextSummary,
+          input.aiDecision.confidence,
+        );
       }
 
       return {

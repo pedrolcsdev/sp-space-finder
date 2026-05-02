@@ -71,7 +71,7 @@ describe("chat engine", () => {
     expect(response.askedField).toBe("spaceType");
   });
 
-  it('"quero uma sala pra 7 pessoas" pede localizacao', () => {
+  it('"quero uma sala pra 7 pessoas" recomenda sem travar em confirmacao extra', () => {
     const response = resolveChatTurn(
       {
         message: "quero uma sala pra 7 pessoas",
@@ -97,8 +97,8 @@ describe("chat engine", () => {
       spaces,
     );
 
-    expect(response.mode).toBe("ask");
-    expect(response.askedField).toBe("budget");
+    expect(response.mode).toBe("recommend");
+    expect(response.recommendations.length).toBeGreaterThan(0);
     expect(response.intent.quantidadePessoas).toBe(7);
   });
 
@@ -265,6 +265,36 @@ describe("chat engine", () => {
     expect(response.recommendations.length).toBeGreaterThan(0);
   });
 
+  it("corrige lotacao apos recomendacao e devolve novos cards no mesmo turno", () => {
+    const response = resolveChatTurn(
+      {
+        message: "na verdade e so pra 5 pessoas",
+        previousSummary: "",
+        baseIntent: {
+          tipoEspaco: "Auditório",
+          tipoEvento: "Aulão",
+          quantidadePessoas: 140,
+          cidade: undefined,
+          cidadeIncluida: undefined,
+          locations: [],
+          recursosDesejados: [],
+          orcamentoMaximo: undefined,
+          cidadesExcluidas: [],
+        },
+        aiDecision: buildDecision({
+          reply: "Entendi, voce precisa de um espaco para um aulao com 5 pessoas em Sao Luis.",
+          intent: "clarification",
+          action: "reply_only",
+        }),
+      },
+      spaces,
+    );
+
+    expect(response.mode).toBe("recommend");
+    expect(response.intent.quantidadePessoas).toBe(5);
+    expect(response.recommendations.length).toBeGreaterThan(0);
+  });
+
   it('entende "umas 70" como resposta de capacidade quando esse era o campo perguntado', () => {
     const parsed = parseLocalIntent("umas 70", {
       previousAskedField: "capacity",
@@ -404,6 +434,64 @@ describe("chat engine", () => {
     expect(response.reply).toContain("regiao de Renascença");
   });
 
+  it("forca recommend quando o modelo responde reply_only com contexto completo", () => {
+    const response = resolveChatTurn(
+      {
+        message: "preciso rever as opcoes",
+        previousSummary: "",
+        baseIntent: {
+          tipoEspaco: "Auditório",
+          tipoEvento: "Aulão",
+          quantidadePessoas: 5,
+          cidade: undefined,
+          cidadeIncluida: undefined,
+          locations: [],
+          recursosDesejados: [],
+          orcamentoMaximo: undefined,
+          cidadesExcluidas: [],
+        },
+        aiDecision: buildDecision({
+          reply: "Posso te enviar as opcoes disponiveis para voce?",
+          intent: "search",
+          action: "reply_only",
+        }),
+      },
+      spaces,
+    );
+
+    expect(response.mode).toBe("recommend");
+    expect(response.recommendations.length).toBeGreaterThan(0);
+  });
+
+  it('confirma com "sim" e nao entra em loop quando o contexto ja esta completo', () => {
+    const response = resolveChatTurn(
+      {
+        message: "sim",
+        previousSummary: "",
+        baseIntent: {
+          tipoEspaco: "Auditório",
+          tipoEvento: "Aulão",
+          quantidadePessoas: 5,
+          cidade: undefined,
+          cidadeIncluida: undefined,
+          locations: [],
+          recursosDesejados: [],
+          orcamentoMaximo: undefined,
+          cidadesExcluidas: [],
+        },
+        aiDecision: buildDecision({
+          reply: "Claro! Posso te mandar as opcoes.",
+          intent: "clarification",
+          action: "reply_only",
+        }),
+      },
+      spaces,
+    );
+
+    expect(response.mode).toBe("recommend");
+    expect(response.recommendations.length).toBeGreaterThan(0);
+  });
+
   it('"quero evitar ponta d’areia" exclui bairro sem pedir cidade', () => {
     const response = resolveChatTurn(
       {
@@ -443,6 +531,47 @@ describe("chat engine", () => {
     expect(
       response.recommendations.every((space) => !space.location.includes("Ponta d'Areia")),
     ).toBe(true);
+  });
+
+  it("nao deixa uma resposta textual inventada sem recommendations quando a busca esta pronta", () => {
+    const response = resolveChatTurn(
+      {
+        message: "agora pode ser menor",
+        previousSummary: "",
+        baseIntent: {
+          tipoEspaco: "Auditório",
+          tipoEvento: "Aulão",
+          quantidadePessoas: 140,
+          cidade: undefined,
+          cidadeIncluida: undefined,
+          locations: [],
+          recursosDesejados: [],
+          orcamentoMaximo: undefined,
+          cidadesExcluidas: [],
+        },
+        aiDecision: buildDecision({
+          reply:
+            "Com 5 pessoas, um espaco pequeno e confortavel seria ideal. Posso sugerir a Sala de Aula 3 no Centro.",
+          intent: "clarification",
+          action: "reply_only",
+          extracted: {
+            tipoEspaco: null,
+            tipoEvento: null,
+            cidade: null,
+            locations: [],
+            excludedLocations: [],
+            quantidadePessoas: 5,
+            recursosDesejados: [],
+            orcamentoMaximo: null,
+          },
+        }),
+      },
+      spaces,
+    );
+
+    expect(response.mode).toBe("recommend");
+    expect(response.recommendations.length).toBeGreaterThan(0);
+    expect(response.reply).not.toContain("Sala de Aula 3");
   });
 
   it("nao repete tipo de espaco quando a descricao ja trouxe contexto suficiente", () => {
