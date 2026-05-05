@@ -334,7 +334,7 @@ export function ChatWidget() {
                   onChange={(event) => setInput(event.target.value)}
                   onKeyDown={(event) => event.key === "Enter" && handleSend()}
                   placeholder="Descreva o espaço que você precisa"
-                  className="h-10 rounded-md border-border bg-secondary text-base shadow-none"
+                  className="h-10 rounded-md border-border bg-secondary text-base shadow-none focus:bg-secondary focus:shadow-none"
                   disabled={isSearching}
                 />
                 <Button

@@ -99,7 +99,7 @@ export const buildFallbackDecision = (
 
   return {
     reply:
-      "Tive uma instabilidade agora, mas sigo com voce. Me diga o tipo de uso ou a lotacao, e se quiser depois a gente refina por bairro, orcamento ou recursos.",
+      "Tive uma instabilidade agora, mas sigo com você. Me diga o tipo de uso ou a lotação, e se quiser depois a gente refina por bairro, orçamento ou recursos.",
     intent: "unknown",
     action: "ask_followup",
     extracted: {

@@ -133,13 +133,13 @@ const buildReasons = (
   const reasons: string[] = [];
 
   if (space.capacity >= (intent.quantidadePessoas ?? 0)) {
-    reasons.push(`Capacidade para ate ${space.capacity} pessoas`);
+    reasons.push(`Capacidade para até ${space.capacity} pessoas`);
   } else {
     reasons.push(`Capacidade atual de ${space.capacity} pessoas`);
   }
 
   if (semanticScore >= 0.9) {
-    reasons.push("Perfil do espaco bem alinhado com o tipo de uso pedido");
+    reasons.push("Perfil do espaço bem alinhado com o tipo de uso pedido");
   }
 
   if (
@@ -147,7 +147,7 @@ const buildReasons = (
     !isBaseCity(intent.cidadeIncluida) &&
     normalizeText(space.location).includes(normalizeText(intent.cidadeIncluida))
   ) {
-    reasons.push(`Na regiao de ${intent.cidadeIncluida}`);
+    reasons.push(`Na região de ${intent.cidadeIncluida}`);
   }
 
   if (intent.recursosDesejados.length > 0 && resourceScore > 0) {
@@ -201,26 +201,26 @@ const buildExactReply = (intent: ChatIntent, recommendations: ChatRecommendation
   const scope: string[] = [];
 
   if (intent.cidadeIncluida && !isBaseCity(intent.cidadeIncluida)) {
-    scope.push(`na regiao de ${intent.cidadeIncluida}`);
+    scope.push(`na região de ${intent.cidadeIncluida}`);
   }
   if (intent.cidadesExcluidas.length > 0) {
     scope.push(`evitando ${intent.cidadesExcluidas.join(", ")}`);
   }
 
-  const summary = scope.length > 0 ? `Encontrei opcoes coerentes ${scope.join(" e ")}. ` : "";
-  return `${summary}A primeira sugestao e ${lead.name}, e deixei outras alternativas reais para voce comparar.`;
+  const summary = scope.length > 0 ? `Encontrei opções coerentes ${scope.join(" e ")}. ` : "";
+  return `${summary}A primeira sugestão é ${lead.name}, e deixei outras alternativas reais para você comparar.`;
 };
 
 const buildNoExactMatchReply = (intent: ChatIntent, recommendations: ChatRecommendation[]) => {
   const requestedCapacity = intent.quantidadePessoas
     ? `${intent.quantidadePessoas} pessoas`
-    : "o que voce pediu";
+    : "o que você pediu";
 
   if (recommendations.length === 0) {
-    return `Nao encontrei nenhum espaco viavel para ${requestedCapacity} na base atual.`;
+    return `Não encontrei nenhum espaço viável para ${requestedCapacity} na base atual.`;
   }
 
-  return "Nao encontrei um espaco que atenda perfeitamente ao que voce pediu. Vou te mostrar as alternativas reais mais proximas disponiveis agora.";
+  return "Não encontrei um espaço que atenda perfeitamente ao que você pediu. Vou te mostrar as alternativas reais mais próximas disponíveis agora.";
 };
 
 const filterAllowedSpaces = (spaces: Space[], intent: ChatIntent) =>

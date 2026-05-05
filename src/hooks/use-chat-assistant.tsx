@@ -501,7 +501,7 @@ export function ChatAssistantProvider({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            message: "Ver opcoes agora",
+            message: "Ver opções agora",
             intent: criteriaToApiIntent(requestCriteria),
             conversationSummary: requestConversationSummary,
             forceRecommend: true,
@@ -529,7 +529,7 @@ export function ChatAssistantProvider({
             messages: [
               ...current.messages,
               toBotMessage(
-                data.reply ?? "Separei algumas opcoes com o contexto atual.",
+                data.reply ?? "Separei algumas opções com o contexto atual.",
                 data.recommendations ?? [],
                 data.quickActions ?? [],
                 data.followUpKind,
@@ -546,7 +546,7 @@ export function ChatAssistantProvider({
           messages: [
             ...current.messages,
             toBotMessage(
-              "Nao consegui buscar as opcoes agora. Se quiser, me diga mais um detalhe e eu tento de novo.",
+              "Não consegui buscar as opções agora. Se quiser, me diga mais um detalhe e eu tento de novo.",
             ),
           ],
         }));

@@ -100,10 +100,10 @@ const getNextCriticalField = (intent: ChatIntent): QuestionField | null => {
 };
 
 const followUpByField: Record<QuestionField, string> = {
-  spaceType: "Que tipo de espaco combina melhor com o que voce precisa?",
-  location: "Se quiser, posso refinar por bairro ou regiao dentro de Sao Luis.",
-  capacity: "Para quantas pessoas voce precisa do espaco?",
-  budget: "Se quiser, eu tambem posso considerar uma faixa de valor por hora. Qual teto faz sentido?",
+  spaceType: "Que tipo de espaço combina melhor com o que você precisa?",
+  location: "Se quiser, posso refinar por bairro ou região dentro de São Luís.",
+  capacity: "Para quantas pessoas você precisa do espaço?",
+  budget: "Se quiser, eu também posso considerar uma faixa de valor por hora. Qual teto faz sentido?",
   refinement: "Me passa mais um detalhe para eu refinar a busca.",
 };
 
@@ -126,13 +126,13 @@ const buildConversationSummary = (
   aiDecision: AiDecision,
 ) => {
   const facts = [
-    intent.tipoEspaco ? `tipo de espaco: ${intent.tipoEspaco}` : undefined,
+    intent.tipoEspaco ? `tipo de espaço: ${intent.tipoEspaco}` : undefined,
     intent.tipoEvento ? `tipo de evento: ${intent.tipoEvento}` : undefined,
     intent.quantidadePessoas ? `pessoas: ${intent.quantidadePessoas}` : undefined,
-    intent.cidadeIncluida ? `regiao: ${intent.cidadeIncluida}` : undefined,
+    intent.cidadeIncluida ? `região: ${intent.cidadeIncluida}` : undefined,
     intent.cidadesExcluidas.length > 0 ? `evitar: ${intent.cidadesExcluidas.join(", ")}` : undefined,
     intent.recursosDesejados.length > 0 ? `recursos: ${intent.recursosDesejados.join(", ")}` : undefined,
-    intent.orcamentoMaximo ? `orcamento: R$ ${intent.orcamentoMaximo}/hora` : undefined,
+    intent.orcamentoMaximo ? `orçamento: R$ ${intent.orcamentoMaximo}/hora` : undefined,
   ].filter(Boolean);
 
   const next = [
@@ -160,9 +160,9 @@ const buildRefinementQuickActions = (intent: ChatIntent): QuickAction[] => {
 
   if (!intent.orcamentoMaximo) {
     actions.push({
-      label: "Informar orcamento",
+      label: "Informar orçamento",
       kind: "refine_budget",
-      message: "Quero informar um orcamento maximo.",
+      message: "Quero informar um orçamento máximo.",
     });
   }
 
@@ -176,9 +176,9 @@ const buildRefinementQuickActions = (intent: ChatIntent): QuickAction[] => {
 
   if (intent.quantidadePessoas) {
     actions.push({
-      label: "Ajustar lotacao",
+      label: "Ajustar lotação",
       kind: "refine_capacity",
-      message: "Quero ajustar a lotacao.",
+      message: "Quero ajustar a lotação.",
     });
   }
 
@@ -187,7 +187,7 @@ const buildRefinementQuickActions = (intent: ChatIntent): QuickAction[] => {
 
 const buildOptionalQuickActions = (intent: ChatIntent): QuickAction[] => [
   {
-    label: "Ver opcoes agora",
+    label: "Ver opções agora",
     kind: "search_now",
   },
   ...buildRefinementQuickActions(intent).slice(0, 3),
@@ -197,11 +197,11 @@ const buildOptionalFollowUpReply = (intent: ChatIntent) => {
   const refinements: string[] = [];
 
   if (!intent.cidadeIncluida) refinements.push("bairro");
-  if (!intent.orcamentoMaximo) refinements.push("orcamento");
+  if (!intent.orcamentoMaximo) refinements.push("orçamento");
   if (!intent.recursosDesejados.length) refinements.push("recursos");
 
   if (refinements.length === 0) {
-    return "Ja encontrei algumas opcoes. Se quiser, ainda posso ajustar a lotacao antes de mostrar.";
+    return "Já encontrei algumas opções. Se quiser, ainda posso ajustar a lotação antes de mostrar.";
   }
 
   const refinementText =
@@ -209,7 +209,7 @@ const buildOptionalFollowUpReply = (intent: ChatIntent) => {
       ? refinements[0]
       : `${refinements.slice(0, -1).join(", ")} ou ${refinements.at(-1)}`;
 
-  return `Ja encontrei algumas opcoes. Quer refinar por ${refinementText}?`;
+  return `Já encontrei algumas opções. Quer refinar por ${refinementText}?`;
 };
 
 export const buildRecommendationResponse = (

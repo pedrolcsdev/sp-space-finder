@@ -28,7 +28,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           mode: "ask",
-          reply: "Me diga em uma frase o tipo de espaco que voce precisa.",
+          reply: "Me diga em uma frase o tipo de espaço que você precisa.",
           conversationalIntent: "unknown",
           action: "ask_followup",
           intent: baseIntent,
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
       {
         mode: "ask",
         reply:
-          "Tive uma instabilidade agora, mas posso te ajudar se voce me disser tipo de espaco, quantidade de pessoas, bairro ou orcamento.",
+          "Tive uma instabilidade agora, mas posso te ajudar se você me disser tipo de espaço, quantidade de pessoas, bairro ou orçamento.",
         conversationalIntent: "unknown",
         action: "ask_followup",
         intent: emptyIntent(),

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Activity,
@@ -40,7 +41,6 @@ import {
 } from "@/lib/mock/mockStore";
 import { ReservationStatusBadge } from "@/components/ReservationStatusBadge";
 import { Button } from "@/components/ui/button";
-import { BrandLogo } from "@/components/BrandLogo";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -150,7 +150,14 @@ export default function AdminDashboardScreen({
         <div className="glass-card p-5 sm:mb-8 sm:p-7">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <BrandLogo variant="compact" className="mb-4 w-fit" markClassName="h-10 w-10" />
+              <Image
+                src="/logo-sp-header.png"
+                alt="Grupo São Paulo"
+                width={280}
+                height={85}
+                className="mb-4 h-auto w-[220px]"
+                priority
+              />
               <p className="text-xs font-semibold uppercase tracking-normal text-muted-foreground">
                 Painel administrativo
               </p>

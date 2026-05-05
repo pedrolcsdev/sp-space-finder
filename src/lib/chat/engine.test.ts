@@ -235,7 +235,7 @@ describe("chat engine", () => {
 
     expect(result.matchMode).toBe("no_exact_match");
     expect(result.recommendations[0]?.capacity).toBe(200);
-    expect(result.reply).toContain("Nao encontrei");
+    expect(result.reply).toContain("Não encontrei");
   });
 
   it('"quero um auditório para 140 alunos" recomenda direto em Sao Luis', () => {
@@ -440,7 +440,7 @@ describe("chat engine", () => {
 
     expect(response.mode).toBe("recommend");
     expect(response.intent.cidadeIncluida).toBe("Renascença");
-    expect(response.reply).toContain("regiao de Renascença");
+    expect(response.reply).toContain("região de Renascença");
   });
 
   it("forca recommend quando o modelo responde reply_only com contexto completo", () => {
