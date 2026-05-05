@@ -24,6 +24,23 @@ interface LoginScreenProps {
   redirectTo?: string;
 }
 
+const QUICK_LOGIN_OPTIONS = [
+  {
+    label: "Entrar como administrador",
+    helper: "Acesso rápido ao painel administrativo",
+    email: "admin@gmail.com",
+    password: "admin123",
+    icon: ShieldCheck,
+  },
+  {
+    label: "Entrar como cliente",
+    helper: "Acesso rápido ao fluxo de reserva",
+    email: "cliente@gmail.com",
+    password: "cliente123",
+    icon: UserCircle2,
+  },
+] as const;
+
 const normalizeRedirectPath = (value?: string) => {
   if (!value) {
     return "/encontrar";
@@ -85,8 +102,8 @@ export default function LoginScreen({ redirectTo }: LoginScreenProps) {
     router.replace(redirectTarget);
   }, [isAuthenticated, isReady, pathname, router, safeRedirectTo, session]);
 
-  const handleLogin = () => {
-    if (!email.trim() || !password.trim()) {
+  const submitLogin = (nextEmail: string, nextPassword: string) => {
+    if (!nextEmail.trim() || !nextPassword.trim()) {
       setFeedback({
         type: "error",
         title: "Preencha e-mail e senha",
@@ -96,7 +113,7 @@ export default function LoginScreen({ redirectTo }: LoginScreenProps) {
     }
 
     setIsSubmitting(true);
-    const result = login(email, password);
+    const result = login(nextEmail, nextPassword);
 
     if (!result.ok || !result.session) {
       setFeedback({
@@ -134,6 +151,16 @@ export default function LoginScreen({ redirectTo }: LoginScreenProps) {
     }, 600);
   };
 
+  const handleLogin = () => {
+    submitLogin(email, password);
+  };
+
+  const handleQuickLogin = (nextEmail: string, nextPassword: string) => {
+    setEmail(nextEmail);
+    setPassword(nextPassword);
+    submitLogin(nextEmail, nextPassword);
+  };
+
   return (
     <div className="gradient-subtle flex min-h-screen items-center justify-center px-4 py-8 sm:py-12">
       <motion.div
@@ -162,32 +189,33 @@ export default function LoginScreen({ redirectTo }: LoginScreenProps) {
 
         <Card size="lg" className="space-y-5 p-5 sm:p-6">
           <div className="grid gap-3 rounded-2xl border border-border/70 bg-secondary/35 p-4">
-            <div className="rounded-xl border border-border/70 bg-white/90 p-3">
-              <div className="flex items-center gap-3">
-                <div className="rounded-full bg-primary/10 p-2 text-primary">
-                  <ShieldCheck className="h-4 w-4" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-foreground">Administrador</p>
-                  <p className="break-words text-xs text-muted-foreground">
-                    admin@gmail.com / admin123
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="rounded-xl border border-border/70 bg-white/90 p-3">
-              <div className="flex items-center gap-3">
-                <div className="rounded-full bg-primary/10 p-2 text-primary">
-                  <UserCircle2 className="h-4 w-4" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-foreground">Cliente</p>
-                  <p className="break-words text-xs text-muted-foreground">
-                    cliente@gmail.com / cliente123
-                  </p>
-                </div>
-              </div>
-            </div>
+            <p className="text-sm font-medium text-foreground">Acesso rápido</p>
+            {QUICK_LOGIN_OPTIONS.map((option) => {
+              const Icon = option.icon;
+
+              return (
+                <Button
+                  key={option.email}
+                  type="button"
+                  variant="secondary"
+                  className="h-auto justify-start rounded-xl border border-border/70 bg-white/90 p-3 text-left"
+                  disabled={isSubmitting}
+                  onClick={() => handleQuickLogin(option.email, option.password)}
+                >
+                  <div className="rounded-full bg-primary/10 p-2 text-primary">
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-foreground">
+                      {option.label}
+                    </p>
+                    <p className="break-words text-xs text-muted-foreground">
+                      {option.helper}
+                    </p>
+                  </div>
+                </Button>
+              );
+            })}
           </div>
 
           {feedback && (

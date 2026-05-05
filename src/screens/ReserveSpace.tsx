@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { DateRange } from "react-day-picker";
 import {
@@ -39,6 +39,13 @@ import {
   createMockReservation,
   type MockReservation,
 } from "@/lib/mock/mockStore";
+import {
+  clearPendingReservationDraft,
+  consumePendingReservationRestoredFlag,
+  markPendingReservationAsRestored,
+  readPendingReservationDraft,
+  savePendingReservationDraft,
+} from "@/lib/reservationDraftStorage";
 import { ReservationStatusBadge } from "@/components/ReservationStatusBadge";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -270,6 +277,7 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
   const router = useRouter();
   const resolvedSpace = useResolvedSpace(space);
   const { session } = useAuth();
+  const hasRestoredDraftRef = useRef(false);
   const todayISODate = useMemo(() => getTodayISODate(), []);
   const [selectionMode, setSelectionMode] =
     useState<DateSelectionMode>("specific-days");
@@ -391,8 +399,37 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
     resetAvailability();
   };
 
+  const persistPendingDraft = () => {
+    savePendingReservationDraft({
+      spaceId: resolvedSpace.id,
+      spaceName: resolvedSpace.name,
+      pricePerHour: resolvedSpace.pricePerHour,
+      selectionMode,
+      specificDates,
+      periodRange: periodRange
+        ? {
+            from: periodRange.from ? toISODate(periodRange.from) : undefined,
+            to: periodRange.to ? toISODate(periodRange.to) : undefined,
+          }
+        : null,
+      sharedRange,
+      editIndividually,
+      perDateRanges,
+      form,
+      availabilityStatus,
+      availabilityMessage,
+      checkedDraft,
+      savedAt: new Date().toISOString(),
+    });
+  };
+
   const ensureClientSession = () => {
     if (!session || session.user.role !== "user") {
+      persistPendingDraft();
+      toast({
+        title: "Faça login para concluir sua reserva",
+        description: "Suas escolhas serão mantidas.",
+      });
       router.push(`/login?redirect=${encodeURIComponent(`/reservar/${resolvedSpace.id}`)}`);
       return null;
     }
@@ -611,11 +648,63 @@ export default function ReserveSpaceScreen({ space }: ReserveSpaceScreenProps) {
     });
 
     setCreatedReservation(reservation);
+    clearPendingReservationDraft();
     toast({
       title: "Reserva pendente criada",
       description: `${reservation.code} já está visível em Minhas reservas e na área administrativa.`,
     });
   };
+
+  useEffect(() => {
+    if (hasRestoredDraftRef.current) {
+      return;
+    }
+
+    hasRestoredDraftRef.current = true;
+
+    const pendingDraft = readPendingReservationDraft();
+
+    if (!pendingDraft || pendingDraft.spaceId !== resolvedSpace.id) {
+      return;
+    }
+
+    setSelectionMode(pendingDraft.selectionMode);
+    setSpecificDates(
+      pendingDraft.selectionMode === "specific-days" ? pendingDraft.specificDates : [],
+    );
+    setPeriodRange(
+      pendingDraft.selectionMode === "continuous-period" && pendingDraft.periodRange
+        ? {
+            from: pendingDraft.periodRange.from
+              ? parseISODate(pendingDraft.periodRange.from) ?? undefined
+              : undefined,
+            to: pendingDraft.periodRange.to
+              ? parseISODate(pendingDraft.periodRange.to) ?? undefined
+              : undefined,
+          }
+        : undefined,
+    );
+    setSharedRange(pendingDraft.sharedRange);
+    setEditIndividually(pendingDraft.editIndividually);
+    setPerDateRanges(pendingDraft.perDateRanges);
+    setForm(pendingDraft.form);
+    setAvailabilityStatus(pendingDraft.availabilityStatus);
+    setAvailabilityMessage(pendingDraft.availabilityMessage);
+    setCheckedDraft(pendingDraft.checkedDraft);
+    setCreatedReservation(null);
+    markPendingReservationAsRestored(resolvedSpace.id);
+  }, [resolvedSpace.id]);
+
+  useEffect(() => {
+    if (!consumePendingReservationRestoredFlag(resolvedSpace.id)) {
+      return;
+    }
+
+    toast({
+      title: "Sua seleção foi restaurada",
+      description: "Você pode continuar a reserva de onde parou.",
+    });
+  }, [resolvedSpace.id]);
 
   return (
     <div className="page-container section-space">
