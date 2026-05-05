@@ -8,21 +8,17 @@ import {
 } from "@/lib/availability/spaceAvailability";
 
 describe("spaceAvailability utils", () => {
-  it("calcula os horários indisponíveis por espaço e data", () => {
-    expect(getUnavailableTimes("1", "2026-04-01")).toEqual([
-      "11:00",
-      "15:00",
-      "18:00",
-    ]);
+  it("mantem todos os horarios disponiveis no mock atual", () => {
+    expect(getUnavailableTimes("1", "2026-04-01")).toEqual([]);
   });
 
-  it("calcula status de dia disponível ou indisponível", () => {
+  it("calcula status de dia como disponivel", () => {
     expect(getDayAvailabilityStatus("1", "2026-04-01")).toBe("available");
     expect(getDayAvailabilityStatus("1", "2026-04-01", ["07:00"])).toBe(
       "available",
     );
     expect(getDayAvailabilityStatus("1", "2026-04-04", ["09:00", "13:00"])).toBe(
-      "unavailable",
+      "available",
     );
   });
 
@@ -54,7 +50,7 @@ describe("spaceAvailability utils", () => {
       ),
     ).toEqual({
       date: "2026-04-06",
-      time: "",
+      time: "16:00",
     });
 
     expect(
@@ -100,6 +96,6 @@ describe("spaceAvailability utils", () => {
         "12:00",
         "13:00",
       ]),
-    ).toBe(false);
+    ).toBe(true);
   });
 });

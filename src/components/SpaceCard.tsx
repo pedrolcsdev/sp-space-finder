@@ -13,6 +13,7 @@ import type { Space } from "@/lib/data/contracts";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { getResourceIcon } from "@/lib/resource-icons";
 
 const fallbackImageByCategory: Record<Space["category"], string> = {
   auditorium:
@@ -127,18 +128,22 @@ export function SpaceCard({
           </p>
 
           <div className="flex min-h-[5.5rem] flex-wrap content-start gap-2">
-            {visibleResources.map((r) => (
-              <span
-                key={r}
-                className="inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-full border border-border/70 bg-secondary/70 px-3 py-1.5 text-xs font-medium text-secondary-foreground"
-              >
-                <Check className="w-3 h-3" />
-                <span className="truncate">{r}</span>
-              </span>
-            ))}
+            {visibleResources.map((r) => {
+              const ResourceIcon = getResourceIcon(r);
+
+              return (
+                <span
+                  key={r}
+                  className="inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-full border border-border/70 bg-secondary/70 px-3 py-1.5 text-xs font-medium text-secondary-foreground"
+                >
+                  <ResourceIcon className="h-3 w-3 shrink-0" />
+                  <span className="truncate">{r}</span>
+                </span>
+              );
+            })}
             {hiddenResourcesCount > 0 && (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-secondary/70 px-3 py-1.5 text-xs font-medium text-secondary-foreground">
-                <Check className="w-3 h-3" />+{hiddenResourcesCount}
+                <Check className="h-3 w-3 shrink-0" />+{hiddenResourcesCount}
               </span>
             )}
           </div>

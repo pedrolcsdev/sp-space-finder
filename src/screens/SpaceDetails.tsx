@@ -3,7 +3,6 @@
 import Link from "next/link";
 import {
   ArrowLeft,
-  Check,
   CircleDollarSign,
   MapPin,
   ShieldCheck,
@@ -17,6 +16,7 @@ import { Card } from "@/components/ui/card";
 import { SpaceAvailabilitySidebar } from "@/components/SpaceAvailabilitySidebar";
 import { useResolvedSpace } from "@/hooks/use-mock-store";
 import { FavoriteSpaceButton } from "@/components/FavoriteSpaceButton";
+import { getResourceIcon } from "@/lib/resource-icons";
 
 interface SpaceDetailsScreenProps {
   space: Space;
@@ -131,16 +131,20 @@ export default function SpaceDetailsScreen({ space }: SpaceDetailsScreenProps) {
               Comodidades
             </h2>
             <div className="flex flex-wrap gap-2">
-              {resolvedSpace.resources.map((resource) => (
-                <Badge
-                  key={resource}
-                  variant="secondary"
-                  className="h-auto rounded-full px-3 py-1.5 text-xs font-medium"
-                >
-                  <Check className="mr-1 h-3 w-3" />
-                  {resource}
-                </Badge>
-              ))}
+              {resolvedSpace.resources.map((resource) => {
+                const ResourceIcon = getResourceIcon(resource);
+
+                return (
+                  <Badge
+                    key={resource}
+                    variant="secondary"
+                    className="h-auto rounded-full px-3 py-1.5 text-xs font-medium"
+                  >
+                    <ResourceIcon className="mr-1 h-3.5 w-3.5 shrink-0" />
+                    {resource}
+                  </Badge>
+                );
+              })}
             </div>
           </Card>
 
@@ -202,9 +206,9 @@ export default function SpaceDetailsScreen({ space }: SpaceDetailsScreenProps) {
           <Button
             asChild
             size="lg"
-            className="h-12 min-w-[148px] rounded-2xl px-6 shadow-sm shadow-primary/20 active:scale-[0.98]"
+            className="h-12 min-w-[198px] rounded-2xl px-6 shadow-sm shadow-primary/20 active:scale-[0.98]"
           >
-            <Link href={reservePath}>Reservar</Link>
+            <Link href={reservePath}>Verificar disponibilidade</Link>
           </Button>
         </div>
       </div>

@@ -13,13 +13,6 @@ export const DEFAULT_TIME_SLOTS = [
   "18:00",
 ] as const;
 
-const UNAVAILABLE_SLOT_PATTERNS: readonly string[][] = [
-  ["10:00", "14:00", "17:00"],
-  ["09:00", "13:00"],
-  ["11:00", "15:00", "18:00"],
-  ["08:00", "16:00"],
-];
-
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 const padDatePart = (value: number) => String(value).padStart(2, "0");
@@ -73,16 +66,14 @@ export const getUnavailableTimes = (
   date: string,
   slots: readonly string[] = DEFAULT_TIME_SLOTS,
 ) => {
+  void spaceId;
+  void slots;
+
   if (!isISODate(date)) {
     return [];
   }
 
-  const day = Number(date.slice(-2));
-  const numericSpaceId = Number.parseInt(spaceId, 10) || 1;
-  const ruleSeed = (day + numericSpaceId) % UNAVAILABLE_SLOT_PATTERNS.length;
-  const unavailablePattern = UNAVAILABLE_SLOT_PATTERNS[ruleSeed] ?? [];
-
-  return unavailablePattern.filter((slot) => slots.includes(slot));
+  return [];
 };
 
 export const getDayAvailabilityStatus = (
