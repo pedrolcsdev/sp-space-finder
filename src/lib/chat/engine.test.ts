@@ -71,7 +71,7 @@ describe("chat engine", () => {
     expect(response.askedField).toBe("spaceType");
   });
 
-  it('"quero uma sala pra 7 pessoas" recomenda sem travar em confirmacao extra', () => {
+  it('"quero uma sala pra 7 pessoas" vira refinamento opcional sem bloquear a busca', () => {
     const response = resolveChatTurn(
       {
         message: "quero uma sala pra 7 pessoas",
@@ -97,8 +97,9 @@ describe("chat engine", () => {
       spaces,
     );
 
-    expect(response.mode).toBe("recommend");
-    expect(response.recommendations.length).toBeGreaterThan(0);
+    expect(response.mode).toBe("ask");
+    expect(response.followUpKind).toBe("optional");
+    expect(response.quickActions[0]?.kind).toBe("search_now");
     expect(response.intent.quantidadePessoas).toBe(7);
   });
 
@@ -311,6 +312,14 @@ describe("chat engine", () => {
     expect(parsed.tipoEvento).toContain("aula");
   });
 
+  it('fallback entende "sala com projetor" como tipo de espaco valido', () => {
+    const parsed = parseLocalIntent("sala com projetor para 50 pessoas");
+
+    expect(parsed.tipoEspaco).toBe("Sala de reunião");
+    expect(parsed.recursosDesejados).toContain("Projetor");
+    expect(parsed.quantidadePessoas).toBe(50);
+  });
+
   it("corrige pergunta repetida de capacidade e avanca para recomendacao", () => {
     const baseIntent: ChatIntent = {
       tipoEspaco: "Auditório",
@@ -461,6 +470,71 @@ describe("chat engine", () => {
 
     expect(response.mode).toBe("recommend");
     expect(response.recommendations.length).toBeGreaterThan(0);
+  });
+
+  it("promove ask_followup para refinamento opcional quando tipo e lotacao ja bastam", () => {
+    const response = resolveChatTurn(
+      {
+        message: "sala com projetor para 50 pessoas",
+        previousSummary: "",
+        baseIntent: emptyIntent(),
+        aiDecision: buildDecision({
+          reply: "Voce prefere algum bairro ou tem um teto de orcamento?",
+          intent: "search",
+          action: "ask_followup",
+          extracted: {
+            tipoEspaco: "Sala de reunião",
+            tipoEvento: "Treinamento",
+            cidade: null,
+            locations: [],
+            excludedLocations: [],
+            quantidadePessoas: 50,
+            recursosDesejados: ["Projetor"],
+            orcamentoMaximo: null,
+          },
+          missingFields: ["bairro"],
+        }),
+      },
+      spaces,
+    );
+
+    expect(response.mode).toBe("ask");
+    expect(response.followUpKind).toBe("optional");
+    expect(response.quickActions.map((action) => action.kind)).toContain("search_now");
+    expect(response.quickActions.map((action) => action.kind)).toContain("refine_location");
+    expect(response.quickActions.map((action) => action.kind)).toContain("refine_budget");
+  });
+
+  it("mantem pergunta obrigatoria quando ainda falta capacidade", () => {
+    const response = resolveChatTurn(
+      {
+        message: "quero um lugar pra treinar minha equipe",
+        previousSummary: "",
+        baseIntent: emptyIntent(),
+        aiDecision: buildDecision({
+          reply: "Perfeito. Para quantas pessoas voce precisa do espaco?",
+          intent: "search",
+          action: "ask_followup",
+          extracted: {
+            tipoEspaco: null,
+            tipoEvento: "Treinamento de equipe",
+            cidade: null,
+            locations: [],
+            excludedLocations: [],
+            quantidadePessoas: null,
+            recursosDesejados: [],
+            orcamentoMaximo: null,
+          },
+          missingFields: ["quantidadePessoas"],
+        }),
+      },
+      spaces,
+    );
+
+    expect(response.mode).toBe("ask");
+    expect(response.followUpKind).toBe("required");
+    expect(response.askedField).toBe("capacity");
+    expect(response.quickActions).toHaveLength(0);
   });
 
   it('confirma com "sim" e nao entra em loop quando o contexto ja esta completo', () => {

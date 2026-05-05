@@ -16,12 +16,25 @@ export type AiAction =
 
 export type ChatMode = "reply" | "ask" | "recommend";
 export type MatchMode = "exact" | "no_exact_match";
+export type FollowUpKind = "required" | "optional";
 export type QuestionField =
   | "spaceType"
   | "location"
   | "capacity"
   | "budget"
   | "refinement";
+export type QuickActionKind =
+  | "search_now"
+  | "refine_location"
+  | "refine_budget"
+  | "refine_resources"
+  | "refine_capacity";
+
+export interface QuickAction {
+  label: string;
+  kind: QuickActionKind;
+  message?: string;
+}
 
 export interface StructuredExtracted {
   tipoEspaco: string | null;
@@ -68,7 +81,8 @@ export interface ChatResponse {
   intent: ChatIntent;
   conversationSummary: string;
   recommendations: ChatRecommendation[];
-  followUpActions: string[];
+  quickActions: QuickAction[];
+  followUpKind?: FollowUpKind;
   askedField?: QuestionField;
   confidence: number;
   matchMode?: MatchMode;

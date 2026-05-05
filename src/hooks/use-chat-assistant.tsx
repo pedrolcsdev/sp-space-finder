@@ -17,6 +17,19 @@ type PricePreference = "bestMatch" | "lowest";
 type AskedField = "spaceType" | "location" | "budget" | "capacity" | "refinement";
 type ChatMode = "reply" | "ask" | "recommend";
 type ChatAction = "reply_only" | "ask_followup" | "recommend" | "no_exact_match";
+type FollowUpKind = "required" | "optional";
+type QuickActionKind =
+  | "search_now"
+  | "refine_location"
+  | "refine_budget"
+  | "refine_resources"
+  | "refine_capacity";
+
+interface QuickAction {
+  label: string;
+  kind: QuickActionKind;
+  message?: string;
+}
 
 export interface ChatRecommendation extends Space {
   matchPercent: number;
@@ -28,7 +41,8 @@ export interface ChatMessage {
   type: MessageType;
   text: string;
   recommendations?: ChatRecommendation[];
-  followUpActions?: string[];
+  quickActions?: QuickAction[];
+  followUpKind?: FollowUpKind;
 }
 
 interface ChatApiIntent {
@@ -58,7 +72,8 @@ interface ChatApiResponse {
   intent: ChatApiIntent;
   conversationSummary?: string;
   recommendations: ChatRecommendation[];
-  followUpActions: string[];
+  quickActions: QuickAction[];
+  followUpKind?: FollowUpKind;
   askedField?: AskedField;
   resetContext?: boolean;
 }
@@ -101,14 +116,14 @@ interface ChatAssistantContextValue {
   closeChat: () => void;
   resetConversation: () => void;
   sendMessage: (text: string) => Promise<void>;
+  runQuickAction: (action: QuickAction) => Promise<void>;
   announceResults: (count: number) => void;
 }
 
 const SESSION_STORAGE_KEY = "sp-spaces-chat-state";
 
 const introSuggestions = [
-  "Quero uma sala para 10 pessoas",
-  "Preciso de um auditório com projetor",
+  "Quero uma sala para 10 pessoas com projetor.",
 ] as const;
 
 const ChatAssistantContext = createContext<ChatAssistantContextValue | null>(null);
@@ -122,11 +137,13 @@ const toMessage = (text: string, type: MessageType): ChatMessage => ({
 const toBotMessage = (
   text: string,
   recommendations?: ChatRecommendation[],
-  followUpActions?: string[],
+  quickActions?: QuickAction[],
+  followUpKind?: FollowUpKind,
 ): ChatMessage => ({
   ...toMessage(text, "bot"),
   recommendations,
-  followUpActions,
+  quickActions,
+  followUpKind,
 });
 
 const normalizeText = (value: string) =>
@@ -430,7 +447,8 @@ export function ChatAssistantProvider({
               : current.conversationSummary,
           conversationStage: "results",
           lastAskedField:
-            data.action === "ask_followup" || data.mode === "ask"
+            data.followUpKind === "required" &&
+            (data.action === "ask_followup" || data.mode === "ask")
               ? data.askedField
               : undefined,
           messages: [
@@ -441,7 +459,8 @@ export function ChatAssistantProvider({
               data.mode === "recommend" || data.action === "no_exact_match"
                 ? data.recommendations ?? []
                 : [],
-              data.followUpActions ?? [],
+              data.quickActions ?? [],
+              data.followUpKind,
             ),
           ],
         };
@@ -461,6 +480,85 @@ export function ChatAssistantProvider({
       }));
     }
   }, []);
+
+  const runQuickAction = useCallback(async (action: QuickAction) => {
+    if (action.kind === "search_now") {
+      if (state.conversationStage === "searching") return;
+
+      const requestCriteria = state.criteria;
+      const requestConversationSummary = state.conversationSummary;
+
+      setState((current) => {
+        return {
+          ...current,
+          open: true,
+          conversationStage: "searching",
+        };
+      });
+
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: "Ver opcoes agora",
+            intent: criteriaToApiIntent(requestCriteria),
+            conversationSummary: requestConversationSummary,
+            forceRecommend: true,
+          }),
+        });
+        const data = (await response.json()) as Partial<ChatApiResponse>;
+
+        setState((current) => {
+          const nextCriteria = data.resetContext
+            ? getBaseCriteria()
+            : mergeCriteriaWithIntent(current.criteria, data.intent);
+
+          return {
+            ...current,
+            open: true,
+            criteria: nextCriteria,
+            conversationSummary:
+              data.resetContext
+                ? ""
+                : typeof data.conversationSummary === "string"
+                ? data.conversationSummary
+                : current.conversationSummary,
+            conversationStage: "results",
+            lastAskedField: undefined,
+            messages: [
+              ...current.messages,
+              toBotMessage(
+                data.reply ?? "Separei algumas opcoes com o contexto atual.",
+                data.recommendations ?? [],
+                data.quickActions ?? [],
+                data.followUpKind,
+              ),
+            ],
+          };
+        });
+      } catch {
+        setState((current) => ({
+          ...current,
+          open: true,
+          conversationStage: "results",
+          lastAskedField: "refinement",
+          messages: [
+            ...current.messages,
+            toBotMessage(
+              "Nao consegui buscar as opcoes agora. Se quiser, me diga mais um detalhe e eu tento de novo.",
+            ),
+          ],
+        }));
+      }
+
+      return;
+    }
+
+    if (action.message) {
+      await sendMessage(action.message);
+    }
+  }, [sendMessage, state.conversationStage, state.conversationSummary, state.criteria]);
 
   const openChat = useCallback(
     (detail?: ChatOpenDetail) => {
@@ -493,7 +591,7 @@ export function ChatAssistantProvider({
     };
   }, [openChat]);
 
-const value = useMemo<ChatAssistantContextValue>(
+  const value = useMemo<ChatAssistantContextValue>(
     () => ({
       open: state.open,
       messages: state.messages,
@@ -515,6 +613,7 @@ const value = useMemo<ChatAssistantContextValue>(
       closeChat,
       resetConversation,
       sendMessage,
+      runQuickAction,
       announceResults,
     }),
     [
@@ -523,6 +622,7 @@ const value = useMemo<ChatAssistantContextValue>(
       openChat,
       resetConversation,
       sendMessage,
+      runQuickAction,
       state,
     ],
   );

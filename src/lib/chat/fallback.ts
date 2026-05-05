@@ -60,10 +60,12 @@ export const parseLocalIntent = (
 
   if (/audit[oó]rio|auditorio/i.test(message)) {
     intent.tipoEspaco = "Auditório";
+  } else if (/\bsala\b/i.test(message) && !/odont|consult[oó]rio|consulta|clinica/i.test(message)) {
+    intent.tipoEspaco = "Sala de reunião";
   }
 
   if (
-    /palestra|apresenta(c|ç)(a|ã)o|evento corporativo|aula|treinamento|workshop|seminario/i.test(
+    /palestra|apresenta(c|ç)(a|ã)o|evento corporativo|aula|treinamento|treinar|workshop|seminario/i.test(
       message,
     )
   ) {
@@ -97,7 +99,7 @@ export const buildFallbackDecision = (
 
   return {
     reply:
-      "Tive uma instabilidade agora, mas posso continuar te ajudando se voce me disser o tipo de espaco, quantidade de pessoas, bairro ou orcamento.",
+      "Tive uma instabilidade agora, mas sigo com voce. Me diga o tipo de uso ou a lotacao, e se quiser depois a gente refina por bairro, orcamento ou recursos.",
     intent: "unknown",
     action: "ask_followup",
     extracted: {

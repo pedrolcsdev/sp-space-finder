@@ -1,11 +1,18 @@
-import type { AiDecision, ChatIntent, ChatResponse, ChatTurnInput, QuestionField } from "./types";
+import type {
+  AiDecision,
+  ChatIntent,
+  ChatResponse,
+  ChatTurnInput,
+  QuestionField,
+  QuickAction,
+} from "./types";
 import { emptyIntent, extractedToIntent, getAskedField, mergeIntent } from "./intent";
 import { parseLocalIntent } from "./fallback";
 import { rankRecommendations } from "./ranking";
 import { normalizeText } from "./shared";
 import type { Space } from "@/lib/data/contracts";
 
-const hasSearchContext = (intent: ChatIntent) => {
+export const hasSearchContext = (intent: ChatIntent) => {
   const hasType = Boolean(intent.tipoEspaco || intent.tipoEvento);
   const hasCapacity = Boolean(intent.quantidadePessoas);
 
@@ -60,7 +67,7 @@ const shouldForceRecommend = (
     return true;
   }
 
-  if (hasSearchIntentMutation(input.baseIntent, nextIntent)) {
+  if (hasSearchContext(input.baseIntent) && hasSearchIntentMutation(input.baseIntent, nextIntent)) {
     return true;
   }
 
@@ -68,7 +75,7 @@ const shouldForceRecommend = (
     return true;
   }
 
-  return aiDecision.action === "ask_followup" || aiDecision.action === "reply_only";
+  return aiDecision.action === "reply_only";
 };
 
 const hasValueForField = (intent: ChatIntent, field: QuestionField) => {
@@ -140,18 +147,72 @@ const buildConversationSummary = (
   return next.length > 900 ? next.slice(next.length - 900) : next;
 };
 
-const buildFollowUpActions = (intent: ChatIntent) => {
-  const actions: string[] = [];
+const buildRefinementQuickActions = (intent: ChatIntent): QuickAction[] => {
+  const actions: QuickAction[] = [];
 
-  if (!intent.cidadeIncluida) actions.push("Refinar por bairro");
-  if (!intent.orcamentoMaximo) actions.push("Informar orcamento");
-  if (!intent.recursosDesejados.length) actions.push("Adicionar recursos");
-  if (intent.quantidadePessoas) actions.push("Ajustar lotacao");
+  if (!intent.cidadeIncluida) {
+    actions.push({
+      label: "Adicionar bairro",
+      kind: "refine_location",
+      message: "Quero refinar por bairro.",
+    });
+  }
 
-  return actions.slice(0, 3);
+  if (!intent.orcamentoMaximo) {
+    actions.push({
+      label: "Informar orcamento",
+      kind: "refine_budget",
+      message: "Quero informar um orcamento maximo.",
+    });
+  }
+
+  if (!intent.recursosDesejados.length) {
+    actions.push({
+      label: "Adicionar recursos",
+      kind: "refine_resources",
+      message: "Quero adicionar recursos desejados.",
+    });
+  }
+
+  if (intent.quantidadePessoas) {
+    actions.push({
+      label: "Ajustar lotacao",
+      kind: "refine_capacity",
+      message: "Quero ajustar a lotacao.",
+    });
+  }
+
+  return actions.slice(0, 4);
 };
 
-const buildRecommendationResponse = (
+const buildOptionalQuickActions = (intent: ChatIntent): QuickAction[] => [
+  {
+    label: "Ver opcoes agora",
+    kind: "search_now",
+  },
+  ...buildRefinementQuickActions(intent).slice(0, 3),
+];
+
+const buildOptionalFollowUpReply = (intent: ChatIntent) => {
+  const refinements: string[] = [];
+
+  if (!intent.cidadeIncluida) refinements.push("bairro");
+  if (!intent.orcamentoMaximo) refinements.push("orcamento");
+  if (!intent.recursosDesejados.length) refinements.push("recursos");
+
+  if (refinements.length === 0) {
+    return "Ja encontrei algumas opcoes. Se quiser, ainda posso ajustar a lotacao antes de mostrar.";
+  }
+
+  const refinementText =
+    refinements.length === 1
+      ? refinements[0]
+      : `${refinements.slice(0, -1).join(", ")} ou ${refinements.at(-1)}`;
+
+  return `Ja encontrei algumas opcoes. Quer refinar por ${refinementText}?`;
+};
+
+export const buildRecommendationResponse = (
   spaces: Space[],
   intent: ChatIntent,
   conversationSummary: string,
@@ -169,11 +230,29 @@ const buildRecommendationResponse = (
     intent,
     conversationSummary,
     recommendations: recommendationResult.recommendations,
-    followUpActions: buildFollowUpActions(intent),
+    quickActions: buildRefinementQuickActions(intent),
     confidence,
     matchMode: recommendationResult.matchMode,
   };
 };
+
+const buildOptionalFollowUpResponse = (
+  intent: ChatIntent,
+  conversationSummary: string,
+  confidence: number,
+): ChatResponse => ({
+  mode: "ask",
+  reply: buildOptionalFollowUpReply(intent),
+  conversationalIntent: "search",
+  action: "ask_followup",
+  intent,
+  conversationSummary,
+  recommendations: [],
+  quickActions: buildOptionalQuickActions(intent),
+  followUpKind: "optional",
+  askedField: "refinement",
+  confidence,
+});
 
 export const resolveChatTurn = (
   input: ChatTurnInput,
@@ -209,7 +288,7 @@ export const resolveChatTurn = (
       intent: emptyIntent(),
       conversationSummary: "",
       recommendations: [],
-      followUpActions: [],
+      quickActions: [],
       confidence: input.aiDecision.confidence,
       resetContext: true,
     };
@@ -231,8 +310,7 @@ export const resolveChatTurn = (
       const nextCriticalField = getNextCriticalField(nextIntent);
 
       if (!nextCriticalField) {
-        return buildRecommendationResponse(
-          spaces,
+        return buildOptionalFollowUpResponse(
           nextIntent,
           nextSummary,
           input.aiDecision.confidence,
@@ -247,10 +325,19 @@ export const resolveChatTurn = (
         intent: nextIntent,
         conversationSummary: nextSummary,
         recommendations: [],
-        followUpActions: [],
+        quickActions: [],
+        followUpKind: "required",
         askedField: nextCriticalField,
         confidence: input.aiDecision.confidence,
       };
+    }
+
+    if (hasSearchContext(nextIntent)) {
+      return buildOptionalFollowUpResponse(
+        nextIntent,
+        nextSummary,
+        input.aiDecision.confidence,
+      );
     }
 
     return {
@@ -261,7 +348,8 @@ export const resolveChatTurn = (
       intent: nextIntent,
       conversationSummary: nextSummary,
       recommendations: [],
-      followUpActions: [],
+      quickActions: [],
+      followUpKind: "required",
       askedField,
       confidence: input.aiDecision.confidence,
     };
@@ -275,7 +363,7 @@ export const resolveChatTurn = (
     intent: nextIntent,
     conversationSummary: nextSummary,
     recommendations: [],
-    followUpActions: [],
+    quickActions: [],
     confidence: input.aiDecision.confidence,
   };
 };

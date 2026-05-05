@@ -33,6 +33,7 @@ export function ChatWidget() {
     openChat,
     resetConversation,
     sendMessage,
+    runQuickAction,
   } = useChatAssistant();
   const [input, setInput] = useState("");
   const [showInitialTooltip, setShowInitialTooltip] = useState(true);
@@ -254,6 +255,38 @@ export function ChatWidget() {
                           </span>
                         </Link>
                       ))}
+                    </div>
+                  )}
+
+                  {message.type === "bot" && message.quickActions && message.quickActions.length > 0 && (
+                    <div className="space-y-2 pl-0 sm:pl-8">
+                      <div className="flex flex-wrap gap-2">
+                        {message.quickActions.map((action) =>
+                          action.kind === "search_now" ? (
+                            <Button
+                              key={`${message.id}-${action.kind}`}
+                              type="button"
+                              size="sm"
+                              className="h-8 rounded-full px-4 text-xs"
+                              onClick={() => void runQuickAction(action)}
+                              disabled={isSearching}
+                            >
+                              {action.label}
+                            </Button>
+                          ) : (
+                            <FilterChip
+                              key={`${message.id}-${action.kind}`}
+                              onClick={() => void runQuickAction(action)}
+                              variant="default"
+                              size="sm"
+                              className="max-w-full hover:border-primary/40"
+                              disabled={isSearching}
+                            >
+                              {action.label}
+                            </FilterChip>
+                          ),
+                        )}
+                      </div>
                     </div>
                   )}
 

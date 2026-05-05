@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { spaceCatalog } from "@/lib/data/spaceCatalog";
 import {
   buildFallbackDecision,
+  buildRecommendationResponse,
   emptyIntent,
+  hasSearchContext,
   resolveChatTurn,
   sanitizeIntent,
   type QuestionField,
@@ -19,18 +21,21 @@ export async function POST(request: Request) {
       typeof body?.previousAskedField === "string"
         ? (body.previousAskedField as QuestionField)
         : undefined;
+    const forceRecommend = body?.forceRecommend === true;
+    const baseIntent = sanitizeIntent(body?.intent) ?? emptyIntent();
 
-    if (!message) {
+    if (!message && !forceRecommend) {
       return NextResponse.json(
         {
           mode: "ask",
           reply: "Me diga em uma frase o tipo de espaco que voce precisa.",
           conversationalIntent: "unknown",
           action: "ask_followup",
-          intent: emptyIntent(),
+          intent: baseIntent,
           conversationSummary: previousSummary,
           recommendations: [],
-          followUpActions: [],
+          quickActions: [],
+          followUpKind: "required",
           askedField: "spaceType",
           confidence: 0,
         },
@@ -38,7 +43,13 @@ export async function POST(request: Request) {
       );
     }
 
-    const baseIntent = sanitizeIntent(body?.intent) ?? emptyIntent();
+    if (forceRecommend && hasSearchContext(baseIntent)) {
+      const spaces = await spaceCatalog.listSpaces();
+      return NextResponse.json(
+        buildRecommendationResponse(spaces, baseIntent, previousSummary, 1),
+      );
+    }
+
     const aiDecision =
       (await chatWithGroq({
         message,
@@ -71,7 +82,8 @@ export async function POST(request: Request) {
         intent: emptyIntent(),
         conversationSummary: "",
         recommendations: [],
-        followUpActions: [],
+        quickActions: [],
+        followUpKind: "required",
         askedField: "refinement",
         confidence: 0,
       },
