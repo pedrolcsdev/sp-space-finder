@@ -25,7 +25,7 @@ export function AccountShell({
     <div className="section-space">
       <div className="page-container grid min-w-0 grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[260px_minmax(0,1fr)] xl:gap-8">
         <aside className="xl:sticky xl:top-24 xl:h-fit">
-          <div className="rounded-3xl border border-white/70 bg-white/86 p-4 shadow-[0_24px_70px_rgb(15_23_42_/_0.08)] backdrop-blur-xl">
+          <div className="glass-card p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
               Área do cliente
             </p>
@@ -50,7 +50,7 @@ export function AccountShell({
         </aside>
 
         <section className="min-w-0 space-y-6">
-          <div className="rounded-3xl border border-white/70 bg-white/86 p-5 shadow-[0_24px_70px_rgb(15_23_42_/_0.08)] backdrop-blur-xl sm:p-7">
+          <div className="glass-card p-5 sm:p-7">
             <p className="text-xs font-semibold uppercase tracking-normal text-muted-foreground">
               Minha conta
             </p>

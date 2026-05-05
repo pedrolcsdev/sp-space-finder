@@ -10,7 +10,7 @@ const filterChipVariants = cva(
     variants: {
       variant: {
         default:
-          "border-border/80 bg-white/88 text-secondary-foreground shadow-sm shadow-slate-950/5 hover:-translate-y-0.5 hover:border-primary/20 hover:bg-white",
+          "border-border/80 bg-card/88 text-secondary-foreground shadow-sm shadow-slate-950/5 hover:-translate-y-0.5 hover:border-primary/20 hover:bg-card",
         selected:
           "border-primary/20 bg-primary text-primary-foreground shadow-sm shadow-primary/20",
         count: "border-transparent bg-foreground text-background shadow-sm",

@@ -67,7 +67,7 @@ export default function MyReservationsScreen() {
             </div>
 
             {reservation.notes && (
-              <div className="rounded-[22px] border border-border/70 bg-white/90 p-4">
+              <div className="rounded-[22px] border border-border/70 bg-card/90 p-4">
                 <p className="text-sm font-semibold text-foreground">Observações</p>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">{reservation.notes}</p>
               </div>

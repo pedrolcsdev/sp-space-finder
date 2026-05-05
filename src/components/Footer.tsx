@@ -2,10 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function Footer() {
   return (
-    <footer className="mt-14 border-t border-border bg-card">
+    <footer className="mt-14 border-t border-border bg-card/75 backdrop-blur-xl">
       <div className="page-container py-10 sm:py-12">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-[1.3fr_0.8fr_0.9fr] md:items-start">
           <div className="space-y-3">
@@ -57,6 +58,7 @@ export function Footer() {
                 Visite nosso site <ExternalLink className="w-3.5 h-3.5" />
               </a>
             </Button>
+            <ThemeToggle className="w-fit" />
           </div>
         </div>
 

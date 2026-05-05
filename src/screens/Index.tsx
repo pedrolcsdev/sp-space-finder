@@ -72,20 +72,20 @@ export default function HomeScreen({ spaces }: HomeScreenProps) {
               transition={{ duration: 0.7 }}
               className="min-w-0"
             >
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-normal text-primary-foreground/80 backdrop-blur-sm">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-normal text-white/85 backdrop-blur-sm dark:border-white/20 dark:bg-white/5">
                 <Sparkles className="h-3.5 w-3.5" />
                 Busca com IA
               </div>
-              <h1 className="mx-auto mb-3 max-w-2xl font-display text-2xl font-bold leading-tight tracking-normal text-primary-foreground sm:text-4xl lg:text-5xl">
+              <h1 className="mx-auto mb-3 max-w-2xl font-display text-2xl font-bold leading-tight tracking-normal text-white sm:text-4xl lg:text-5xl">
                 Encontre seu espaço ideal
               </h1>
-              <p className="mx-auto mb-5 max-w-2xl text-sm leading-6 text-primary-foreground/80 sm:text-base sm:leading-7">
+              <p className="mx-auto mb-5 max-w-2xl text-sm leading-6 text-white sm:text-base sm:leading-7">
                 Descreva seu evento e receba recomendações personalizadas com base nas suas necessidades.
               </p>
 
               <div className="mx-auto max-w-2xl">
                 <form
-                  className="flex min-w-0 items-center gap-2 rounded-2xl border border-white/20 bg-white p-2 shadow-2xl shadow-slate-950/20"
+                  className="flex min-w-0 items-center gap-2 rounded-2xl border border-white/20 bg-white p-2 shadow-2xl shadow-slate-950/20 dark:border-border/80 dark:bg-card/92"
                   onSubmit={(event) => {
                     event.preventDefault();
                     submitHeroQuery();
@@ -121,7 +121,7 @@ export default function HomeScreen({ spaces }: HomeScreenProps) {
                     >
                       <button
                         type="button"
-                        className="inline-flex h-full min-h-10 w-full items-center justify-start gap-1.5 whitespace-nowrap rounded-full border border-white/20 bg-white/10 px-3 py-2 text-left text-xs font-medium text-primary-foreground shadow-none backdrop-blur-sm transition-all duration-200 hover:border-white/30 hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35 sm:min-h-11 sm:py-2.5 sm:text-sm"
+                        className="inline-flex h-full min-h-10 w-full items-center justify-start gap-1.5 whitespace-nowrap rounded-full border border-white/20 bg-white/10 px-3 py-2 text-left text-xs font-medium text-white shadow-none backdrop-blur-sm transition-all duration-200 hover:border-white/30 hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35 dark:border-white/20 dark:bg-white/5 dark:hover:bg-white/12 sm:min-h-11 sm:py-2.5 sm:text-sm"
                         onClick={() => selectHeroPrompt(prompt)}
                       >
                         <WandSparkles className="h-4 w-4 shrink-0" />

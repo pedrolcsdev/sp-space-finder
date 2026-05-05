@@ -99,7 +99,7 @@ export function Header() {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-[80] border-b border-white/50 bg-background/90 backdrop-blur-xl">
+      <header className="fixed inset-x-0 top-0 z-[80] border-b border-border/70 bg-background/88 backdrop-blur-xl">
       <div className="page-container flex h-16 items-center justify-between gap-4 sm:h-20">
         <Link href="/" className="group block">
           <div className="relative h-11 w-[140px] sm:h-[54px] sm:w-[188px]">
@@ -125,7 +125,7 @@ export function Header() {
               className={`whitespace-nowrap rounded-full px-2.5 py-2.5 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 xl:px-4 xl:text-sm ${
                 isActive(item.path)
                   ? "bg-primary text-primary-foreground shadow-sm shadow-primary/15"
-                  : "text-foreground/72 hover:bg-white hover:text-foreground hover:shadow-sm"
+                  : "text-foreground/72 hover:bg-card/88 hover:text-foreground hover:shadow-sm"
               }`}
             >
               {item.label}
@@ -138,7 +138,7 @@ export function Header() {
               className={`whitespace-nowrap rounded-full px-2.5 py-2.5 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 xl:px-4 xl:text-sm ${
                 isCategoryActive(category.id)
                   ? "bg-primary text-primary-foreground shadow-sm shadow-primary/15"
-                  : "text-foreground/72 hover:bg-white hover:text-foreground hover:shadow-sm"
+                  : "text-foreground/72 hover:bg-card/88 hover:text-foreground hover:shadow-sm"
               }`}
             >
               {categoryLabelById[category.id] ?? category.name}
@@ -235,7 +235,7 @@ export function Header() {
 
         <button
           onClick={() => setMobileOpen(true)}
-          className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border/70 bg-white/90 text-primary shadow-sm transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/45 lg:hidden"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border/70 bg-card/92 text-primary shadow-sm transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/45 lg:hidden"
           aria-label="Abrir menu"
           aria-expanded={mobileOpen}
         >
@@ -264,7 +264,7 @@ export function Header() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "tween", duration: 0.26, ease: "easeOut" }}
-              className="absolute right-0 top-0 flex h-dvh w-[min(88vw,390px)] flex-col overflow-y-auto border-l border-white/70 bg-background px-5 py-5 shadow-2xl"
+              className="absolute right-0 top-0 flex h-dvh w-[min(88vw,390px)] flex-col overflow-y-auto border-l border-border/70 bg-background/98 px-5 py-5 shadow-2xl backdrop-blur-xl"
             >
               <div className="mb-6 flex items-center justify-between gap-4">
                 <Link href="/" className="block" onClick={closeMenu}>
@@ -280,7 +280,7 @@ export function Header() {
                 </Link>
                 <button
                   onClick={closeMenu}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border/80 bg-white text-foreground shadow-sm transition-colors hover:bg-secondary"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border/80 bg-card text-foreground shadow-sm transition-colors hover:bg-secondary"
                   aria-label="Fechar menu"
                 >
                   <X className="h-5 w-5" />
@@ -296,7 +296,7 @@ export function Header() {
                     className={`rounded-2xl px-4 py-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
                       isActive(item.path)
                         ? "bg-primary text-primary-foreground"
-                        : "bg-white/80 text-foreground hover:bg-white"
+                        : "bg-card/88 text-foreground hover:bg-secondary"
                     }`}
                   >
                     {item.label}
@@ -316,7 +316,7 @@ export function Header() {
                         className={`rounded-2xl px-4 py-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
                           isCategoryActive(category.id)
                             ? "bg-primary text-primary-foreground"
-                            : "bg-white/80 text-foreground hover:bg-white"
+                            : "bg-card/88 text-foreground hover:bg-secondary"
                         }`}
                       >
                         {category.name}
@@ -326,7 +326,7 @@ export function Header() {
                 </div>
 
                 {isReady && isAuthenticated && user ? (
-                  <div className="mt-auto space-y-3 rounded-2xl border border-border/80 bg-white/80 p-4">
+                  <div className="mt-auto space-y-3 rounded-2xl border border-border/80 bg-card/88 p-4">
                     <div>
                       <p className="break-words text-sm font-semibold text-foreground">
                         {user.fullName}

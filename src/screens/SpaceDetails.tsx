@@ -194,7 +194,7 @@ export default function SpaceDetailsScreen({ space }: SpaceDetailsScreenProps) {
         </aside>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-[70] border-t border-border/80 bg-white/95 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-10px_30px_rgb(15_23_42_/_0.08)] backdrop-blur-xl motion-safe:animate-in motion-safe:slide-in-from-bottom-4 motion-safe:fade-in-0 md:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-[70] border-t border-border/80 bg-card/95 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-10px_30px_rgb(15_23_42_/_0.08)] backdrop-blur-xl motion-safe:animate-in motion-safe:slide-in-from-bottom-4 motion-safe:fade-in-0 md:hidden">
         <div className="mx-auto flex max-w-screen-sm items-center justify-between gap-4">
           <div className="min-w-0">
             <p className="text-lg font-bold leading-none text-foreground">

@@ -1,7 +1,14 @@
+import { ThemeToggle } from "@/components/ThemeToggle";
+
 export default function StandaloneLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return (
+    <>
+      {children}
+      <ThemeToggle variant="floating" />
+    </>
+  );
 }

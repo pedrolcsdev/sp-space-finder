@@ -131,7 +131,7 @@ export default function ChatResultsScreen({ spaces }: ChatResultsScreenProps) {
       </div>
 
       {rankedSpaces.length === 0 && (
-        <div className="mt-8 rounded-3xl border border-dashed border-border bg-white/65 px-5 py-12 text-center shadow-sm shadow-slate-950/5 sm:px-6 sm:py-14">
+        <div className="mt-8 rounded-3xl border border-dashed border-border bg-card/70 px-5 py-12 text-center shadow-sm shadow-slate-950/5 sm:px-6 sm:py-14">
           <p className="text-xl font-semibold tracking-normal text-foreground">
             Nenhum espaço apareceu com esse recorte.
           </p>

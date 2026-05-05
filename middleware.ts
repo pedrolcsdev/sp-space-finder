@@ -10,11 +10,6 @@ export function middleware(request: NextRequest) {
   const role = getRoleFromCookieValue(authCookie);
   const isAuthenticated = Boolean(role);
 
-  if (pathname === "/login" && isAuthenticated) {
-    const redirectTarget = role === "admin" ? "/admin" : "/encontrar";
-    return NextResponse.redirect(new URL(redirectTarget, request.url));
-  }
-
   const isUserProtectedPath = USER_PROTECTED_PATHS.some(
     (path) => pathname === path || pathname.startsWith(`${path}/`),
   );

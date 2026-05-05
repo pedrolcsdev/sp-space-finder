@@ -151,7 +151,7 @@ export default function OnboardingScreen() {
                           className={`w-full rounded-lg border-2 p-4 text-left transition-all ${
                             isSelected
                               ? "border-primary bg-primary-soft"
-                              : "border-border hover:border-primary/40"
+                              : "border-border bg-card/72 hover:border-primary/40 hover:bg-secondary/35"
                           }`}
                         >
                           <div className="flex items-start gap-3 sm:items-center sm:gap-4">

@@ -49,7 +49,7 @@ export function SpaceCard({
     >
       <Link
         href={`/espacos/${space.id}`}
-        className="group flex h-full min-h-[560px] min-w-0 cursor-pointer flex-col overflow-hidden rounded-2xl border border-white/70 bg-card/95 shadow-sm shadow-slate-950/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_64px_rgb(15_23_42_/_0.12)] focus-visible:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/45 focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:min-h-[620px]"
+        className="group flex h-full min-h-[560px] min-w-0 cursor-pointer flex-col overflow-hidden rounded-2xl border border-border/80 bg-card/95 shadow-sm shadow-slate-950/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_64px_rgb(15_23_42_/_0.12)] focus-visible:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/45 focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:min-h-[620px]"
       >
         <div className="relative h-48 shrink-0 overflow-hidden bg-muted sm:h-52">
           <img

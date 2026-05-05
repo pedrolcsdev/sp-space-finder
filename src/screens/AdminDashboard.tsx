@@ -145,9 +145,9 @@ export default function AdminDashboardScreen({
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(15,118,110,0.10),_transparent_28%),linear-gradient(180deg,#f8fafc_0%,#eef4f7_100%)]">
+    <div className="gradient-subtle min-h-screen">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-        <div className="mb-6 rounded-3xl border border-white/80 bg-white/86 p-5 shadow-[0_24px_70px_rgb(15_23_42_/_0.08)] backdrop-blur-xl sm:mb-8 sm:p-7">
+        <div className="glass-card p-5 sm:mb-8 sm:p-7">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <BrandLogo variant="compact" className="mb-4 w-fit" markClassName="h-10 w-10" />
@@ -182,7 +182,7 @@ export default function AdminDashboardScreen({
         </div>
 
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="h-auto w-full justify-start overflow-x-auto rounded-2xl bg-white/85 p-2 sm:flex-wrap">
+          <TabsList className="h-auto w-full justify-start overflow-x-auto rounded-2xl bg-card/82 p-2 sm:flex-wrap">
             <TabsTrigger value="dashboard" className="shrink-0 rounded-2xl">
               <LayoutDashboard className="mr-2 h-4 w-4" />
               Dashboard

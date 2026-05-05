@@ -198,7 +198,7 @@ export default function LoginScreen({ redirectTo }: LoginScreenProps) {
                   key={option.email}
                   type="button"
                   variant="secondary"
-                  className="h-auto justify-start rounded-xl border border-border/70 bg-white/90 p-3 text-left"
+                  className="h-auto justify-start rounded-xl border border-border/70 bg-card/92 p-3 text-left"
                   disabled={isSubmitting}
                   onClick={() => handleQuickLogin(option.email, option.password)}
                 >

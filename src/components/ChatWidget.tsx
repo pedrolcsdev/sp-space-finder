@@ -89,7 +89,7 @@ export function ChatWidget() {
                 initial={{ opacity: 0, x: 8 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 8 }}
-                className="pointer-events-none max-w-[210px] rounded-xl border border-border/80 bg-white px-3 py-2 text-xs font-medium leading-5 text-foreground shadow-lg"
+                className="pointer-events-none max-w-[210px] rounded-xl border border-border/80 bg-card px-3 py-2 text-xs font-medium leading-5 text-foreground shadow-lg"
               >
                 Precisa de ajuda? Fale com o assistente
               </motion.div>
@@ -119,14 +119,14 @@ export function ChatWidget() {
           >
             <div className="gradient-hero flex items-center justify-between gap-3 px-4 py-3 sm:px-5 sm:py-4">
               <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-foreground/20">
-                  <Bot className="h-4 w-4 text-primary-foreground" />
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/14">
+                  <Bot className="h-4 w-4 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-primary-foreground">
+                  <p className="text-sm font-semibold text-white">
                     Assistente SP Spaces
                   </p>
-                  <p className="truncate text-xs text-primary-foreground/60">
+                  <p className="truncate text-xs text-white">
                     Recomendações consultivas em tempo real
                   </p>
                 </div>
@@ -134,18 +134,18 @@ export function ChatWidget() {
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={resetConversation}
-                  className="rounded-md p-1.5 transition-colors hover:bg-primary-foreground/10"
+                  className="rounded-md p-1.5 transition-colors hover:bg-white/10"
                   aria-label="Nova busca"
                   title="Nova busca"
                 >
-                  <RotateCcw className="h-4 w-4 text-primary-foreground" />
+                  <RotateCcw className="h-4 w-4 text-white" />
                 </button>
                 <button
                   onClick={closeChat}
-                  className="rounded-md p-1.5 transition-colors hover:bg-primary-foreground/10"
+                  className="rounded-md p-1.5 transition-colors hover:bg-white/10"
                   aria-label="Fechar chat"
                 >
-                  <X className="h-4 w-4 text-primary-foreground" />
+                  <X className="h-4 w-4 text-white" />
                 </button>
               </div>
             </div>
@@ -209,7 +209,7 @@ export function ChatWidget() {
                         <Link
                           key={space.id}
                           href={`/espacos/${space.id}`}
-                          className="block rounded-lg border border-border/80 bg-white p-3 text-left shadow-sm transition-colors hover:border-primary/45 hover:bg-secondary/40"
+                          className="block rounded-lg border border-border/80 bg-card/92 p-3 text-left shadow-sm transition-colors hover:border-primary/45 hover:bg-secondary/40"
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
